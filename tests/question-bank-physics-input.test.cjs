@@ -16,6 +16,6 @@ assert.deepEqual(P.scan('cm3；Q吸；1.25×103；J/kg℃').map(x=>x.category),[
 console.log('PASS: all presets parse, thermal exclusions, conservative suggestions and no mutation');
 
 const vm=require('vm'),fs=require('fs'),path=require('path');
-const win={katex:global.katex,JSZip:require('../jszip.min.js'),PhysicsMathContent:M};
+const win={katex:global.katex,JSZip:require('../jszip.min.js'),PhysicsMathContent:M,PhysicsPaperLayout:require('../question-bank/paper-layout.js')};
 for(const f of ['mathml2omml.js','question-bank/word-export.js'])vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..',f),'utf8'),{window:win,console,Uint8Array,atob,Blob});
 (async()=>{const blob=await win.PhysicsWordExport.createDocx({items:P.presets.map(p=>({stem:p.label+'：\\('+p.tex+'\\)',answer:'',images:[],answerImages:[]})),feedback:false});const z=await win.JSZip.loadAsync(await blob.arrayBuffer()),xml=await z.file('word/document.xml').async('string');assert.ok(xml.includes('<m:oMath'));assert.ok(!xml.includes('\\frac'));console.log('PASS: every preset converts to native Word equations')})().catch(e=>{console.error(e);process.exitCode=1});

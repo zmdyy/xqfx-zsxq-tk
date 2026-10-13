@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const assert=require('node:assert/strict');
 const js=fs.readFileSync(path.join(__dirname,'../question-bank/word-export.js'),'utf8');
-const root={};const sandbox={window:root,atob,Uint8Array,Promise,console};
+const root={PhysicsPaperLayout:require('../question-bank/paper-layout.js')};const sandbox={window:root,atob,Uint8Array,Promise,console};
 vm.runInNewContext(js,sandbox,{timeout:1500});
 assert.ok(root.PhysicsWordExport&&root.PhysicsWordExport.createDocx,'native OOXML exporter exposed');
 let exported;
@@ -21,7 +21,7 @@ for(const layout of ['single','double']){
   assert.ok(blob.size>500);
   let x=String(exported.files.get('word/document.xml'));
   assert.ok(x.includes('力学练习'), 'document title present');
-  assert.ok(x.includes('w:type="page"'),'page break before answers');
+  assert.ok(x.includes('w:val="nextPage"'),'page break before answers');
   assert.ok(x.includes('参考答案'),'answers present');
   assert.ok(x.includes('完成后勾选'),'student feedback present');
   assert.ok(!x.includes('altChunk'),'no HTML-dependent Word rendering');
@@ -30,8 +30,15 @@ for(const layout of ['single','double']){
   assert.ok(exported.files.has('word/media/image2.png'),'answer image embedded');
   assert.ok(String(exported.files.get('word/_rels/document.xml.rels')).includes('image2.png'));
   assert.ok(String(exported.files.get('[Content_Types].xml')).includes('image/png'));
-  assert.equal((x.match(/<w:tbl>/g)||[]).length,layout==='double'?4:2,'single/double layout table count');
+  assert.equal((x.match(/<w:tbl>/g)||[]).length,4,'feedback tables and single-cell keep containers only, no column-layout table');
+  assert.equal((x.match(/<w:cols w:num="2"/g)||[]).length,layout==='double'?2:0,'question and answer bodies use native columns');
+  assert.ok(x.indexOf('力的示意图')<x.indexOf('电路连线'),'sequential body order');
+  assert.ok(exported.files.has('word/footer1.xml'));
+  assert.ok(String(exported.files.get('word/footer1.xml')).includes('NUMPAGES'));
+  assert.ok(!x.includes('w:trHeight'),'no fixed row heights');
 }
+await root.PhysicsWordExport.createDocx({JSZip:ZipFake,layout:'double',feedback:false,items:[{stem:'实验表\n项目 | 数值\n'+Array.from({length:20},(_,i)=>'记录'+i+' | 待填').join('\n'),answer:'答案',images:[],answerImages:[]}]});
+assert.equal((String(exported.files.get('word/document.xml')).match(/<w:tbl>/g)||[]).length,4,'medium table fitting a column is also kept whole');
 await assert.rejects(root.PhysicsWordExport.createDocx({JSZip:ZipFake,items:[]}),/试题篮为空/);
 console.log('PASS: OOXML single/double, page break, image relationships, feedback, empty basket');
 })().catch(e=>{console.error(e);process.exitCode=1});

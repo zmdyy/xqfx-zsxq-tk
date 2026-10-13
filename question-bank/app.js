@@ -354,7 +354,8 @@ function checkPageOverflow(probe,layout,autoSwitched){
  const layoutLabel=layout==='double'?'双栏':'单栏';
  const pageCount=result.frontPages?'题目 '+result.frontPages+' 页，答案 '+result.backPages+' 页':'';
  let message=result.frontPages?pageCount+'，采用'+layoutLabel+'。'+(result.frontPages+result.backPages>2?'超出的内容已完整续页显示。':'')+(result.oversize?'有不可拆分内容超过一页高度，已完整显示，请检查打印效果。':'')+(result.issues.includes('不可拆分内容或图片')&&!result.oversize?'请检查图片加载与内容宽度。':''):result.fits?'A4正反面已检查，采用'+layoutLabel+'。':
-   result.issues.join('、')+'排版超出A4安全区域：两种版式都无法保证一页，请减少题目或题图。';
+   result.issues.join('、')+'排版超出A4正反面，仍可导出 Word；导出后请检查打印效果。';
+ if(result.frontPages&&!result.fits)message+='仍可导出 Word；导出后请检查打印效果。';
  if(autoSwitched&&result.fits)message='已自动从单栏切换到双栏；'+message;
  if(lowImages)message+=' '+lowImages+'幅原图清晰度较低，建议检查印刷效果。';
  $('previewStatus').textContent=message;
@@ -364,8 +365,8 @@ function checkPageOverflow(probe,layout,autoSwitched){
    info.textContent=result.frontPages
     ?(($('layout').value==='auto'?'自动排版：'+(autoSwitched?'已切换为':'采用'):'手动选择：')+layoutLabel+'，'+pageCount+'。'+(!result.fits?'已显示全部内容，请检查打印效果。':''))
     :$('layout').value==='auto'
-    ?(result.fits?(autoSwitched?'自动排版：单栏超出A4，已切换为双栏（正反面均通过检查）。':'自动排版：单栏可容纳正反面内容。'):'自动排版：单栏与双栏均超出A4，请减少题量。')
-    :('手动选择：'+layoutLabel+(result.fits?'，正反面已通过浏览器预览检查。':'，内容超出A4，请调整。'));
+    ?(result.fits?(autoSwitched?'自动排版：单栏超出A4，已切换为双栏（正反面均通过检查）。':'自动排版：单栏可容纳正反面内容。'):'自动排版：单栏与双栏均超出A4，仍可导出 Word。')
+    :('手动选择：'+layoutLabel+(result.fits?'，正反面已通过浏览器预览检查。':'，内容超出A4，仍可导出 Word。'));
    info.classList.toggle('warning',!result.fits);
  }
  return result.fits;
@@ -448,10 +449,7 @@ async function exportWord(){
      if(!evaluated)throw Error('无法完成A4预览，请检查题目内容');
    }
    const p=state.preview;
-   if(notice.dataset.overflow==='yes'){
-     noticeError('自动检查后正面或答案页仍超出A4，请减少题目，或修改图片大小与排版。');
-     return;
-   }
+   const overflowWarning=notice.dataset.overflow==='yes'?'预览内容超出 A4 正反面，仍已导出。Word 可能续页，请检查打印效果；过高的单个选项或答题表请在 Word 中调整。':'';
    const pending=p.items.filter(x=>x.q.review!=='approved');
    if(pending.length){
      const ok=confirm('当前有 '+pending.length+' 道题尚未标记为“教师已审核”。\n请确认题干、公式、题图和答案是否正确。\n是否仍要导出这次练习？');
@@ -495,9 +493,9 @@ async function exportWord(){
    }
    $('wordDownloadLink').click();
    notice.textContent='Word 已生成：'+filename+'（'+Math.round(blob.size/1024)+' KB）。'+(student?(savedHistory?'已在 '+student.name+' 名下记录 '+p.items.length+' 道题。':'注意：个人导出历史未保存，请检查浏览器存储空间。'):'')
-     +' 若浏览器未自动保存，请点击“点击保存 Word”。';
-   notice.style.color=savedHistory?'#17633f':'#a12729';
-   tell('Word 已生成并发起下载。'+(student?(savedHistory?'已记录学生导出历史。':'但个人历史保存失败。'):'')+' 如未下载请点击“保存已生成的 Word”。',!savedHistory);
+     +' '+overflowWarning+' 若浏览器未自动保存，请点击“点击保存 Word”。';
+   notice.style.color=!savedHistory?'#a12729':overflowWarning?'#8a472e':'#17633f';
+   tell('Word 已生成并发起下载。'+overflowWarning+(student?(savedHistory?'已记录学生导出历史。':'但个人历史保存失败。'):'')+' 如未下载请点击“保存已生成的 Word”。',!savedHistory);
  }catch(e){
    noticeError(e.message||String(e));
    console.error('[题库 Word 导出失败]',e);
