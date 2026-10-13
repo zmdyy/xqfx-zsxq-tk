@@ -43,6 +43,8 @@ function preserve(old,incoming,changed){
   if(!q.qualityReviewEventsV2.some(x=>x.id===evt.id))q.qualityReviewEventsV2.push(evt);
  }
  q.qualityEditHistory=[...(old.qualityEditHistory||[])];
+ q.teacherHistoryV1=old.teacherHistoryV1||incoming.teacherHistoryV1||[];
+ if(old.sourceTitle)q.sourceTitle=old.sourceTitle;
  q.typeAudit20261011={...(incoming.typeAudit20261011||{}),...(old.typeAudit20261011||{})};
  if(old.review==='approved'&&changed)q.review='pending';
  else if(old.review==='approved')q.review='approved';
@@ -84,10 +86,11 @@ function preserve(old,incoming,changed){
 function compare(current,payload){
  const existing=new Map(current.map(q=>[q.id,q])),updates=[],added=[],conflicts=[],metadataUpdates=[];
  for(const next of payload){
-  if(!next?.id||!next.stem)continue;
+  if(!next?.id||(!next.stem&&!(next.images||[]).length))continue;
   const old=existing.get(next.id);
   if(!old){added.push(next);continue}
-  const changed=plain(old)!==plain(next)||mediaFingerprint(old)!==mediaFingerprint(next);
+  const mediaChanged=mediaFingerprint(old)!==mediaFingerprint(next)||!decodedMediaEqual(old,next);
+  const changed=plain(old)!==plain(next)||mediaChanged;
   if(!changed){
    // 即使题干未变，新母版中的人工审核事件、排除疑点及复核候选也需要同步。
    const merged={...old};let changedMetadata=false;
@@ -121,12 +124,12 @@ function compare(current,payload){
    if(changedMetadata){merged.qualityReviewV1=review;metadataUpdates.push({previous:old,next:merged})}
    continue;
   }
-    if(old.teacherEditedAt){conflicts.push({id:old.id,reason:'教师网页修改受保护',previous:old,incoming:next});continue;}
+    if(root.PhysicsBankPackage?.teacherEdited(old)||old.teacherEditedAt||old.teacherHistoryV1?.length||old.qualityEditHistory?.length){conflicts.push({id:old.id,reason:'教师网页修改受保护',previous:old,incoming:next});continue;}
     const newRev=Number(next.revision||1),oldRev=Number(old.revision||1);
   const isRepair=Array.isArray(next.qualityFixes)&&next.qualityFixes.length>0;
   const changedFields=['stem','answer','type','tags','relation'].filter(k=>JSON.stringify(old[k])!==JSON.stringify(next[k]));
   const approvedPatchSafe=changedFields.length>0&&changedFields.every(field=>(next.qualityFixes||[]).some(f=>f.field===field&&JSON.stringify(f.before)===JSON.stringify(old[field])));
-  const verifyMediaOnly=old.review==='approved'&&plain(old)===plain(next)&&mediaFingerprint(old)!==mediaFingerprint(next);
+  const verifyMediaOnly=old.review==='approved'&&plain(old)===plain(next)&&mediaChanged;
   if(verifyMediaOnly||((newRev>oldRev||isRepair)&&(old.review!=='approved'||approvedPatchSafe))){
    updates.push({previous:old,next:preserve(old,next,true),incoming:next,verifyMediaOnly});
   }else{
@@ -135,14 +138,21 @@ function compare(current,payload){
  }
  return {updates,added,conflicts,metadataUpdates};
 }
-function transactionApply(db,data,version,base){
+function transactionApply(db,data,version,base,expectedQuestions){
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(['questions','settings'],'readwrite');
   const qs=tx.objectStore('questions'),settings=tx.objectStore('settings');
+  let checkpoint;
+  try{
+  if(expectedQuestions){
+   const expected=new Map(expectedQuestions.map(q=>[q.id,q]));
+   for(const q of [...data.added,...data.updates.map(u=>u.next),...(data.metadataUpdates||[]).map(u=>u.next)]){const req=qs.get(q.id);req.onsuccess=()=>{if(!root.PhysicsBankPackage.equal(req.result||null,expected.get(q.id)||null))tx.abort()}}
+   const req=settings.get('bankVersionV2');req.onsuccess=()=>{if((req.result?.value||'')!==base)tx.abort()};
+  }
   for(const q of data.added)qs.put(q);
   for(const u of data.updates)qs.put(u.next);
   for(const u of data.metadataUpdates||[])qs.put(u.next);
-  const checkpoint={at:now(),from:base||'',to:version,
+  checkpoint={at:now(),from:base||'',to:version,
    updated:data.updates.map(u=>{
     const old=u.previous,cur=u.next;
     // 同图只备份文字/元数据，防止复制整套200MB题图导致本地容量耗尽。
@@ -157,50 +167,26 @@ function transactionApply(db,data,version,base){
   settings.put({id:'bankRollbackV2',value:checkpoint});
   settings.put({id:'bankVersionV2',value:version});
   settings.put({id:'bankUpdateConflictsV2',value:data.conflicts});
+  }catch(error){tx.abort();reject(error);return}
   tx.oncomplete=()=>resolve(checkpoint);
-  tx.onabort=()=>reject(tx.error||Error('空间不足，已自动回滚。'));
+  tx.onabort=()=>reject(tx.error||Error('题库被其他操作修改或存储失败，已取消并回滚本次更新。'));
   tx.onerror=()=>{}; // let transaction abort propagate
  });
 }
-async function decode(zip,questions){
- const cached=new Map();
- async function media(ref){
-  if(!ref)return '';
-  if(cached.has(ref))return cached.get(ref);
-  const item=zip.file(ref);if(!item)throw Error('题图缺失：'+ref);
-  const ext=ref.split('.').pop().toLowerCase();
-  const mime={jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',svg:'image/svg+xml',emf:'application/x-emf',wmf:'application/x-wmf'}[ext]||'image/png';
-  const data='data:'+mime+';base64,'+await item.async('base64');cached.set(ref,data);return data;
- }
- for(const q of questions){
-  for(const side of ['images','answerImages'])for(const im of q[side]||[]){
-   if(im.ref&&!im.data){im.data=await media(im.ref);delete im.ref}
-   if(!im.repair)continue;
-   for(const [refKey,dataKey] of [['candidateRef','candidateData'],['originalRef','originalData'],['alternativeCandidateRef','alternativeCandidateData'],['previewPngRef','previewPngData'],['legacyCandidateRef','legacyCandidateData']]){
-    if(im.repair[refKey]&&!im.repair[dataKey])im.repair[dataKey]=await media(im.repair[refKey]);
-   }
-  }
- }
-}
 async function update(file,options){
- if(!root.JSZip)throw Error('JSZip未加载');
- const zip=options.package?.zip||await root.JSZip.loadAsync(await file.arrayBuffer());
- const entry=zip.file('bank.json');if(!entry)throw Error('这不是标准题库ZIP：缺少bank.json');
- const bank=options.package?.bank||JSON.parse(await entry.async('text'));
- if(bank.format!=='physics-training-bank-v1'||!Array.isArray(bank.questions))throw Error('题库格式不匹配，已停止更新');
- if(!bank.questions.length)throw Error('题库为空，已停止更新');
- const idSet=new Set();
- for(const q of bank.questions){if(!q.id||idSet.has(q.id))throw Error('题库包含空或重复的题目ID，已停止更新：'+q.id);idSet.add(q.id)}
+ if(!root.PhysicsBankPackage)throw Error('统一题库包模块未加载。');
+ const pkg=options.package||await root.PhysicsBankPackage.read(file);
+ if(pkg.kind!=='update')throw Error('这是个人备份，请选择仅添加题目或恢复个人备份。');
+ const bank=pkg.bank;root.PhysicsBankPackage.validate(bank,'update');
  // bank.version=1 是JSON格式版本，不是题库批次。使用明确批次ID或文件名+内容校验码。
  const rawInfo=[file.name,bank.questions.length,bank.exportedAt||''].join('|');
  let fingerprint=2166136261;for(let i=0;i<rawInfo.length;i++){fingerprint^=rawInfo.charCodeAt(i);fingerprint=Math.imul(fingerprint,16777619)}
- const version=String(bank.bankVersion||bank.buildId||(file.name+'#'+(fingerprint>>>0).toString(36))).slice(0,150);
+ const version=String(bank.bankVersion||bank.buildId||(pkg.manifest?pkg.manifest.createdAt.slice(0,10)+'#'+pkg.manifest.bank.sha256.slice(0,12):file.name+'#'+(fingerprint>>>0).toString(36))).slice(0,150);
  const base=await options.getSetting('bankVersionV2')||'';
  if(base&&!isNewer(version,base))throw Error('所选题库版本可能早于现有版本，自动取消覆盖。现有：'+base+'；导入：'+version);
  let records=compare(options.getQuestions(),bank.questions);
  // 只解压将要写入的题图，原有未修改题不再反复加载，减少大型ZIP处理内存。
- const applyList=[...records.added,...records.updates.map(u=>u.incoming)];
- await decode(zip,applyList);
+ // 统一读取器已校验并还原正文、题图及历史资源。
  // 修改是否仅为题图，在载入后再作正式比较，防止误报
  const contentUpdates=[];
  for(const u of records.updates){
@@ -211,7 +197,7 @@ async function update(file,options){
   else if(JSON.stringify(next)!==JSON.stringify(u.previous))records.metadataUpdates.push({previous:u.previous,next});
  }
  records.updates=contentUpdates;
- const applied=await transactionApply(options.db,records,version,base);
+ const applied=await transactionApply(options.db,records,version,base,options.expectedQuestions);
  const merged=new Map(options.getQuestions().map(q=>[q.id,q]));
  for(const q of records.added)merged.set(q.id,q);
  for(const u of records.updates)merged.set(u.next.id,u.next);

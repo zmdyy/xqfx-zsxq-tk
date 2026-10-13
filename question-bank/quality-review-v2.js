@@ -218,12 +218,12 @@ async function saveChange(q,changes,kind){
  const fields=Object.keys(changes).filter(k=>JSON.stringify(changes[k])!==JSON.stringify(q[k]));
  if(!fields.length){message='没有内容变化';return true}
  const before={},changed={};for(const k of fields){before[k]=q[k];changed[k]=changes[k]}
- const old={...q,qualityEditHistory:q.qualityEditHistory,qualityReviewV1:q.qualityReviewV1};
+ const old={...q,teacherEditedAt:q.teacherEditedAt,qualityEditHistory:q.qualityEditHistory,qualityReviewV1:q.qualityReviewV1};
  const now=new Date().toISOString();
  try{
   Object.assign(q,changed);
   if(fields.includes('tags'))api.updateConcepts?.(q);
-  q.revision=Number(q.revision||1)+1;q.updatedAt=now;
+  q.revision=Number(q.revision||1)+1;q.updatedAt=now;q.teacherEditedAt=now;
   q.qualityEditHistory=[...(q.qualityEditHistory||[]),{at:now,label:kind,before,changes:changed}];
   const review={...(q.qualityReviewV1||{})};
   for(const f of fields){

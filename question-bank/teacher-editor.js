@@ -4,9 +4,9 @@
 'use strict';
 const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone=x=>JSON.parse(JSON.stringify(x)),stamp=()=>new Date().toISOString();
-const fields=['stem','answer','tags','type','difficulty','relation','review','parts','images','answerImages','normalizationDecisionsV1','sourceEvidenceV1','sourceTitle'];
+const fields=root.PhysicsBankPackage.editorFields;
 const content=q=>Object.fromEntries(fields.map(k=>[k,q[k]??(['tags','parts','images','answerImages','normalizationDecisionsV1'].includes(k)?[]:'')]));
-const fingerprint=q=>JSON.stringify(content(q));
+const fingerprint=q=>root.PhysicsBankPackage.fingerprint(q);
 let api,base,work,dialog,range,activeField,mathTarget,mathRange,undo=[],redo=[],writing=Promise.resolve(),saveBusy=false,session=0,issues=[],issueIndex=0;
 let viewMode='edit',viewScroll={},backgroundScroll=null;
 let recentChanges=[],feedback=null,resumeIndex=0,scanTimer,appliedTimer,composing=false;
@@ -189,8 +189,8 @@ function restoreHistory(){const records=base.teacherHistoryV1||[];$('teHistoryBo
 async function open(id,options={}){
  if(dialog?.open){collect();await writing;}const found=await api.getQuestion(id)||options.newQuestion;if(!found)return;
  session++;base=clone(found);if(!base.id)base.id=id;work=clone(base);undo=[];redo=[];issueIndex=0;const d=await api.getDraft(id);let note='未修改';
- if(d){if(d.baseFingerprint===fingerprint(base)){Object.assign(work,clone(d.content));note='已恢复未正式保存的草稿'}else{note='存在基于旧版本的草稿，请在历史中查看后恢复';}}
- build(options);renderFields();fillMeta();comparison();palette();scan();status(note);if(d&&d.baseFingerprint!==fingerprint(base)){$('teOldDraft').hidden=false;$('teOldDraft').onclick=()=>{if(confirm('恢复旧草稿会替换当前编辑内容，正式版本在点击保存前不变。继续？')){checkpoint();Object.assign(work,clone(d.content));renderFields();fillMeta();draft();scan()}}}lockBackground();if(!dialog.open)dialog.showModal();$('teDocumentScroll').scrollTop=0;$('teControls').scrollTop=0;getSelection().removeAllRanges();locate(false);
+ if(d){if(root.PhysicsBankPackage.normalizeFingerprint(d.baseFingerprint)===fingerprint(base)){Object.assign(work,clone(d.content));note='已恢复未正式保存的草稿'}else{note='存在基于旧版本的草稿，请在历史中查看后恢复';}}
+ build(options);renderFields();fillMeta();comparison();palette();scan();status(note);if(d&&root.PhysicsBankPackage.normalizeFingerprint(d.baseFingerprint)!==fingerprint(base)){$('teOldDraft').hidden=false;$('teOldDraft').onclick=()=>{if(confirm('恢复旧草稿会替换当前编辑内容，正式版本在点击保存前不变。继续？')){checkpoint();Object.assign(work,clone(d.content));renderFields();fillMeta();draft();scan()}}}lockBackground();if(!dialog.open)dialog.showModal();$('teDocumentScroll').scrollTop=0;$('teControls').scrollTop=0;getSelection().removeAllRanges();locate(false);
 }
 function build(options){
  clearTimeout(scanTimer);clearTimeout(appliedTimer);clearHighlights();issues=[];feedback=null;recentChanges=[];resumeIndex=0;

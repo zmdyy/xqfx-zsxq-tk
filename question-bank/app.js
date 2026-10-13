@@ -23,7 +23,7 @@ function putManyQuestions(items){return new Promise((yes,no)=>{const tx=db.trans
 function del(table,id){return new Promise((yes,no)=>{const tx=db.transaction(table,'readwrite');tx.objectStore(table).delete(id);tx.oncomplete=()=>yes();tx.onerror=()=>no(tx.error)})}
 async function bankSetting(key){return (await getOne('settings',key))?.value}
 async function saveBankSetting(key,value){await put('settings',{id:key,value})}
-async function init(){try{db=await openDB();state.questions=await getAll('questions');state.events=await getAll('events');let m=await getOne('settings','meta');state.meta=m?m.value:{};await loadCatalog();const imports=await bankSetting('bankImportHistoryV1')||[];state.importSelection=imports.filter(r=>r.addedIds?.length).at(-1)||null;bind();initTeacherEditor();initBankManagement();window.PhysicsBankInlineDetails?.init?.({getQuestions:()=>state.questions,catalogById:state.catalogById,catalogByName:state.catalogByName,focusConcept,resetDetailFilters});window.PhysicsImageRepair?.init?.({getQuestions:()=>state.questions,getEvents:()=>state.events,getMeta:()=>state.meta,save:q=>put('questions',q),onChange:()=>{invalidateWordDownload();render()}});window.PhysicsQualityReview?.init?.({getQuestions:()=>state.questions.filter(q=>!q.archivedAsDuplicate),save:q=>put('questions',q),saveMany:putManyQuestions,openEditor,updateConcepts:applyConcepts,catalogByName:state.catalogByName,getSetting:bankSetting,setSetting:saveBankSetting,onChange:()=>{invalidateWordDownload();render()}});if(window.StudentPracticeExport){await window.StudentPracticeExport.init({getEvents:()=>state.events,onSelectionChange:invalidateWordDownload})}const params=new URLSearchParams(location.search);const cid=params.get('concept_id'),cname=params.get('concept_name');if(cname){focusConcept(cname)}else if(cid){const c=state.catalogById.get(cid);if(c){$('conceptFilter').value=c.name;tell('已从知识星球定位：'+c.name)}}renderAssessmentOptions();if(params.get('assessment_id')&&$('assessmentFilter'))$('assessmentFilter').value=params.get('assessment_id');render()}catch(e){console.error(e);tell('题库启动失败：'+e.message,true)}}
+async function init(){try{db=await openDB();state.questions=await getAll('questions');state.events=await getAll('events');let m=await getOne('settings','meta');state.meta=m?m.value:{};await loadCatalog();const imports=await bankSetting('bankImportHistoryV1')||[];state.importSelection=imports.filter(r=>r.addedIds?.length).at(-1)||null;bind();initTeacherEditor();initBankManagement();window.PhysicsBankInlineDetails?.init?.({getQuestions:()=>state.questions,catalogById:state.catalogById,catalogByName:state.catalogByName,focusConcept,resetDetailFilters});window.PhysicsImageRepair?.init?.({getQuestions:()=>state.questions,getEvents:()=>state.events,getMeta:()=>state.meta,getSnapshot:getBankSnapshot,save:q=>put('questions',q),onChange:()=>{invalidateWordDownload();render()}});window.PhysicsQualityReview?.init?.({getQuestions:()=>state.questions.filter(q=>!q.archivedAsDuplicate),save:q=>put('questions',q),saveMany:putManyQuestions,openEditor,updateConcepts:applyConcepts,catalogByName:state.catalogByName,getSetting:bankSetting,setSetting:saveBankSetting,onChange:()=>{invalidateWordDownload();render()}});if(window.StudentPracticeExport){await window.StudentPracticeExport.init({getEvents:()=>state.events,onSelectionChange:invalidateWordDownload})}const params=new URLSearchParams(location.search);const cid=params.get('concept_id'),cname=params.get('concept_name');if(cname){focusConcept(cname)}else if(cid){const c=state.catalogById.get(cid);if(c){$('conceptFilter').value=c.name;tell('已从知识星球定位：'+c.name)}}renderAssessmentOptions();if(params.get('assessment_id')&&$('assessmentFilter'))$('assessmentFilter').value=params.get('assessment_id');render()}catch(e){console.error(e);tell('题库启动失败：'+e.message,true)}}
 async function loadCatalog(){try{let r=await fetch('../data/knowledge/exam-annotation-catalog.json');if(!r.ok)throw Error('HTTP '+r.status);let j=await r.json();state.catalog=j.concepts||[];state.catalog.forEach(c=>{state.catalogByName.set(norm(c.name),c);state.catalogById.set(c.concept_id,c)});for(let id of ['conceptFilter','conceptFilter2'])$(''+id).insertAdjacentHTML('beforeend',state.catalog.map(c=>'<option value="'+esc(c.name)+'">'+esc(c.module+' / '+c.name)+'</option>').join(''));window.PhysicsConceptAssessment?.configure(window.CONCEPT_ASSESSMENT_CATALOG);state.questions.forEach(applyConcepts);renderAssessmentOptions()}catch(e){tell('知识点目录暂不可用，仍可通过题目文字检索。',true)}}
 function actualAssignments(id,cls){return state.events.filter(e=>e.status==='assigned'&&(!cls||e.className===cls)&&e.items.some(t=>t.id.split('::')[0]===id))}
 function usedRecently(id,cls){return actualAssignments(id,cls).some(e=>new Date(e.date).getTime()>Date.now()-30*86400000)}
@@ -93,13 +93,22 @@ function render(){refreshSourceFilters();let qs=state.questions.filter(matches);
 return '<article class="qcard"><div class="qtop"><strong>'+esc(q.type+' · 第'+(q.sourceNo||'?')+'题')+'</strong><div class="right"><span class="tag">'+esc(q.difficulty||'难度待审')+'</span><span class="tag '+(q.review==='approved'?'approved':'')+'">'+(q.review==='approved'?'已审核':'待审核')+'</span></div></div><div class="qsource"><strong title="'+esc(q.source||'')+'">'+esc(window.PhysicsQuestionSources?.title(q)||q.source)+'</strong>'+esc(name)+' · '+esc(quality)+' · 已布置 '+actualAssignments(q.id,'').length+' 次</div>'+sourceDetails(q)+'<div class="qstem">'+(window.PhysicsMathContent?window.PhysicsMathContent.html(window.PhysicsMathContent.preview(q.stem||'',600)):esc((q.stem||'').slice(0,260)))+'</div><div class="qimage">'+pics+'</div><div class="qfooter"><div class="qfootleft">'+(q.concept_ids?.length?q.concept_ids.map(id=>state.catalogById.get(id)?.name||id):q.tags||[]).slice(0,8).map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div><div class="qfootright"><button class="small" data-edit="'+esc(q.id)+'">编辑 / 审核</button><button class="small primary" data-add="'+esc(q.id)+'">＋整题</button></div></div>'+(parts?'<details><summary>独立子题 ('+q.parts.length+')</summary>'+parts+'</details>':'')+'</article>'}).join('')+(qs.length>60?'<p class="hint">仅显示前60条，请进一步筛选。</p>':''):'<p class="empty">未找到题目。可以导入原始 Word，或调整筛选条件。</p>';renderBasket();renderUsage();renderActiveFilters();window.StudentPracticeExport?.renderHistory?.();window.PhysicsBankInlineDetails?.refreshIfOpen?.()}
 function renderBasket(){$('basketCount').textContent=state.basket.length+'道';$('basket').innerHTML=state.basket.length?state.basket.map((id,i)=>'<div class="basket-item"><span class="title">'+esc((i+1)+'. '+selectedLabel(id))+'</span><button data-up="'+i+'" '+(!i?'disabled':'')+'>↑</button><button data-down="'+i+'" '+(i===state.basket.length-1?'disabled':'')+'>↓</button><button data-remove="'+i+'">×</button></div>').join(''):'<p class="hint">尚未选题；可选整题或经审核的独立小问。</p>'}
 function renderUsage(){let cls=$('classFilter').value.trim();let list=state.events.filter(e=>e.status==='assigned'&&(!cls||e.className===cls)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);$('usageSummary').innerHTML=list.length?list.map(e=>'<div class="event"><b>'+esc(e.className)+'</b> · '+esc(e.date.slice(0,10))+' · '+e.items.length+'题<br>'+esc(e.title||'精准练习')+'<br><button class="small" data-feedback-event="'+esc(e.id)+'">录入反馈</button> <button class="small" data-cancel-event="'+esc(e.id)+'">撤回布置</button>'+(e.feedback?'<br>'+esc(e.feedback.note||'已反馈'):'')+'</div>').join(''):'<p class="hint">本班尚无已确认的使用记录。</p>'}
-function applyIndex(q){for(let r of q.sourceRefs||[{file:q.source,no:q.sourceNo}]){let d=state.meta[sourceBase(r.file)]?.[r.no];if(!d)continue;q.difficulty=q.difficulty||d.difficulty;q.type=q.type==='其他'?d.type:q.type;q.tags=q.tags?.length?q.tags:d.tags;applyConcepts(q);return true}return false}
-async function parseDocIndex(file){let buf=await file.arrayBuffer(),txt=new TextDecoder('utf-8').decode(buf);if((txt.match(/�/g)||[]).length>15)txt=new TextDecoder('gb18030').decode(buf);if(!/<table/i.test(txt))throw Error('旧版二进制 DOC 无法直接解析，请另存为 DOCX。配套 HTML 格式的 .doc 目录可以直接导入。');let doc=new DOMParser().parseFromString(txt,'text/html'),sec='',base=sourceBase(file.name),count=0,updated=0;state.meta[base]=state.meta[base]||{};for(let tr of doc.querySelectorAll('tr')){let tds=tr.querySelectorAll('td');if(tds.length===1){sec=tds[0].textContent;continue}if(tds.length<3)continue;let n=tds[0].textContent.trim();if(!/^\d+$/.test(n))continue;state.meta[base][n]={difficulty:tds[1].textContent.trim(),tags:uniqueTags(tds[2].textContent),type:inferType(sec)};count++}for(let q of state.questions)if(applyIndex(q)){await put('questions',q);updated++}await put('settings',{id:'meta',value:state.meta});tell('目录导入：识别 '+count+' 条；更新现有原题 '+updated+' 条。') }
+function applyIndex(q,meta=state.meta){for(let r of q.sourceRefs||[{file:q.source,no:q.sourceNo}]){let d=meta[sourceBase(r.file)]?.[r.no];if(!d)continue;q.difficulty=q.difficulty||d.difficulty;q.type=q.type==='其他'?d.type:q.type;q.tags=q.tags?.length?q.tags:d.tags;applyConcepts(q);return true}return false}
+async function parseDocIndex(file){
+ const buf=await file.arrayBuffer();let txt=new TextDecoder('utf-8').decode(buf);if((txt.match(/�/g)||[]).length>15)txt=new TextDecoder('gb18030').decode(buf);
+ if(!/<table/i.test(txt))throw Error('旧版二进制 DOC 请先另存为 DOCX。');
+ const doc=new DOMParser().parseFromString(txt,'text/html'),base=sourceBase(file.name),previous=await getOne('settings','meta'),meta=window.PhysicsBankPackage.clone(previous?.value||{});let section='',count=0;
+ meta[base]=meta[base]||{};
+ for(const tr of doc.querySelectorAll('tr')){const cells=tr.querySelectorAll('td');if(cells.length===1){section=cells[0].textContent;continue}if(cells.length<3)continue;const no=cells[0].textContent.trim();if(!/^\d+$/.test(no))continue;meta[base][no]={difficulty:cells[1].textContent.trim(),tags:uniqueTags(cells[2].textContent),type:inferType(section)};count++}
+ const original=await getAll('questions'),working=window.PhysicsBankPackage.clone(original),changed=working.filter(q=>applyIndex(q,meta));
+ await commitImportedQuestions(changed,original,[{record:{id:'meta',value:meta},previous:previous||null}]);state.questions=working;state.meta=meta;tell('目录导入：识别 '+count+' 条；更新现有原题 '+changed.length+' 条。');
+}
+
 function sameMedia(a,b){return a.length===b.length&&a.every((m,i)=>hash(m.data||'')===hash(b[i]?.data||''))}
 async function prepareDocx(file){if(!window.JSZip)throw Error('缺少 JSZip');let zip=await JSZip.loadAsync(await file.arrayBuffer()),f=zip.file('word/document.xml');if(!f)throw Error('不是有效的 DOCX 文件');let doc=new DOMParser().parseFromString(await f.async('text'),'application/xml'),body=Array.from(doc.getElementsByTagName('*')).find(x=>x.localName==='body');if(!body)throw Error('缺少 Word 正文');
 let rels={},rel=zip.file('word/_rels/document.xml.rels');if(rel){let rd=new DOMParser().parseFromString(await rel.async('text'),'application/xml');Array.from(rd.getElementsByTagName('*')).filter(x=>x.localName==='Relationship').forEach(x=>{let path=x.getAttribute('Target')||'';if(/image/i.test(x.getAttribute('Type')||'')&&!/^https?:/.test(path))rels[x.getAttribute('Id')]=path.startsWith('/')?path.slice(1):'word/'+path.replace(/^\.\//,'')})}
 let questions=[],answers=new Map(),curr=null,phase='question',type='其他',cache={};
-async function imagesFrom(p){let out=[];for(let n of Array.from(p.getElementsByTagName('*')).filter(x=>x.localName==='blip')){let rid=n.getAttribute('r:embed')||n.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','embed'),path=rels[rid];if(!path)continue;path=path.replace(/word\/\.\.\//g,'');if(!cache[path]){let z=zip.file(path);if(!z)continue;let ext=path.split('.').pop().toLowerCase();cache[path]={data:'data:'+(ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='gif'?'image/gif':ext==='svg'?'image/svg+xml':'image/png')+';base64,'+await z.async('base64'),sourcePath:path}}out.push({...cache[path]})}return out}
+async function imagesFrom(p){let out=[];for(let n of Array.from(p.getElementsByTagName('*')).filter(x=>x.localName==='blip')){let rid=n.getAttribute('r:embed')||n.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','embed'),path=rels[rid];if(!path)continue;path=path.replace(/word\/\.\.\//g,'');if(!cache[path]){let z=zip.file(path);if(!z)throw Error('Word配图文件缺失：'+path);let ext=path.split('.').pop().toLowerCase();cache[path]={data:'data:'+(ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='gif'?'image/gif':ext==='svg'?'image/svg+xml':'image/png')+';base64,'+await z.async('base64'),sourcePath:path}}out.push({...cache[path]})}return out}
 for(let child of Array.from(body.children)){let paras=child.localName==='p'?[child]:child.localName==='tbl'?[child]:[];for(let p of paras){let txt=(window.PhysicsMathContent?window.PhysicsMathContent.fromWordNode(p):Array.from(p.getElementsByTagName('*')).filter(x=>['t','tab','br'].includes(x.localName)).map(x=>x.localName==='t'?x.textContent:x.localName==='tab'?' ':'\n').join('')).trim();if(txt.includes('答案解析部分')){phase='answer';curr=null;continue}let m=txt.match(/^\s*(\d{1,3})[．.、]\s*(.*)$/),a=txt.match(/^\s*(\d{1,3})[．.、]\s*【答案】(.*)$/);if(phase==='question'&&/^[一二三四五六七八九十]+[、．.]\s*(选择|填空|作图|计算|实验|综合)/.test(txt)){type=inferType(txt);continue}
 if(phase==='answer'&&a){curr={n:a[1],text:a[2],images:[]};answers.set(curr.n,curr)}
 else if(phase==='question'&&m){curr={n:m[1],text:m[2],images:[],type};questions.push(curr)}
@@ -164,37 +173,49 @@ function estimateMerge(questions){
  return {added,existing,conflicts:0};
 }
 async function prepareImportFile(file){
- if(/\.docx$/i.test(file.name)){const questions=await prepareDocx(file);return {file,kind:'docx',questions,plan:estimateMerge(questions),description:'Word试卷：按题号提取题干、答案和配图，保留原文件名。导入后请核对公式与图片。'}}
+ if(/\.docx$/i.test(file.name)){const questions=await prepareDocx(file);await window.PhysicsBankPackage.read({format:'physics-training-bank-v1',questions});return {file,kind:'docx',questions,plan:estimateMerge(questions),description:'Word试卷：按题号提取题干、答案和配图，保留原文件名。导入后请核对公式与图片。'}}
  if(/\.doc$/i.test(file.name)){const text=new TextDecoder().decode(await file.arrayBuffer());if(!/<table/i.test(text))throw Error('旧版二进制 DOC 请先另存为 DOCX。');return {file,kind:'index',description:'配套题目目录：补充现有题目的知识点、难度和题型，不作为完整试卷导入。'}}
- let j,zip;
- if(/\.zip$/i.test(file.name)){
-  zip=await JSZip.loadAsync(await file.arrayBuffer());const backup=zip.file('teacher-bank-backup.json'),bank=zip.file('bank.json');
-  if(backup&&bank)throw Error('ZIP同时含题库与备份入口，无法确定用途，请检查文件。');
-  const entry=backup||bank;if(!entry)throw Error('无法识别这个ZIP。请选择题库更新包或网页导出的完整备份。');
-  j=JSON.parse(await entry.async('text'));
-  if(j.format!=='physics-training-bank-v1'||!Array.isArray(j.questions))throw Error('题库包格式不匹配。');
-  if(bank){
-   const ids=new Set();for(const q of j.questions){if(!q.id||!q.stem||ids.has(q.id))throw Error('题库包包含空题干或无效、重复ID。');ids.add(q.id)}
-   if(!j.questions.length)throw Error('题库包没有题目。');
-   const diff=window.PhysicsBankVersionUpdate.compare(state.questions,j.questions);
-   return {file,kind:'update',questions:j.questions,package:{zip,bank:j},plan:{added:diff.added.length,existing:j.questions.length-diff.added.length-diff.conflicts.length,conflicts:diff.conflicts.length},description:'题库更新包：添加新题，按修订规则更新旧题；教师修改受保护，冲突保留本机内容。'};
-  }
- }else if(/\.json$/i.test(file.name))j=JSON.parse(await file.text());else throw Error('请选择 DOCX、配套DOC目录、ZIP或旧JSON文件。');
- const isBackup=!!(j?.format==='physics-training-bank-v1'&&(zip||Array.isArray(j.settings)||Array.isArray(j.events)));
+ let j;
+ if(/\.zip$/i.test(file.name))return preparePackage(file,await window.PhysicsBankPackage.read(file));
+ if(/\.json$/i.test(file.name))j=JSON.parse(await file.text());else throw Error('请选择 DOCX、配套DOC目录、ZIP或旧JSON文件。');
+ if([window.PhysicsBankPackage.FORMAT,'physics-training-bank-v1'].includes(j?.format))return preparePackage(file,await window.PhysicsBankPackage.read(j));
  const rows=Array.isArray(j)?j:(j?.questions||j?.items);if(!Array.isArray(rows))throw Error('文件中没有可识别的题目数组。');
- if(isBackup)return {file,kind:'backup',data:j,questions:j.questions||[],plan:estimateMerge(j.questions||[]),description:'个人备份：包含题目与个人工作记录。可仅添加题目，或恢复完整备份。'};
  const questions=rows.filter(x=>x.stem||x.text).map(x=>({...x,id:x.id||'q'+hash(norm(x.stem||x.text)),stem:x.stem||x.text,source:x.source||file.name,sourceNo:x.sourceNo||x.question_no||'',type:x.type||'其他',answer:x.answer||'',images:x.images||[],answerImages:x.answerImages||[],tags:uniqueTags(x.tags||x.knowledge_points),difficulty:x.difficulty||'',concept_ids:x.concept_ids||[],relation:x.relation||'pending',review:'pending',revision:x.revision||1,parts:x.parts||[],createdAt:x.createdAt||now(),updatedAt:now()}));
- if(!questions.length)throw Error('没有识别到完整题干。');
+ if(!questions.length)throw Error('没有识别到完整题干。');await window.PhysicsBankPackage.read({format:'physics-training-bank-v1',questions});
  return {file,kind:'json',questions,plan:estimateMerge(questions),description:'题目JSON：去重后添加题目，保留现有教师修改和使用记录。'};
 }
+function preparePackage(file,pkg){
+ const j=pkg.bank,description=pkg.legacy?'（兼容旧文件）':'（统一格式V2；正文和资源已通过校验）';
+ if(pkg.kind==='backup')return {file,kind:'backup',data:j,questions:j.questions,package:pkg,plan:estimateMerge(j.questions),description:'个人备份'+description+'：可仅添加题目，或恢复完整个人记录。'};
+ const diff=window.PhysicsBankVersionUpdate.compare(state.questions,j.questions);
+ return {file,kind:'update',questions:j.questions,package:pkg,plan:{added:diff.added.length,existing:j.questions.length-diff.added.length-diff.conflicts.length,conflicts:diff.conflicts.length},description:'题库更新包'+description+'：添加新题，按修订规则更新旧题；教师修改受保护。'};
+}
+async function commitImportedQuestions(changes,original,settings=[]){
+ const expected=new Map(original.map(q=>[q.id,q]));
+ await new Promise((yes,no)=>{
+  const tx=db.transaction(['questions','settings'],'readwrite'),store=tx.objectStore('questions');let failure;
+  const abort=error=>{failure=error;try{tx.abort()}catch(e){}};
+  tx.oncomplete=yes;tx.onabort=()=>no(failure||tx.error||Error('导入事务失败，已回滚。'));tx.onerror=()=>{};
+  try{
+   for(const q of changes){const req=store.get(q.id);req.onsuccess=()=>{if(failure)return;try{if(!window.PhysicsBankPackage.equal(req.result||null,expected.get(q.id)||null))throw Error('题库已被其他操作修改，已取消本次导入，请重新选择文件。');store.put(q)}catch(e){abort(e)}}}
+   for(const item of settings){const settingsStore=tx.objectStore('settings'),req=settingsStore.get(item.record.id);req.onsuccess=()=>{if(failure)return;try{if(!window.PhysicsBankPackage.equal(req.result||null,item.previous))throw Error('题库目录已被其他操作修改，已取消导入。');settingsStore.put(item.record)}catch(e){abort(e)}}}
+  }catch(e){abort(e)}
+ });
+}
+
 async function applyPreparedImport(p,mode){
  if(p.kind==='index'){await parseDocIndex(p.file);return {summary:$('status').textContent}}
  if(p.kind==='update'){
-  const r=await window.PhysicsBankVersionUpdate.update(p.file,{db,getQuestions:()=>state.questions,setQuestions:items=>{state.questions=items},getSetting:bankSetting,package:p.package,onChange:()=>{invalidateWordDownload();render()}});
+  const original=await getAll('questions'),working=window.PhysicsBankPackage.clone(original);
+  const r=await window.PhysicsBankVersionUpdate.update(p.file,{db,getQuestions:()=>working,expectedQuestions:original,setQuestions:items=>{state.questions=items},getSetting:bankSetting,package:p.package,onChange:()=>{invalidateWordDownload();render()}});
   return {...r,summary:'新增 '+r.added+' 道，更新 '+r.updated+' 道，同步审核信息 '+r.metadataSynced+' 道，冲突保留 '+r.conflicts+' 道。'};
  }
  if(p.kind==='backup'&&mode==='restore'){await restoreObject(p.data);return {summary:'已恢复 '+(p.questions.length)+' 道备份题目及个人记录；当前其他题目保留。'}}
- const r=await window.QuestionBankMerge.mergeQuestions(structuredClone(p.questions),{questions:state.questions,save:q=>put('questions',q),updateConcepts:applyConcepts,now,hash});
+ window.PhysicsBankPackage.validate({questions:p.questions},p.kind==='backup'?'backup':'update');
+ const original=await getAll('questions'),working=window.PhysicsBankPackage.clone(original),changes=new Map();
+ const r=await window.QuestionBankMerge.mergeQuestions(window.PhysicsBankPackage.clone(p.questions),{questions:working,save:async q=>{changes.set(q.id,q)},updateConcepts:applyConcepts,now,hash});
+ await commitImportedQuestions([...changes.values()],original);state.questions=working;
+
  return {...r,updated:r.qualityUpdated,summary:'新增 '+r.added+' 道，合并重复 '+r.merged+' 道，质量修订 '+r.qualityUpdated+' 道，疑似变式保留 '+r.suspected+' 道。'+(p.kind==='docx'?'请核对答案、公式和图片。':'')};
 }
 function initBankManagement(){window.PhysicsBankManagement.init({questions:()=>state.questions,prepare:prepareImportFile,apply:applyPreparedImport,getSetting:bankSetting,setSetting:saveBankSetting,newQuestion,backup:()=>{tell('正在生成完整ZIP备份…');return backupZip().catch(e=>tell('备份失败：'+e.message,true))},viewAdded:viewImportAdded,notify:tell,rememberAdded:record=>{state.importSelection=record},onChange:()=>{invalidateWordDownload();render()}})}
@@ -270,7 +291,16 @@ async function commitTeacherEdit(base,work){
  });
  const i=state.questions.findIndex(q=>q.id===saved.id);if(i<0)state.questions.push(saved);else state.questions[i]=saved;invalidateWordDownload();render();return saved;
 }
-async function backupZip(){const settings=await getAll('settings');const data={format:'physics-training-bank-v1',exportedAt:now(),questions:state.questions,events:state.events,meta:state.meta,settings};const zip=new JSZip();zip.file('teacher-bank-backup.json',JSON.stringify(data));download(await zip.generateAsync({type:'blob',compression:'DEFLATE'}),'私人题库完整备份_'+today()+'.zip');tell('已导出完整题库、图片、版本历史与草稿。')}
+async function getBankSnapshot(){
+ const stores=['questions','events','settings'];
+ const snapshot=await new Promise((yes,no)=>{const tx=db.transaction(stores,'readonly'),out={};for(const key of stores){const req=tx.objectStore(key).getAll();req.onsuccess=()=>{out[key]=req.result}}tx.oncomplete=()=>yes(out);tx.onabort=()=>no(tx.error||Error('读取备份快照失败'));tx.onerror=()=>{}});
+ return {format:'physics-training-bank-v1',exportedAt:now(),...snapshot,meta:snapshot.settings.find(s=>s.id==='meta')?.value||{}};
+}
+async function backupZip(){
+ const data=await getBankSnapshot(),result=await window.PhysicsBankPackage.create(data,{kind:'backup'});
+ download(result.blob,'私人题库完整备份_'+today()+'.zip');tell('已导出统一V2完整备份：'+data.questions.length+'道题，'+result.resourceCount+'份独立资源；含图片、版本历史、草稿和导入记录。');
+}
+
 function legacyOpenEditor(id){let q=state.questions.find(x=>x.id===id);if(!q)return;state.current=id;$('editorTitle').textContent='审核题目 · '+q.source+' · 第'+q.sourceNo+'题';
 $('editorBody').innerHTML='<div class="editor-fields">'+field('题干（包含公共情境）','editStem',q.stem,true)+field('答案与简短解析','editAnswer',q.answer,true)+field('知识点（用分号分隔）','editTags',(q.tags||[]).join('；'))+
 '<label>题型<select id="editType">'+['作图题','选择题','填空题','实验题','计算题','综合题','其他'].map(x=>'<option '+(q.type===x?'selected':'')+'>'+x+'</option>').join('')+'</select></label>'+
@@ -296,8 +326,12 @@ function download(blob,name){let url=URL.createObjectURL(blob),a=document.create
 async function backup(onlyHistory){let j={settings:onlyHistory?[]:await getAll('settings'),format:'physics-training-bank-v1',exportedAt:now(),questions:onlyHistory?[]:state.questions,events:state.events,meta:onlyHistory?{}:state.meta};download(new Blob([JSON.stringify(j)],{type:'application/json'}),(onlyHistory?'题目使用历史_':'私人题库完整备份_')+today()+'.json');tell('本地备份已导出，请避免公开传播第三方题目。')}
 
 async function restoreObject(j){
- const qs=structuredClone(j.questions||[]),events=structuredClone(j.events||[]),settings=j.settings||[];for(const q of qs)applyConcepts(q);const meta={...state.meta,...(j.meta||{})};
- await new Promise((yes,no)=>{const tx=db.transaction(['questions','events','settings'],'readwrite');for(const q of qs)tx.objectStore('questions').put(q);for(const e of events)tx.objectStore('events').put(e);for(const setting of settings)if(setting&&typeof setting.id==='string')tx.objectStore('settings').put(setting);tx.objectStore('settings').put({id:'meta',value:meta});tx.oncomplete=yes;tx.onerror=()=>no(tx.error);tx.onabort=()=>no(tx.error||Error('备份恢复失败，未应用部分内容'))});
+ window.PhysicsBankPackage.validate(j,'backup');const qs=window.PhysicsBankPackage.clone(j.questions||[]),events=window.PhysicsBankPackage.clone(j.events||[]),settings=j.settings||[];for(const q of qs)applyConcepts(q);const meta={...state.meta,...(j.meta||settings.find(s=>s.id==='meta')?.value||{})};
+ await new Promise((yes,no)=>{
+  const tx=db.transaction(['questions','events','settings'],'readwrite');let failure;
+  tx.oncomplete=yes;tx.onabort=()=>no(failure||tx.error||Error('备份恢复失败，已完整回滚。'));tx.onerror=()=>{};
+  try{for(const q of qs)tx.objectStore('questions').put(q);for(const e of events)tx.objectStore('events').put(e);for(const setting of settings)tx.objectStore('settings').put(setting);tx.objectStore('settings').put({id:'meta',value:meta})}catch(e){failure=e;tx.abort()}
+ });
  const merged=new Map(state.questions.map(q=>[q.id,q]));for(const q of qs)merged.set(q.id,q);state.questions=[...merged.values()];const ev=new Map(state.events.map(e=>[e.id,e]));for(const e of events)ev.set(e.id,e);state.events=[...ev.values()];state.meta=meta;invalidateWordDownload();window.StudentPracticeExport?.renderHistory?.();
 }
 async function assignBasket(){if(!state.basket.length)return tell('试题篮为空',true);let cl=prompt('实际布置给哪个班级？',$('classFilter').value||'801');if(!cl||!cl.trim())return;let day=prompt('实际布置日期（YYYY-MM-DD）',today());if(!day)return;if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return tell('日期格式错误',true);let title=prompt('练习名称','物理精准练习')||'物理精准练习';let items=state.basket.map(id=>({id,revision:findQuestion(id)?.revision||1})),fingerprint=hash(cl.trim()+'|'+day+'|'+items.map(x=>x.id).sort().join('|'));if(state.events.some(e=>e.status==='assigned'&&e.fingerprint===fingerprint))return tell('同班同日同一套题已记录，避免重复计次。',true);if(!confirm('已经实际布置或印发给学生？只有确认后才计入使用次数。'))return;let ev={id:uid(),fingerprint,className:cl.trim(),date:day+'T12:00:00',title,items,status:'assigned',createdAt:now()};state.events.push(ev);await put('events',ev);$('classFilter').value=cl.trim();render();tell('已记录 '+cl+' 班实际布置 '+items.length+'题。')}

@@ -127,54 +127,10 @@ async function exportZip(){
  busy=true;$('repairExportBtn').disabled=true;
  $('repairNotice').textContent='正在打包所有题目和原图；大题库可能需要一些时间…';
  try{
-   const zip=new root.JSZip(),memo=new Map();
-   function addData(uri,folder){
-     if(!uri)return null;
-     const match=alphabet.exec(uri);if(!match)throw Error('存在不支持的图像编码');
-     let key=folder+'|'+uri.length+'|'+uri.slice(0,96)+'|'+uri.slice(-96);
-     if(memo.has(key))return memo.get(key);
-     const parsed=asBytes(uri),path=folder+'/'+folder.replace(/[^a-z]/g,'').slice(0,10)+'_'+memo.size+'.'+extension(parsed.mime);
-     zip.file(path,parsed.bytes,{binary:true,compression:'STORE'});
-     memo.set(key,path);return path;
-   }
-   // Never mutate IndexedDB records while preparing a ZIP.
-   const out=api.getQuestions().map(q=>{
-     const cloned={...q};
-     for(const side of ['images','answerImages']){
-       cloned[side]=(q[side]||[]).map(im=>{
-         const copy={...im},review=copy.repair?{...copy.repair}:null;
-         const raw=im.data||im.src||'';
-         if(raw)copy.ref=addData(raw,'media');
-         delete copy.data;delete copy.src;
-         if(review){
-           const original=review.originalData||(review.status==='approved'?'':raw);
-           const candidate=review.candidateData||(review.status==='approved'?raw:'');
-           if(original)review.originalRef=addData(original,'repair-originals');
-           if(candidate)review.candidateRef=addData(candidate,'repair-candidates');
-           if(review.previewPngData)review.previewPngRef=addData(review.previewPngData,'repair-candidates');
-           if(review.alternativeCandidateData)review.alternativeCandidateRef=addData(review.alternativeCandidateData,'repair-candidates');
-           if(review.legacyCandidateData)review.legacyCandidateRef=addData(review.legacyCandidateData,'repair-candidates');
-           delete review.originalData;delete review.candidateData;delete review.previewPngData;delete review.alternativeCandidateData;delete review.legacyCandidateData;
-           copy.repair=review;
-         }
-         return copy;
-       });
-     }
-     return cloned;
-   });
-   const c=count();
-   const bank={
-     format:'physics-training-bank-v1',version:1,private:true,
-     batch:'1414道作图图像教师验收版',exportedAt:now(),
-     description:'原图保存在repair-originals；已确认图采用为media中正式题图',
-     questions:out,events:api.getEvents(),meta:api.getMeta(),
-     diagramRepairBatch:{questionCount:c.questions,candidateSlots:c.all,approved:c.approved,
-       pending:c.pending,rejected:c.rejected,originalsPreserved:true}
-   };
-   zip.file('bank.json',JSON.stringify(bank),{compression:'DEFLATE',compressionOptions:{level:3}});
-   const blob=await zip.generateAsync({type:'blob',compression:'STORE',streamFiles:true},progress=>{
-     if(progress.percent%10<1)$('repairNotice').textContent='正在生成私人题库ZIP：'+Math.floor(progress.percent)+'%';
-   });
+   if(!root.PhysicsBankPackage||!api.getSnapshot)throw Error('完整备份模块未加载，请刷新题库页面。');
+   const c=count(),snapshot=await api.getSnapshot();
+   snapshot.diagramRepairBatch={questionCount:c.questions,candidateSlots:c.all,approved:c.approved,pending:c.pending,rejected:c.rejected,originalsPreserved:true};
+   const result=await root.PhysicsBankPackage.create(snapshot,{kind:'backup',onProgress:progress=>{if(progress.percent%10<1)$('repairNotice').textContent='正在生成统一完整备份：'+Math.floor(progress.percent)+'%'}}),blob=result.blob;
    const url=URL.createObjectURL(blob),a=document.createElement('a');
    a.href=url;a.download='physics_bank_image_review_'+new Date().toISOString().slice(0,10)+'.zip';
    document.body.appendChild(a);a.click();a.remove();
