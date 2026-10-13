@@ -128,7 +128,7 @@
   box-shadow:0 3px 18px #273b5510;margin:0 0 14px;padding:14px 17px 10px;
 }
 .bank-query-main{
-  display:grid;grid-template-columns:auto minmax(240px,1fr) auto;
+  display:grid;grid-template-columns:minmax(240px,1fr) auto;
   align-items:center;gap:12px;padding-bottom:14px;
 }
 .bank-import-button{min-width:147px;min-height:44px;white-space:nowrap;font-size:13px;cursor:pointer}
@@ -188,7 +188,7 @@
   .bank-query-conditions{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:860px){
-  .bank-query-main{grid-template-columns:auto minmax(0,1fr);gap:9px}
+  .bank-query-main{grid-template-columns:minmax(0,1fr) auto;gap:9px}
   .bank-reset-button{grid-column:1/-1;justify-self:end;min-height:34px}
   .bank-query-group{grid-template-columns:1fr;gap:10px}
   .bank-query-heading{flex-direction:row;gap:12px;align-items:baseline}
@@ -313,3 +313,26 @@
 @media(max-width:650px){.repair-subfigure .repair-compare{grid-template-columns:1fr 1fr}.repair-subfigure .repair-compare img{height:155px}}
 
 .physics-math{display:inline-block;vertical-align:middle;white-space:nowrap}.physics-math math{font-size:1.08em}.physics-math-error{background:#fff1cc;color:#9b3300}.physics-data-table{border-collapse:collapse;margin:8px 0;max-width:100%;font-size:inherit}.physics-data-table td,.physics-data-table th{border:1px solid #64748b;padding:5px 9px;text-align:center}.concept-method-tag{background:#e8f4ea;color:#17532d}
+
+/* 集中题库管理与来源筛选 */
+.top-actions{flex-wrap:wrap}
+.bank-source-filters{display:flex;gap:16px;flex-wrap:wrap;padding:12px 0 0}
+.bank-source-filters label{display:grid;gap:5px;flex:1 1 230px;color:#53677c;font-weight:650}
+.bank-source-filters select{min-width:0;width:100%;height:40px;padding:0 10px;border:1px solid #c7d4e2;border-radius:8px;background:#fff;color:var(--ink)}
+.qsource{margin:8px 0;font-size:12px;overflow-wrap:anywhere}
+.qsource strong{display:block;font-size:14px;color:#234e71;margin-bottom:4px}
+.qsources{margin:6px 0;color:#65778e;font-size:12px;overflow-wrap:anywhere}
+.bm-dialog{width:min(780px,96vw);max-height:90vh;padding:22px;border:0;border-radius:14px;color:var(--ink);box-shadow:0 20px 65px #102b4555;overflow:auto}
+.bm-dialog::backdrop{background:#102b45a6}
+.bm-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.bm-head h2{margin:0;font-size:21px}.bm-head button{flex-shrink:0}
+.bm-actions{display:flex;gap:12px;flex-wrap:wrap}.bm-actions>*{flex:1 1 210px;min-height:48px}
+.bm-dialog p{line-height:1.7}.bm-dialog input[type=file]{max-width:100%}
+.bm-dialog select{max-width:100%;padding:9px;border:1px solid #c7d4e2;border-radius:7px}
+.bm-summary,.bm-record{padding:14px;border:1px solid #dae4ee;border-radius:10px;background:#f5f9fc;margin:12px 0;overflow-wrap:anywhere}
+.bm-summary h3,.bm-record h3{margin:0 0 7px;font-size:15px}
+.bm-dialog .error{color:#a62f39}.bm-dialog .warning{color:#985329}
+.bm-record small{color:#64748b}.bm-record ul{padding-left:20px}
+.bm-status{white-space:pre-line;min-height:24px}
+.bm-dialog [hidden]{display:none!important}
+@media(max-width:650px){.bm-dialog{padding:16px}.bank-source-filters{gap:10px}.bm-actions{gap:8px}.top-actions button{font-size:13px}.bm-head h2{font-size:19px}}

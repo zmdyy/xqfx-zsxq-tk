@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>物理精准练习题库 · 学情可视化</title>
 <link rel="stylesheet" href="./teacher-editor.css?v=20261013suggest2">
-<link rel="stylesheet" href="./style.css?v=20261013preview3">
+<link rel="stylesheet" href="./style.css?v=20261014manage2">
 <link rel="stylesheet" href="./quality-review.css?v=20261013review5">
 <script src="../jszip.min.js"></script>
 <script src="../katex.min.js"></script>
@@ -14,6 +14,8 @@
 <script src="../data/knowledge/concept-assessment.js?v=20261012v5"></script>
 <script src="./math-content.js?v=20261012v5"></script>
 <script src="./paper-layout.js?v=20261013preview3"></script>
+<script src="./question-sources.js?v=20261014manage2"></script>
+<script src="./bank-management.js?v=20261014manage2"></script>
 <script src="./bank-merge.js?v=20261012editor1"></script>
 <script src="../pinyin-pro.js"></script>
 <script src="../student-name-search.js?v=20261011alias2"></script>
@@ -22,14 +24,11 @@
 </head>
 <body>
 <div id="questionBankHome">
-<header class="topbar"><div><a href="../index.html">← 学情分析</a><a href="../knowledge/index.html">✦ 知识星球</a><h1>物理精准练习题库</h1></div><div class="top-actions"><button type="button" class="primary" id="bankDetailsButton" aria-expanded="false" aria-controls="bankDetailsPanel" title="展开或收起知识点统计">▤ 题库明细</button><button type="button" id="qualityReviewBtn" class="muted" title="统一审核题图、公式与单位、答案、重复题、知识点和题型">题库质量审核</button><label class="button muted" title="选择完整题库ZIP后自动核对版本并更新本地题库">更新题库版本<input type="file" id="bankVersionInput" accept=".zip" hidden></label><button type="button" id="newQuestionBtn">＋ 新建题目</button><button id="backupZipBtn" class="muted">完整ZIP备份</button><button id="backupBtn" class="muted">备份题库与记录</button><label class="button muted">恢复备份<input type="file" id="restoreInput" accept=".json,.zip" hidden></label></div></header>
+<header class="topbar"><div><a href="../index.html">← 学情分析</a><a href="../knowledge/index.html">✦ 知识星球</a><h1>物理精准练习题库</h1></div><div class="top-actions"><button type="button" class="primary" id="bankDetailsButton" aria-expanded="false" aria-controls="bankDetailsPanel">▤ 题库明细</button><button type="button" id="qualityReviewBtn" class="muted">题库质量审核</button><button type="button" id="addQuestionsBtn">＋ 添加题目</button><button type="button" id="bankManageBtn" class="muted">备份与恢复</button></div></header>
 <main>
 <section class="bank-query-panel workflow-section" aria-label="题库检索与筛选">
   <div class="workflow-heading"><div class="workflow-step"><span aria-hidden="true">01</span><div><h2>检索与筛选</h2><p>先定位知识点，再选择合适的练习题</p></div></div><span class="workflow-side-note">题库管理</span></div>
   <div class="bank-query-main">
-    <label class="button primary bank-import-button">＋ 导入题目
-      <input id="fileInput" type="file" accept=".docx,.doc,.json,.zip" multiple hidden>
-    </label>
     <label class="bank-search-field" for="search">
       <span class="bank-search-icon" aria-hidden="true">⌕</span>
       <input id="search" type="search" placeholder="搜索题干、知识点、别名、考法、题号或来源" autocomplete="off" aria-label="搜索题库">
@@ -83,6 +82,10 @@
       </label>
     </div>
   </div>
+  <div class="bank-source-filters">
+    <label>试卷来源<select id="sourceFilter"><option value="">全部来源</option></select></label>
+    <label>导入范围<select id="batchFilter"><option value="">全部题目</option><option value="added">最近一次新增题目</option></select></label>
+  </div>
   <div id="activeFilterSummary" class="bank-active-filters" aria-live="polite" hidden></div>
 </section>
 <div id="status" role="status"></div>
@@ -109,7 +112,7 @@
   </div>
 </section>
 <div class="workspace">
-<section class="library workflow-section"><div class="section-title section-heading"><div class="workflow-step"><span aria-hidden="true">02</span><div><h2>题目资源</h2><p>查看题干与原图，点击“＋整题”加入试题篮</p></div></div><span id="count"></span></div><div id="results" class="results"><p class="empty">尚无题目。点击左上角导入 .docx 题目和配套 .doc 目录。也可以先查看示例题。</p></div></section>
+<section class="library workflow-section"><div class="section-title section-heading"><div class="workflow-step"><span aria-hidden="true">02</span><div><h2>题目资源</h2><p>查看题干与原图，点击“＋整题”加入试题篮</p></div></div><span id="count"></span></div><div id="results" class="results"><p class="empty">尚无题目。点击顶部“添加题目”，导入 Word 试卷或粘贴单题。</p></div></section>
 <aside class="sidebar">
 <section class="basket-section workflow-section">
   <div class="section-title section-heading"><div class="workflow-step"><span aria-hidden="true">03</span><div><h2>试题篮</h2><p>调整题目顺序，安排针对性练习</p></div></div><span id="basketCount">0道</span></div>
@@ -201,11 +204,11 @@
 <script src="./image-repair-review.js?v=20261011group"></script>
 <script src="./quality-diagnostics.js?v=20261012editor1"></script>
 <script src="./quality-export.js?v=20261012v5"></script>
-<script src="./bank-version-update.js?v=20261012editor1"></script>
-<script src="./quality-review-v2.js?v=20261013review5"></script>
+<script src="./bank-version-update.js?v=20261014manage2"></script>
+<script src="./quality-review-v2.js?v=20261014manage2"></script>
 <script src="./vendor/mathlive/mathlive.min.js"></script>
 <script src="./physics-input.js?v=20261013suggest2"></script>
-<script src="./teacher-editor.js?v=20261013review5"></script>
-<script src="./app.js?v=20261013word4"></script>
+<script src="./teacher-editor.js?v=20261014manage2"></script>
+<script src="./app.js?v=20261014manage2"></script>
 </body>
 </html>

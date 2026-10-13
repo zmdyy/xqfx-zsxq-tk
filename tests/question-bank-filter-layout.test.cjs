@@ -13,7 +13,7 @@ assert.match(html,/class="bank-query-fields bank-query-knowledge"/);
 assert.match(html,/class="bank-query-fields bank-query-conditions"/);
 assert.match(css,/\.bank-query-panel/);
 assert.match(css,/@media\(max-width:650px\)/);
-const ids=['search','fileInput','conceptFilter','conceptFilter2','relationFilter','typeFilter','difficultyFilter','reviewFilter','usedFilter','classFilter','assessmentFilter','conceptRoleFilter','resetFiltersBtn','activeFilterSummary'];
+const ids=['search','sourceFilter','batchFilter','conceptFilter','conceptFilter2','relationFilter','typeFilter','difficultyFilter','reviewFilter','usedFilter','classFilter','assessmentFilter','conceptRoleFilter','resetFiltersBtn','activeFilterSummary'];
 for(const id of ids){
  const count=(html.match(new RegExp('id="'+id+'"','g'))||[]).length;
  assert.equal(count,1,id+' appears exactly once');
@@ -21,15 +21,22 @@ for(const id of ids){
 const patched=app.replace(/init\(\);\s*\}\)\(\);\s*$/,'window.__filterTest={matches,renderActiveFilters,resetQuestionFilters,state};})();');
 assert.notEqual(patched,app,'suppress init');
 const els={};
-for(const id of ids)els[id]={value:'',tagName:(id==='classFilter'||id==='search')?'INPUT':'SELECT',options:[],selectedIndex:0,innerHTML:'',textContent:'',hidden:true};
+for(const id of ids)els[id]={value:'',tagName:(id==='classFilter'||id==='search')?'INPUT':'SELECT',options:[],selectedIndex:0,innerHTML:'',textContent:'',hidden:true,dataset:{}};
 for(const id of ['count','results','basketCount','basket','usageSummary','status'])els[id]={innerHTML:'',textContent:'',className:''};
+els.batchFilter.options=[{},{}];
 els.relationFilter.value='any';els.classFilter.value='801';
 const win={};
+vm.runInNewContext(fs.readFileSync(path.join(root,'question-sources.js'),'utf8'),{window:win});
 vm.runInNewContext(patched,{window:win,document:{getElementById:id=>els[id]},console},{timeout:1000});
 const api=win.__filterTest;
 const q={id:'q1',stem:'根据光的反射定律作图',source:'试卷',sourceNo:'1',
  tags:['光的反射定律','平面镜成像'],type:'作图题',difficulty:'普通',review:'approved',relation:'cross',images:[],parts:[]};
 api.state.questions=[q];
+q.sourceRefs=[{file:'深圳市示例学校期中.docx',no:'8'}];q.sourceTitle='补充试卷名称';
+els.sourceFilter.value='深圳市示例学校期中.docx';assert.ok(api.matches(q),'all duplicate sources can be filtered');
+els.sourceFilter.value='不存在';assert.ok(!api.matches(q));els.sourceFilter.value='';
+els.search.value='深圳市示例学校';assert.ok(api.matches(q),'search includes additional sources');els.search.value='补充试卷名称';assert.ok(api.matches(q),'search includes supplied title');els.search.value='';
+els.batchFilter.value='added';assert.ok(!api.matches(q));api.state.importSelection={addedIds:['q1'],fileName:'试卷'};assert.ok(api.matches(q));els.batchFilter.value='';
 els.conceptFilter.value='光的反射定律';
 els.relationFilter.value='cross';
 assert.ok(api.matches(q),'cross relation works with one selected concept');

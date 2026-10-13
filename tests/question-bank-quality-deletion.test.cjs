@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const app=fs.readFileSync(path.join(__dirname,'../question-bank/app.js'),'utf8');
 const from=app.indexOf('async function removeExcludedQuestions(ids){');
-const to=app.indexOf('\nasync function importPrivateZip(',from);
+const to=app.indexOf('\nfunction sourceDetails(',from);
 assert.ok(from>=0&&to>from);
 const extracted=app.slice(from,to);
 const q1={id:'ole1',review:'pending'},q2={id:'draw2',review:'pending'},q3={id:'teacher',review:'approved'};

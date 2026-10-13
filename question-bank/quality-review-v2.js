@@ -65,7 +65,7 @@ function relevant(q){
 }
 function include(q){
  if(!relevant(q))return false;
- if(query&&!normalize([q.id,q.source,q.sourceNo,q.stem,(q.tags||[]).join(' ')].join(' ')).includes(normalize(query)))return false;
+ if(query&&!normalize([q.id,root.PhysicsQuestionSources?.search(q)||q.source,q.sourceNo,q.stem,(q.tags||[]).join(' ')].join(' ')).includes(normalize(query)))return false;
  const states=mode==='overview'?MODES.slice(1).map(([d])=>audit(q,d).status):[audit(q,mode).status];
  if(scope==='all')return true;
  if(scope==='repair')return states.includes('repair');
@@ -111,7 +111,7 @@ function issueTags(q){
 function original(q,name,withRepair){
  const i=issues(q,'overview');
  const show=source=>{const text=String(q[source]||'');return i.some(x=>x.source===source&&x.precision==='exact')?D().markText(text,i,source,esc):(root.PhysicsMathContent?.html(text)||esc(text));};
- return '<div class="qr-evidence-body"><div class="qr-meta">'+esc(name||q.id)+' · '+esc(q.source||'')+' · 第'+esc(q.sourceNo||'?')+'题 · '+esc(q.type)+'</div>'+
+ return '<div class="qr-evidence-body"><div class="qr-meta">'+esc(name||q.id)+' · '+esc(root.PhysicsQuestionSources?.title(q)||q.source||'')+' · 第'+esc(q.sourceNo||'?')+'题 · '+esc(q.type)+'</div>'+
  issueTags(q)+'<h3>原题</h3><div class="qr-stem">'+show('stem')+'</div>'+
  gallery(q.images||[],'原题图片',withRepair)+
  '<h3 id="qrAnswerHeading">答案与解析</h3><div class="qr-stem qr-answer-text">'+(q.answer?show('answer'):'<span class="qr-neutral">暂无文字答案</span>')+'</div>'+
@@ -200,7 +200,7 @@ function render(){
  queue=api.getQuestions().filter(include).sort((a,b)=>issueScore(b)-issueScore(a)||String(a.source||'').localeCompare(String(b.source||''),'zh-CN'));
  if(!queue.some(q=>q.id===id))id=queue[0]?.id||'';
  const pos=queue.findIndex(q=>q.id===id),page=Math.floor(Math.max(pos,0)/40),items=queue.slice(page*40,(page+1)*40);
- $('qrList').innerHTML=items.map((q,j)=>'<button data-id="'+esc(q.id)+'" class="'+(q.id===id?'active':'')+'"><b>'+(page*40+j+1)+'. '+esc(q.sourceNo||'?')+'题</b><small>'+esc(q.source||q.id)+'</small><small>'+esc((q.stem||'').slice(0,55))+'</small></button>').join('')||'<p class="qr-empty">没有符合条件的题目</p>';
+ $('qrList').innerHTML=items.map(q=>'<button data-id="'+esc(q.id)+'" class="'+(q.id===id?'active':'')+'" title="'+esc(root.PhysicsQuestionSources?.search(q)||q.source||'')+'"><b>'+esc(root.PhysicsQuestionSources?.title(q)||q.source||q.id)+'</b><small>第'+esc(q.sourceNo||'?')+'题 · '+esc(q.type||'其他')+'</small><small>'+esc((q.stem||'').slice(0,55))+'</small></button>').join('')||'<p class="qr-empty">没有符合条件的题目</p>';
  $('qrCount').textContent=pos<0?'0 / 0':'第 '+(pos+1)+' / '+queue.length+' 题';
  $('qrQueueBadge').textContent='('+queue.length+'道)';
  $('qrPrevious').disabled=pos<=0;$('qrFollowing').disabled=pos<0||pos===queue.length-1;

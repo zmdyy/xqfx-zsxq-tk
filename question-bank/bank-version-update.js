@@ -184,9 +184,9 @@ async function decode(zip,questions){
 }
 async function update(file,options){
  if(!root.JSZip)throw Error('JSZip未加载');
- const zip=await root.JSZip.loadAsync(await file.arrayBuffer());
+ const zip=options.package?.zip||await root.JSZip.loadAsync(await file.arrayBuffer());
  const entry=zip.file('bank.json');if(!entry)throw Error('这不是标准题库ZIP：缺少bank.json');
- const bank=JSON.parse(await entry.async('text'));
+ const bank=options.package?.bank||JSON.parse(await entry.async('text'));
  if(bank.format!=='physics-training-bank-v1'||!Array.isArray(bank.questions))throw Error('题库格式不匹配，已停止更新');
  if(!bank.questions.length)throw Error('题库为空，已停止更新');
  const idSet=new Set();
