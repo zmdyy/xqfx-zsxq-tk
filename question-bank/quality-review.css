@@ -252,3 +252,10 @@ body.qr-page-open>header.topbar,body.qr-page-open>main{display:none}
 body.qr-page-open .quality-review-dialog[open]{position:fixed;inset:0;z-index:20;width:100vw;max-width:none;height:100vh;height:100dvh;max-height:none;margin:0;border:0;border-radius:0;box-shadow:none}
 .qr-controls .qr-unified-editor{min-height:34px;font-weight:700}
 .qr-controls .qr-unified-editor:disabled{opacity:.5;cursor:not-allowed}
+.qr-option-figures{margin:2px 0 8px 1.6em}
+.qr-option-figures .qr-gallery{margin-top:0}
+.qr-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin:4px 0 10px}
+.qr-option-cell{display:flex;gap:6px;align-items:flex-start;min-width:0}
+.qr-option-cell>b{flex:none;font-size:17px;line-height:1.85}
+.qr-option-cell .qr-gallery{margin:0;flex:1;min-width:0}
+.qr-option-cell .qr-gallery img{max-height:170px}

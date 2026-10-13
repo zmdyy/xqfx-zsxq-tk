@@ -40,6 +40,8 @@ function scan(q,options){
     add('image','图片修复候选待确认',name+' · 图'+(i+1),'存在候选增强图，尚未确认是否忠实原图','需核对刻度、符号、结构及文字','',null,null);
   });
  }
+ const optionSuggestion=root.PhysicsOptionImages?.suggest(q);
+ if(optionSuggestion)add('image','选项图未配位','题图 · 选项 '+optionSuggestion.map(x=>x.option).join('/'),'选项文字为空，题图集中排在题干下方','建议按顺序把图片配给对应选项','',null,null);
  if(!answer.trim()&&!(q.answerImages||[]).length)add('answer','缺少答案','答案区','答案文本和答案图均为空','需对照标准答案补全','',null,null);
  if(!tags.length)add('knowledge','知识点缺失','知识点','题目标签列表为空','应根据整题主要考查任务标注','',null,null);
  else if(root.PhysicsConceptAssessment){
