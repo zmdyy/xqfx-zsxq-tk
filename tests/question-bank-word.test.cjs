@@ -3,6 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const assert=require('node:assert/strict');
 const js=fs.readFileSync(path.join(__dirname,'../question-bank/word-export.js'),'utf8');
 const root={};const sandbox={window:root,atob,Uint8Array,Promise,console};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../question-bank/option-images.js'),'utf8'),sandbox,{timeout:1500});
 vm.runInNewContext(js,sandbox,{timeout:1500});
 assert.ok(root.PhysicsWordExport&&root.PhysicsWordExport.createDocx,'native OOXML exporter exposed');
 let exported;
@@ -30,8 +31,16 @@ for(const layout of ['single','double']){
   assert.ok(exported.files.has('word/media/image2.png'),'answer image embedded');
   assert.ok(String(exported.files.get('word/_rels/document.xml.rels')).includes('image2.png'));
   assert.ok(String(exported.files.get('[Content_Types].xml')).includes('image/png'));
-  assert.equal((x.match(/<w:tbl>/g)||[]).length,layout==='double'?4:2,'single/double layout table count');
+  assert.equal((x.match(/<w:tbl>/g)||[]).length,2,'only feedback tables; double columns are not simulated with a table');
+  assert.equal((x.match(/<w:cols w:num="2"/g)||[]).length,layout==='double'?2:0,'double layout uses real Word section columns for front and back');
+  if(layout==='double')assert.ok(/<w:cols w:num="1"[^>]*\/><\/w:sectPr><\/w:pPr><\/w:p><w:p><w:pPr><w:jc w:val="left"\/>[\s\S]*?1\. 力的示意图/.test(x),'question flow starts in a new two-column section after the header');
+}
+{
+  await root.PhysicsWordExport.createDocx({JSZip:ZipFake,layout:'double',items:[{stem:'10．其中有效的是\nA．\nB．',answer:'B',images:[img,img,img],imageItems:[{src:img,option:''},{src:img,option:'A'},{src:img,option:'B'}],answerImages:[]}]});
+  const x=String(exported.files.get('word/document.xml'));
+  const a=x.indexOf('A．'),b=x.indexOf('B．'),pics=[...x.matchAll(/<a:blip r:embed=/g)].map(m=>m.index);
+  assert.equal(pics.length,3);assert.ok(pics[0]<a&&a<pics[1]&&pics[1]<b&&b<pics[2],'unanchored stem figure precedes the options; option figures follow their letter');
 }
 await assert.rejects(root.PhysicsWordExport.createDocx({JSZip:ZipFake,items:[]}),/试题篮为空/);
-console.log('PASS: OOXML single/double, page break, image relationships, feedback, empty basket');
+console.log('PASS: OOXML single/real two-column sections, option figures beside options, page break, image relationships, feedback, empty basket');
 })().catch(e=>{console.error(e);process.exitCode=1});
