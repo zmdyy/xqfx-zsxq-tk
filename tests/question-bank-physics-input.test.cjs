@@ -6,6 +6,13 @@ assert.ok(P.presets.some(p=>p.label==='J/(kg·℃)'));
 assert.ok(!P.presets.some(p=>p.label==='J/(kg·K)'||p.label==='电加热综合计算'));
 assert.equal(P.scan('型号 AF1X，题号123，单位 kg/m³，公式 \\(F_1=2\\)').length,0);
 assert.deepEqual(P.scan('F1，cm3，kg/m3，J/kg℃，Q吸').map(x=>x.after),['\\(F_{1}\\)','cm³','kg/m³','J/(kg·℃)','\\(Q_{\\text{吸}}\\)']);
+const typography="R0，R0'，R0′，R0²，R0^2，R0^{2}，R10'，L1，S1，P1，ρ1";
+const fixes=P.scan(typography);
+assert.equal(fixes.length,11);assert.ok(fixes.every(x=>x.category==='numeric-subscript'));
+assert.deepEqual(fixes.slice(0,7).map(x=>x.after),['\\(R_{0}\\)','\\(R_{0}^{\\prime}\\)','\\(R_{0}^{\\prime}\\)','\\(R_{0}^{2}\\)','\\(R_{0}^{2}\\)','\\(R_{0}^{2}\\)','\\(R_{10}^{\\prime}\\)']);
+for(const x of fixes)assert.deepEqual(M.validate(x.after),[],x.before);
+assert.equal(P.scan("型号 AF1X、R2025，原式 \\(R_{0}^{\\prime}\\)，已规范 R₀′").length,0);
+assert.deepEqual(P.scan('cm3；Q吸；1.25×103；J/kg℃').map(x=>x.category),['unit-exponent','text-subscript','scientific-exponent','unit-format']);
 console.log('PASS: all presets parse, thermal exclusions, conservative suggestions and no mutation');
 
 const vm=require('vm'),fs=require('fs'),path=require('path');

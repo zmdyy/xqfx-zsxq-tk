@@ -9,6 +9,8 @@ const content=q=>Object.fromEntries(fields.map(k=>[k,q[k]??(['tags','parts','ima
 const fingerprint=q=>JSON.stringify(content(q));
 let api,base,work,dialog,range,activeField,mathTarget,mathRange,undo=[],redo=[],writing=Promise.resolve(),saveBusy=false,session=0,issues=[],issueIndex=0;
 let viewMode='edit',viewScroll={},backgroundScroll=null;
+let recentChanges=[],feedback=null,resumeIndex=0,scanTimer,appliedTimer,composing=false;
+function resetFeedback(){feedback=null;recentChanges=[];clearTimeout(appliedTimer);}
 function lockBackground(){
  if(backgroundScroll)return;
  backgroundScroll={html:document.documentElement.style.overflow,body:document.body.style.overflow};
@@ -27,9 +29,11 @@ function updateView(){
  dialog.querySelectorAll('[data-mode]').forEach(b=>{const selected=b.dataset.mode===viewMode;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));});
  $('teViewState').textContent=editable?'正在编辑 · 点击左侧文字即可修改':comparing?'只读对照 · 点击“编辑”返回':'阅读预览 · 点击“返回编辑”继续修改';
  dialog.querySelector('[data-action="preview"]').textContent=viewMode==='read'?'返回编辑':'阅读预览';
- dialog.querySelectorAll('.te-toolbar button,.te-issue [data-action="accept"],.te-issue [data-action="correct"]').forEach(b=>b.disabled=saveBusy||!editable);
+ dialog.querySelectorAll('.te-toolbar button,.te-issue [data-action="accept"],.te-issue [data-action="acceptSame"],.te-issue [data-action="correct"]').forEach(b=>b.disabled=saveBusy||!editable);
  $('tePalette').inert=!editable;
  dialog.querySelectorAll('[data-image-replace],[data-image-add],[data-image-width]').forEach(n=>n.disabled=!editable);
+ dialog.querySelectorAll('.te-issue [data-action="issuePrev"],.te-issue [data-action="issueNext"]').forEach(b=>b.disabled=saveBusy||!issues.length);
+ paintHighlights();
 }
 function setView(mode){
  if(!['edit','read','before','source'].includes(mode))return;
@@ -45,20 +49,42 @@ function status(s,error=false){$('teStatus').textContent=s;$('teStatus').classLi
 function atom(tex){return '<span class="te-atom" contenteditable="false" tabindex="0" role="button" aria-label="编辑公式" data-tex="'+E(tex)+'">'+root.PhysicsMathContent.inline('\\('+tex+'\\)')+'</span>'}
 function richInline(s){return root.PhysicsMathContent.tokens(s||'').map(t=>t.type==='math'?atom(t.text):E(t.text)).join('')}
 function rich(s){return root.PhysicsMathContent.blocks(s||'').map(b=>b.type==='table'?'<table><tbody>'+b.rows.map(row=>'<tr>'+row.map(c=>'<td>'+richInline(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>':richInline(b.text)).join('\n')}
-function serialize(node){
- if(node.nodeType===3)return node.textContent;
- if(node.nodeType!==1)return '';
- if(node.dataset.tex!==undefined)return '\\('+node.dataset.tex+'\\)';
- if(node.tagName==='BR')return '\n';
- if(node.tagName==='TABLE')return [...node.rows].map(row=>[...row.cells].map(c=>serialize(c).trim()).join(' | ')).join('\n');
- let s='';for(const n of node.childNodes){const block=n.nodeType===1&&['DIV','P'].includes(n.tagName);if(block&&s&&!s.endsWith('\n'))s+='\n';s+=serialize(n);if(block&&n!==node.lastChild&&!s.endsWith('\n'))s+='\n';}return s;
+function serialized(node){
+ const out={text:'',pieces:[]};
+ const add=part=>{const shift=out.text.length;out.text+=part.text;out.pieces.push(...part.pieces.map(p=>({...p,start:p.start+shift,end:p.end+shift})));};
+ if(node.nodeType===3)return {text:node.textContent,pieces:[{node,start:0,end:node.textContent.length,from:0}]};
+ if(node.nodeType!==1)return out;
+ if(node.dataset.tex!==undefined){const text='\\('+node.dataset.tex+'\\)';return {text,pieces:[{node,start:0,end:text.length,atom:true}]};}
+ if(node.tagName==='BR')return {text:'\n',pieces:[]};
+ if(node.tagName==='TABLE'){
+  [...node.rows].forEach((row,ri)=>{if(ri)out.text+='\n';[...row.cells].forEach((cell,ci)=>{
+   if(ci)out.text+=' | ';const part=serialized(cell),start=part.text.length-part.text.trimStart().length,end=part.text.trimEnd().length;
+   add({text:part.text.trim(),pieces:part.pieces.filter(p=>p.end>start&&p.start<end).map(p=>({...p,start:Math.max(p.start,start)-start,end:Math.min(p.end,end)-start,from:(p.from||0)+Math.max(0,start-p.start)}))});
+  });});return out;
+ }
+ for(const n of node.childNodes){const block=n.nodeType===1&&['DIV','P'].includes(n.tagName);if(block&&out.text&&!out.text.endsWith('\n'))out.text+='\n';add(serialized(n));if(block&&n!==node.lastChild&&!out.text.endsWith('\n'))out.text+='\n';}return out;
+}
+function serialize(node){return serialized(node).text;}
+function textRange(el,start,end,map=serialized(el)){
+ const pieces=map.pieces.filter(p=>p.end>start&&p.start<end);if(!pieces.length)return null;
+ const boundary=(p,at,ending)=>p.atom?[p.node.parentNode,[...p.node.parentNode.childNodes].indexOf(p.node)+(ending?1:0)]:[p.node,p.from+Math.max(0,Math.min(p.end-p.start,at-p.start))];
+ const a=boundary(pieces[0],start,false),b=boundary(pieces[pieces.length-1],end,true),r=document.createRange();r.setStart(...a);r.setEnd(...b);return r;
+}
+function clearHighlights(){if(root.CSS?.highlights)for(const name of ['te-pending','te-current','te-applied'])root.CSS.highlights.delete(name);dialog?.querySelectorAll('.te-recent-applied').forEach(n=>n.classList.remove('te-recent-applied'));}
+function paintHighlights(){
+ clearHighlights();if(viewMode!=='edit'||!dialog)return;
+ const maps=new Map(fieldNodes().map(el=>[el.dataset.field,{el,map:serialized(el)}])),pending=[],current=[],applied=[];
+ issues.forEach((x,i)=>{const entry=maps.get(x.field);if(!entry||entry.map.text.slice(x.start,x.end)!==x.before)return;const r=textRange(entry.el,x.start,x.end,entry.map);if(r)(!feedback&&i===issueIndex?current:pending).push(r);});
+ for(const x of recentChanges){const entry=maps.get(x.field);if(!entry||entry.map.text.slice(x.start,x.end)!==x.after)continue;const r=textRange(entry.el,x.start,x.end,entry.map);if(r)applied.push(r);for(const p of entry.map.pieces)if(p.atom&&p.end>x.start&&p.start<x.end)p.node.classList.add('te-recent-applied');}
+ if(root.CSS?.highlights&&root.Highlight){root.CSS.highlights.set('te-pending',new Highlight(...pending));root.CSS.highlights.set('te-current',new Highlight(...current));root.CSS.highlights.set('te-applied',new Highlight(...applied));}
 }
 function getField(key){return key.startsWith('part:')?work.parts[Number(key.split(':')[1])][key.split(':')[2]]:work[key]}
 function setField(key,value){if(key.startsWith('part:'))work.parts[Number(key.split(':')[1])][key.split(':')[2]]=value;else work[key]=value}
 function fieldNodes(){return [...dialog.querySelectorAll('[data-field]')]}
 function collect(){for(const el of fieldNodes())setField(el.dataset.field,serialize(el));for(const key of ['type','difficulty','relation','review'])work[key]=$('teMeta-'+key).value;work.tags=$('teTags').value.split(/[；;,，、]/).map(x=>x.trim()).filter(Boolean)}
 function checkpoint(){undo.push(clone(content(work)));redo=[];}
-function changed(){collect();draft();}
+function changed(){collect();resetFeedback();clearHighlights();draft();scheduleScan();}
+function scheduleScan(){clearTimeout(scanTimer);if(!composing)scanTimer=setTimeout(()=>{if(dialog.open)scan();},150);}
 function draft(){
  const id=work.id,s=session,payload={id,baseRevision:base.revision||0,baseFingerprint:fingerprint(base),content:clone(content(work)),at:stamp()};
  status('正在保存草稿…');writing=writing.catch(()=>{}).then(()=>api.setDraft(id,payload)).then(()=>{if(s===session)status('草稿已保存 · 尚未正式保存')}).catch(e=>{if(s===session)status('草稿保存失败：'+e.message,true);throw e});writing.catch(()=>{});return writing;
@@ -97,16 +123,56 @@ function comparison(){
  $('teCompareBody').insertAdjacentHTML('beforeend','<p>来源：'+E(base.source||'未记录')+' · 第 '+E(base.sourceNo||'?')+' 题</p>');
 }
 function issueKey(x,text){return x.field+'|'+text+'|'+x.start+'|'+x.before}
-function scan(){
+function scan(preserve=true){
+ clearTimeout(scanTimer);const previous=preserve?issues[issueIndex]:null;
  collect();issues=[];for(const el of fieldNodes()){const field=el.dataset.field,text=getField(field);for(const x of root.PhysicsInput.scan(text)){x.field=field;x.key=issueKey(x,text);if(!(work.normalizationDecisionsV1||[]).some(d=>d.key===x.key&&d.status==='correct'))issues.push(x)}}
- issueIndex=Math.min(issueIndex,Math.max(0,issues.length-1));showIssue();
+ const keep=previous?issues.findIndex(x=>x.field===previous.field&&x.start===previous.start&&x.before===previous.before):-1;
+ issueIndex=keep>=0?keep:Math.min(issueIndex,Math.max(0,issues.length-1));showIssue();
 }
-function showIssue(){const x=issues[issueIndex];$('teIssue').innerHTML=x?'<div class="te-issue-heading"><b>本题 '+issues.length+' 处待核对 · 第 '+(issueIndex+1)+' 处</b><div class="te-tools"><button data-action="issuePrev">上一处</button><button data-action="issueNext">下一处</button></div></div><p><code>'+E(x.before)+'</code> → '+root.PhysicsMathContent.inline(x.after)+' · '+E(x.reason)+'</p><div class="te-tools"><button data-action="accept">采用建议</button><button data-action="locate">手动修改 / 定位</button><button data-action="correct">原文正确</button></div>':'<b>未发现本轮规则覆盖的书写疑点</b><p>不代表物理内容已审核通过</p>';updateView();}
-function locate(){const x=issues[issueIndex];if(!x)return;if(viewMode!=='edit')setView('edit');const el=fieldNodes().find(n=>n.dataset.field===x.field);el.focus({preventScroll:true});
- const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n,found=false;while((n=walker.nextNode())){if(n.parentElement.closest('.te-atom'))continue;const at=n.textContent.indexOf(x.before);if(at>=0){range=document.createRange();range.setStart(n,at);range.setEnd(n,at+x.before.length);selectRange(range);activeField=el;scrollDocumentTo(range);found=true;break;}}
- if(!found)scrollDocumentTo(el);
+function fieldLabel(field){if(field==='stem')return '题干与选项';if(field==='answer')return '答案与解析';const p=field.split(':');return '小问 '+(Number(p[1])+1)+(p[2]==='stem'?' 题干':' 答案');}
+function changeDetails(){return feedback.changes.map((x,i)=>'<li><span>'+E(fieldLabel(x.field))+'：<code>'+E(x.before)+'</code> → '+root.PhysicsMathContent.inline(x.after)+'</span> <button data-applied-index="'+i+'">定位</button></li>').join('');}
+function showIssue(){
+ const x=issues[issueIndex],nav='<div class="te-tools"><button data-action="issuePrev" '+(!issues.length?'disabled':'')+'>上一处</button><button data-action="issueNext" '+(!issues.length?'disabled':'')+'>下一处</button></div>';
+ if(feedback){$('teIssue').innerHTML='<div class="te-feedback" role="status"><b>'+E(feedback.message)+'</b><p>'+(feedback.saved?'正式版本已保存。':'已进入草稿，点击保存后更新正式版本；可用撤销还原本次操作。')+'</p>'+(feedback.changes.length===1?'<ul class="te-feedback-list">'+changeDetails()+'</ul>':'<details><summary>查看本次 '+feedback.changes.length+' 处修改</summary><ul class="te-feedback-list">'+changeDetails()+'</ul></details>')+'</div><p>本题还有 '+issues.length+' 处待核对'+(issues.length?'，点击下一处继续。':'。')+'</p>'+nav;}
+ else if(x){
+  const same=issues.filter(i=>i.category===x.category),counts=new Map();same.forEach(i=>counts.set(i.field,(counts.get(i.field)||0)+1));
+  $('teIssue').innerHTML='<div class="te-issue-heading"><b>本题 '+issues.length+' 处待核对 · 第 '+(issueIndex+1)+' 处</b>'+nav+'</div><p class="te-location">'+E(fieldLabel(x.field))+' · '+E(x.label)+'</p><p><code>'+E(x.before)+'</code> → '+root.PhysicsMathContent.inline(x.after)+' · '+E(x.reason)+'</p><div class="te-tools"><button data-action="accept">采用建议</button><button data-action="locate">手动修改 / 定位</button><button data-action="correct">原文正确</button></div><button class="te-batch" data-action="acceptSame">一键修改本题'+E(x.label)+'（'+same.length+'处）</button><p class="te-batch-scope">'+[...counts].map(([f,n])=>E(fieldLabel(f))+' '+n+' 处').join('；')+'</p>';
+ }else $('teIssue').innerHTML='<b>未发现本轮规则覆盖的书写疑点</b><p>不代表物理内容已审核通过</p>';
+ $('teIssue').dataset.currentField=feedback?'':x?.field||'';$('teIssue').dataset.currentStart=feedback?'':String(x?.start??'');updateView();
 }
-function accept(){const x=issues[issueIndex];if(!x)return;checkpoint();const t=getField(x.field);if(t.slice(x.start,x.end)!==x.before){scan();return}setField(x.field,t.slice(0,x.start)+x.after+t.slice(x.end));renderFields();draft();scan()}
+function revealRange(r){const host=$('teDocumentScroll'),rect=r.getBoundingClientRect(),box=host.getBoundingClientRect();if(rect.top<box.top+20||rect.bottom>box.bottom-20)scrollDocumentTo(r);}
+function locate(select=true){
+ const x=issues[issueIndex];if(!x)return;if(viewMode!=='edit')setView('edit');const el=fieldNodes().find(n=>n.dataset.field===x.field),map=serialized(el);
+ if(map.text.slice(x.start,x.end)!==x.before){scan();return;}
+ const r=textRange(el,x.start,x.end,map);if(!r)return;
+ if(select){el.focus({preventScroll:true});range=r;activeField=el;selectRange(r);}revealRange(r);paintHighlights();
+}
+function locateApplied(i){const x=feedback?.changes[i];if(!x)return;if(viewMode!=='edit')setView('edit');const el=fieldNodes().find(n=>n.dataset.field===x.field);if(!el||getField(x.field).slice(x.start,x.end)!==x.after)return;recentChanges=feedback.changes;paintHighlights();const r=textRange(el,x.start,x.end);if(r)revealRange(r);expireApplied();}
+function expireApplied(){clearTimeout(appliedTimer);const s=session;appliedTimer=setTimeout(()=>{if(s===session){recentChanges=[];paintHighlights();}},6000);}
+function keepCorrectDecisions(edits,oldTexts){
+ // Rebase confirmed exceptions when earlier replacements change text lengths.
+ work.normalizationDecisionsV1=(work.normalizationDecisionsV1||[]).flatMap(d=>{
+  if(d.status!=='correct'||!d.key)return [d];const last=d.key.lastIndexOf('|'),prior=d.key.lastIndexOf('|',last-1),first=d.key.indexOf('|');
+  const field=d.field||d.key.slice(0,first),before=d.before||d.key.slice(last+1),start=d.start??Number(d.key.slice(prior+1,last)),old=oldTexts.get(field),changes=edits.get(field);
+  if(!changes||d.key!==issueKey({field,start,before},old))return [d];
+  if(changes.some(x=>x.start<start+before.length&&x.end>start))return [];
+  const shifted=start+changes.filter(x=>x.end<=start).reduce((n,x)=>n+x.after.length-(x.end-x.start),0),text=getField(field);
+  if(text.slice(shifted,shifted+before.length)!==before)return [];
+  return [{...d,field,start:shifted,end:shifted+before.length,before,key:issueKey({field,start:shifted,before},text)}];
+ });
+}
+function accept(all=false){
+ const selected=issues[issueIndex];if(!selected)return;collect();if(getField(selected.field).slice(selected.start,selected.end)!==selected.before){scan();status('正文已变化，请核对更新后的建议');return;}
+ scan();const active=issues.find(x=>x.field===selected.field&&x.start===selected.start&&x.before===selected.before);if(!active)return;
+ const targets=all?issues.filter(x=>x.category===active.category):[active],edits=new Map(),oldTexts=new Map();
+ targets.forEach(x=>{if(!edits.has(x.field)){edits.set(x.field,[]);oldTexts.set(x.field,getField(x.field));}edits.get(x.field).push(x);});checkpoint();recentChanges=[];
+ for(const [field,list]of edits){let text=oldTexts.get(field);for(const x of [...list].sort((a,b)=>b.start-a.start))text=text.slice(0,x.start)+x.after+text.slice(x.end);setField(field,text);let shift=0;for(const x of [...list].sort((a,b)=>a.start-b.start)){const start=x.start+shift;recentChanges.push({...x,originalStart:x.start,start,end:start+x.after.length});shift+=x.after.length-(x.end-x.start);}}
+ keepCorrectDecisions(edits,oldTexts);feedback={message:'已修改'+active.label+' '+targets.length+' 处',changes:recentChanges};
+ renderFields();draft();scan(false);
+ const anchor=recentChanges.find(x=>x.field===active.field&&x.originalStart===active.start)||recentChanges[0],order=fieldNodes().map(el=>el.dataset.field);
+ const next=issues.findIndex(x=>order.indexOf(x.field)>order.indexOf(anchor.field)||(x.field===anchor.field&&x.start>=anchor.end));resumeIndex=next>=0?next:0;
+ const el=fieldNodes().find(n=>n.dataset.field===anchor.field),r=textRange(el,anchor.start,anchor.end);if(r)revealRange(r);expireApplied();
+}
 function palette(){const group=$('teGroup').value,term=$('teSearch').value.toLowerCase().replace(/[²³]/g,c=>c==='²'?'2':'3');$('tePresets').innerHTML=root.PhysicsInput.presets.map((p,i)=>({p,i})).filter(({p})=>(!group||p.group===group)&&(!term||(p.label+' '+p.tex+' '+p.note).toLowerCase().replace(/[²³]/g,c=>c==='²'?'2':'3').includes(term))).map(({p,i})=>'<button type="button" data-preset="'+i+'" title="'+E(p.note)+'">'+E(p.label)+'</button>').join('')}
 function mathOpen(tex,target=null){rememberRange();mathTarget=target;mathRange=defaultRange().cloneRange();$('teMathValue').value=tex;$('teMathDialog').showModal();$('teMathValue').focus();$('teMathError').textContent='';}
 function diff(){collect();return fields.filter(k=>JSON.stringify(base[k]??content(base)[k])!==JSON.stringify(work[k]??content(work)[k]))}
@@ -115,7 +181,7 @@ async function save(next=false){
  const invalid=fieldNodes().flatMap(n=>root.PhysicsMathContent.validate(getField(n.dataset.field)).filter(e=>e.type==='数学结构解析失败'||e.type==='数学定界符不成对'));
  if(invalid.length){status('公式结构未通过检查，请先修复：'+invalid[0].type,true);return false}
  saveBusy=true;dialog.querySelector('.te-layout').inert=true;dialog.querySelectorAll('button').forEach(b=>b.disabled=true);
- try{await writing;const result=await api.commit(base,work);base=clone(result);work=clone(result);undo=[];redo=[];status('正式版本已保存 · '+new Date().toLocaleTimeString());fillMeta();comparison();if(next)await navigate(1);return true}catch(e){status('保存失败，草稿保留：'+e.message,true);return false}finally{saveBusy=false;dialog.querySelector('.te-layout').inert=false;dialog.querySelectorAll('button').forEach(b=>b.disabled=false);updateView();}
+ try{await writing;const result=await api.commit(base,work);base=clone(result);work=clone(result);undo=[];redo=[];status('正式版本已保存 · '+new Date().toLocaleTimeString());fillMeta();comparison();if(feedback){feedback.saved=true;showIssue();}if(next)await navigate(1);return true}catch(e){status('保存失败，草稿保留：'+e.message,true);return false}finally{saveBusy=false;dialog.querySelector('.te-layout').inert=false;dialog.querySelectorAll('button').forEach(b=>b.disabled=false);updateView();}
 }
 async function navigate(delta){await writing;const list=api.questions().filter(q=>!q.archivedAsDuplicate),i=list.findIndex(q=>q.id===work.id),next=list[i+delta];if(next)await open(next.id);else status(delta>0?'已到最后一题':'已到第一题')}
 async function close(){if(saveBusy)return;try{await writing;dialog.close();api.onClose?.()}catch(e){status('草稿未保存，暂不关闭：'+e.message,true)}}
@@ -124,9 +190,10 @@ async function open(id,options={}){
  if(dialog?.open){collect();await writing;}const found=await api.getQuestion(id)||options.newQuestion;if(!found)return;
  session++;base=clone(found);if(!base.id)base.id=id;work=clone(base);undo=[];redo=[];issueIndex=0;const d=await api.getDraft(id);let note='未修改';
  if(d){if(d.baseFingerprint===fingerprint(base)){Object.assign(work,clone(d.content));note='已恢复未正式保存的草稿'}else{note='存在基于旧版本的草稿，请在历史中查看后恢复';}}
- build(options);renderFields();fillMeta();comparison();palette();scan();status(note);if(d&&d.baseFingerprint!==fingerprint(base)){$('teOldDraft').hidden=false;$('teOldDraft').onclick=()=>{if(confirm('恢复旧草稿会替换当前编辑内容，正式版本在点击保存前不变。继续？')){checkpoint();Object.assign(work,clone(d.content));renderFields();fillMeta();draft();scan()}}}lockBackground();if(!dialog.open)dialog.showModal();$('teDocumentScroll').scrollTop=0;$('teControls').scrollTop=0;getSelection().removeAllRanges();
+ build(options);renderFields();fillMeta();comparison();palette();scan();status(note);if(d&&d.baseFingerprint!==fingerprint(base)){$('teOldDraft').hidden=false;$('teOldDraft').onclick=()=>{if(confirm('恢复旧草稿会替换当前编辑内容，正式版本在点击保存前不变。继续？')){checkpoint();Object.assign(work,clone(d.content));renderFields();fillMeta();draft();scan()}}}lockBackground();if(!dialog.open)dialog.showModal();$('teDocumentScroll').scrollTop=0;$('teControls').scrollTop=0;getSelection().removeAllRanges();locate(false);
 }
 function build(options){
+ clearTimeout(scanTimer);clearTimeout(appliedTimer);clearHighlights();issues=[];feedback=null;recentChanges=[];resumeIndex=0;
  viewMode='edit';viewScroll={};range=null;activeField=null;mathTarget=null;mathRange=null;
  dialog=$('teacherEditorDialog');dialog.innerHTML=`<header class="te-head"><div><h2>编辑题目</h2><span>${E(work.source||'网页新建')} · 第 ${E(work.sourceNo||'?')} 题 · ${E(work.id)}</span></div><div><button data-action="prev">上一题</button><button data-action="next">下一题</button><button data-action="close">关闭</button></div><p id="teStatus" role="status" aria-live="polite"></p></header>
  <div class="te-layout"><section class="te-document" aria-label="题目内容">
@@ -144,12 +211,15 @@ function init(options){
  api=options;document.body.insertAdjacentHTML('beforeend','<dialog id="teacherEditorDialog" class="te-dialog" aria-label="题目编辑"></dialog><dialog id="teMathDialog" class="te-math-dialog"><h2>编辑公式</h2><p>点击公式位置输入；使用下方按钮插入结构。</p><math-field id="teMathValue" math-virtual-keyboard-policy="manual"></math-field><div class="te-tools"><button data-math-command="subscript">下标</button><button data-math-command="superscript">上标</button><button data-math-insert="\\frac{#0}{#?}">分式</button><button data-math-insert="\\sqrt{#0}">根式</button><button data-math-insert="\\times10^{#?}">×10ⁿ</button></div><p id="teMathError" role="alert"></p><button id="teMathCancel">取消</button><button id="teMathApply" class="primary">应用公式</button></dialog><dialog id="teHistoryDialog"><h2>版本与修改记录</h2><div id="teHistoryBody"></div><button id="teHistoryClose">关闭</button></dialog><dialog id="teImageDialog"><img alt="题图放大"><button id="teImageClose">关闭</button></dialog>');
  dialog=$('teacherEditorDialog');
  dialog.addEventListener('close',unlockBackground);
+ dialog.addEventListener('close',()=>{clearTimeout(scanTimer);clearTimeout(appliedTimer);clearHighlights();});
  if(root.MathfieldElement){root.MathfieldElement.fontsDirectory=new URL('./vendor/mathlive/fonts',document.currentScript?.src||new URL('./teacher-editor.js',location.href)).href;root.MathfieldElement.soundsDirectory=null;}
  document.addEventListener('selectionchange',()=>{if(dialog.open)rememberRange()});
  // Toolbar mouse clicks must not replace the selection in the left editor.
  dialog.addEventListener('mousedown',e=>{if(e.button===0&&e.target.closest('.te-toolbar button')){rememberRange();e.preventDefault();}});
  dialog.addEventListener('focusin',e=>{const el=e.target.closest('[data-field]');if(el&&viewMode==='edit')activeField=el;});
  dialog.addEventListener('beforeinput',e=>{if(e.target.closest('[data-field]'))checkpoint()});
+ dialog.addEventListener('compositionstart',()=>{composing=true;clearTimeout(scanTimer);});
+ dialog.addEventListener('compositionend',()=>{composing=false;scheduleScan();});
  dialog.addEventListener('input',e=>{if(e.target.closest('[data-field]')||e.target.closest('.te-meta'))changed();if(e.target.id==='teSearch')palette()});
  dialog.addEventListener('change',async e=>{if(e.target.id==='teGroup')palette();if(e.target.id==='teCompareTab')setView(e.target.value);if(e.target.id==='teSourceFile'){try{await sourceFile(e.target.files[0])}catch(err){status('原件读取失败：'+err.message,true)}return;}
  const ds=e.target.dataset;if(ds.imageWidth){checkpoint();const[k,i]=ds.imageWidth.split(':');work[k][i].displayWidth=Math.max(80,Math.min(1200,Number(e.target.value)||320));renderFields();draft();}
@@ -163,6 +233,7 @@ function init(options){
  const at=e.target.closest('.te-atom');if(at){if(viewMode==='edit')mathOpen(at.dataset.tex,at);return}
  const b=e.target.closest('button');if(!b)return;
  if(b.disabled)return;
+ if(b.dataset.appliedIndex!==undefined){locateApplied(Number(b.dataset.appliedIndex));return;}
  if(b.dataset.mode){setView(b.dataset.mode);return;}
  if(b.dataset.preset!==undefined){const p=root.PhysicsInput.presets[Number(b.dataset.preset)];if(['公式','结构'].includes(p.group))mathOpen(p.tex);else insertTex(p.tex);return}
  if(b.dataset.imageZoom){const[k,i]=b.dataset.imageZoom.split(':');$('teImageDialog').querySelector('img').src=mediaSrc(work[k][i]);$('teImageDialog').showModal();return}
@@ -174,18 +245,18 @@ function init(options){
  if(a==='sub'||a==='sup'){rememberRange();const selected=range?.toString()||'x';mathOpen(range?.toString()?'{}'+(a==='sub'?'_{':'^{')+selected+'}':(a==='sub'?'F_{1}':'x^{2}'));return}
  if(a==='fraction'){mathOpen('\\frac{a}{b}');return}if(a==='science'){mathOpen('a\\times10^{n}');return}
  if(a==='table'){checkpoint();const at=defaultRange(),holder=document.createElement('div');holder.innerHTML='<table><tbody><tr><td>项目</td><td>数值</td></tr><tr><td>物理量</td><td>0</td></tr></tbody></table>';at.deleteContents();at.insertNode(holder.firstChild);changed();return}
- if(a==='accept'){accept();return}if(a==='locate'){locate();return}if(a==='correct'){const x=issues[issueIndex];if(x){checkpoint();work.normalizationDecisionsV1??=[];work.normalizationDecisionsV1.push({key:x.key,status:'correct',at:stamp()});draft();scan()}return}
- if(a==='issuePrev'||a==='issueNext'){issueIndex=(issueIndex+(a==='issueNext'?1:issues.length-1))%Math.max(1,issues.length);showIssue();locate();return}
- if(a==='cancel'){if(confirm('放弃本次草稿，恢复当前正式版本？')){await writing;work=clone(base);undo=[];redo=[];renderFields();fillMeta();scan();await api.setDraft(work.id,null);status('已取消本次修改')}return}
+ if(a==='accept'||a==='acceptSame'){accept(a==='acceptSame');return}if(a==='locate'){locate();return}if(a==='correct'){const x=issues[issueIndex];if(x){collect();if(getField(x.field).slice(x.start,x.end)!==x.before){scan();return;}checkpoint();work.normalizationDecisionsV1??=[];work.normalizationDecisionsV1.push({key:issueKey(x,getField(x.field)),field:x.field,start:x.start,end:x.end,before:x.before,status:'correct',at:stamp()});draft();scan();locate(false);}return}
+ if(a==='issuePrev'||a==='issueNext'){if(!issues.length)return;if(feedback){feedback=null;issueIndex=(resumeIndex+(a==='issuePrev'?issues.length-1:0))%issues.length;}else issueIndex=(issueIndex+(a==='issueNext'?1:issues.length-1))%issues.length;showIssue();locate();return}
+ if(a==='cancel'){if(confirm('放弃本次草稿，恢复当前正式版本？')){await writing;work=clone(base);undo=[];redo=[];resetFeedback();renderFields();fillMeta();scan();await api.setDraft(work.id,null);status('已取消本次修改')}return}
  if(a==='history'){restoreHistory();return}if(a==='diff'){const keys=diff();$('teHistoryBody').innerHTML=keys.length?keys.map(k=>'<h3>'+E(k)+'</h3><div class="te-diff"><pre>'+E(['images','answerImages'].includes(k)?'图片 '+(base[k]||[]).length+' 张（原图保留于历史版本）':typeof base[k]==='string'?base[k]:JSON.stringify(base[k],null,2))+'</pre><pre>'+E(['images','answerImages'].includes(k)?'图片 '+(work[k]||[]).length+' 张（可在编辑区核对）':typeof work[k]==='string'?work[k]:JSON.stringify(work[k],null,2))+'</pre></div>').join(''):'没有内容修改';$('teHistoryDialog').showModal();return}
- if(a==='split'||a==='clearParts'){collect();if(work.parts?.length&&!confirm('替换现有小问草稿？正式版本仍可在历史中恢复。'))return;checkpoint();work.parts=a==='split'?api.split(work.stem):[];renderFields();draft();scan()}
+ if(a==='split'||a==='clearParts'){collect();if(work.parts?.length&&!confirm('替换现有小问草稿？正式版本仍可在历史中恢复。'))return;checkpoint();work.parts=a==='split'?api.split(work.stem):[];resetFeedback();renderFields();draft();scan()}
  }catch(err){status(err.message,true)}});
- $('teHistoryBody').addEventListener('click',e=>{const b=e.target.closest('[data-history]');if(b){checkpoint();Object.assign(work,clone(base.teacherHistoryV1[Number(b.dataset.history)].before));renderFields();fillMeta();draft();scan();$('teHistoryDialog').close()}});
+ $('teHistoryBody').addEventListener('click',e=>{const b=e.target.closest('[data-history]');if(b){checkpoint();Object.assign(work,clone(base.teacherHistoryV1[Number(b.dataset.history)].before));resetFeedback();renderFields();fillMeta();draft();scan();$('teHistoryDialog').close()}});
  $('teMathDialog').addEventListener('click',e=>{const b=e.target.closest('button');if(b?.dataset.mathCommand)$('teMathValue').executeCommand(b.dataset.mathCommand);if(b?.dataset.mathInsert)$('teMathValue').insert(b.dataset.mathInsert)});
  $('teMathApply').onclick=()=>{const tex=$('teMathValue').value;try{if(!tex.trim()||/\\placeholder/.test(tex))throw Error('请填写公式中的空位');root.PhysicsMathContent.mathml(tex);insertTex(tex,mathTarget,mathRange);$('teMathDialog').close()}catch(e){$('teMathError').textContent='公式无法保存：'+e.message}};
  $('teMathCancel').onclick=()=>$('teMathDialog').close();$('teHistoryClose').onclick=()=>$('teHistoryDialog').close();$('teImageClose').onclick=()=>$('teImageDialog').close();
  root.addEventListener('beforeunload',e=>{if(dialog.open&&/失败|正在保存/.test($('teStatus').textContent)){e.preventDefault();e.returnValue=''}});
 }
-function travel(forward){collect();const from=forward?redo:undo,to=forward?undo:redo;if(!from.length)return;to.push(clone(content(work)));Object.assign(work,from.pop());renderFields();fillMeta();draft();scan()}
+function travel(forward){collect();const from=forward?redo:undo,to=forward?undo:redo;if(!from.length)return;to.push(clone(content(work)));Object.assign(work,from.pop());resetFeedback();renderFields();fillMeta();draft();scan()}
 root.PhysicsTeacherEditor={init,open,content,fingerprint,serialize};
 })(window);

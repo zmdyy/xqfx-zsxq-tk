@@ -14,12 +14,17 @@ const formulas=[
 for(const [label,tex,note]of formulas)add('公式',label,tex,note);
 function scan(text){
  text=String(text||'');const out=[],ranges=Array.from(text.matchAll(/\\\([\s\S]*?\\\)/g),m=>[m.index,m.index+m[0].length]);
- function addMatches(re,replace,reason){for(const m of text.matchAll(re)){const start=m.index,end=start+m[0].length;if(ranges.some(([a,b])=>start<b&&end>a)||out.some(x=>start<x.end&&end>x.start))continue;out.push({start,end,before:m[0],after:replace(m),reason})}}
- addMatches(/(?<![A-Za-z0-9_])(?:kg\/m3|g\/cm3|[kM]?J\/m3|cm[23]|mm[23]|m[23])(?![A-Za-z0-9_])/g,m=>m[0].replace(/2/g,'²').replace(/3/g,'³'),'疑似单位指数，请确认这里表示物理单位');
- addMatches(/J\s*\/\s*kg\s*[·⋅]?\s*℃/g,()=> 'J/(kg·℃)','核对是否为比热容单位');
- addMatches(/(?<![A-Za-z0-9_])[FUIRvQt][0-9](?![A-Za-z0-9_])/g,m=>'\\('+m[0][0]+'_{'+m[0][1]+'}\\)','疑似物理量下标，须结合上下文确认；型号不适用');
- addMatches(/(?<![A-Za-z])(?:Q[吸放]|F[浮拉]|[UP][额])/g,m=>'\\('+m[0][0]+'_{\\text{'+m[0].slice(1)+'}}\\)','疑似文字下标，请确认');
- addMatches(/(?<![A-Za-z0-9_])(?:\d+(?:\.\d+)?)[×]10([+-]?\d{1,2})(?![0-9])/g,m=>'\\('+m[0].split('×')[0]+'\\times10^{'+m[1]+'}\\)','疑似科学计数法指数丢失，须核对原件；也可能是普通乘法');
+ function addMatches(re,replace,reason,category,label){for(const m of text.matchAll(re)){const start=m.index,end=start+m[0].length;if(ranges.some(([a,b])=>start<b&&end>a)||out.some(x=>start<x.end&&end>x.start))continue;out.push({start,end,before:m[0],after:replace(m),reason,category,label})}}
+ addMatches(/(?<![A-Za-z0-9_])(?:kg\/m3|g\/cm3|[kM]?J\/m3|cm[23]|mm[23]|m[23])(?![A-Za-z0-9_])/g,m=>m[0].replace(/2/g,'²').replace(/3/g,'³'),'疑似单位指数，请确认这里表示物理单位','unit-exponent','单位指数');
+ addMatches(/J\s*\/\s*kg\s*[·⋅]?\s*℃/g,()=> 'J/(kg·℃)','核对是否为比热容单位','unit-format','比热容单位');
+ const powers='⁰¹²³⁴⁵⁶⁷⁸⁹';
+ addMatches(/(?<![A-Za-z0-9_])([FGUIRPWQVvstlhLSρT])([0-9]{1,2})((?:['′’‘″]{1,2}|\^(?:\{[+-]?[0-9]{1,2}\}|[+-]?[0-9]{1,2})|[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+){0,2})(?![A-Za-z0-9_])/g,m=>{
+   // Digits alone are subscripts. Primes and existing powers stay above the symbol.
+   const upper=m[3].replace(/\^\{([+-]?[0-9]+)\}|\^([+-]?[0-9]+)|['′’‘″]|[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]/g,(s,a,b)=>a||b||(s==='″'?'\\prime\\prime ':"'′’‘".includes(s)?'\\prime ':s==='⁻'?'-':s==='⁺'?'+':String(powers.indexOf(s))));
+   return '\\('+(m[1]==='ρ'?'\\rho':m[1])+'_{'+m[2]+'}'+(upper?'^{'+upper.trim()+'}':'')+'\\)';
+ },'疑似物理量下标，须结合上下文确认；型号不适用','numeric-subscript','数字下标');
+ addMatches(/(?<![A-Za-z])(?:Q[吸放]|F[浮拉]|[UP][额])/g,m=>'\\('+m[0][0]+'_{\\text{'+m[0].slice(1)+'}}\\)','疑似文字下标，请确认','text-subscript','文字下标');
+ addMatches(/(?<![A-Za-z0-9_])(?:\d+(?:\.\d+)?)[×]10([+-]?\d{1,2})(?![0-9])/g,m=>'\\('+m[0].split('×')[0]+'\\times10^{'+m[1]+'}\\)','疑似科学计数法指数丢失，须核对原件；也可能是普通乘法','scientific-exponent','科学计数法');
  return out.sort((a,b)=>a.start-b.start);
 }
 root.PhysicsInput={presets,scan,unitTex};if(typeof module!=='undefined')module.exports=root.PhysicsInput;
