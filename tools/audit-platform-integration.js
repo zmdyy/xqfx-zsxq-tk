@@ -78,6 +78,16 @@ if (!finishDiagnosticSource.includes('diagnosticModalBody.innerHTML')) errors.pu
 if (finishDiagnosticSource.includes('panelDiagnostic.innerHTML')) errors.push('诊断结果页仍残留在右侧详情栏');
 
 
+const questionBankHtml = fs.readFileSync(path.join(root, 'question-bank/index.html'), 'utf8');
+requireText(rootHtml, 'href="question-bank/index.html"', '学情主页缺少题库页入口');
+requireText(knowledgeHtml, '../question-bank/index.html?concept_id=', '知识星球缺少题库 concept_id 深链');
+for (const [html, label] of [[rootHtml, 'index.html'], [knowledgeHtml, 'knowledge/index.html']]) {
+  for (const marker of ['PhysicsTrainingBankV1', 'question-bank/app.js', 'question-bank/style.css', 'id="bankDetailsButton"']) {
+    if (html.includes(marker)) errors.push(label + ' 内嵌了题库页代码（' + marker + '），题库应只在 question-bank/ 中维护');
+  }
+}
+if (/<script>[\s\S]*?<\/script>|<style>/.test(questionBankHtml)) errors.push('question-bank/index.html 含内联脚本或样式，应放入 question-bank/ 下的独立文件');
+
 const remotePinyin = knowledgeHtml.match(/https?:\/\/[^"'\s>]*pinyin/gi) || [];
 if (remotePinyin.length) errors.push('发现远程拼音依赖: ' + remotePinyin.join(', '));
 

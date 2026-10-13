@@ -8,10 +8,30 @@
 - 知识星球：基于 `zmdyy/zsxq1`
 - `/index.html`：学情可视化主页面
 - `/knowledge/index.html`：物理知识宇宙
+- `/question-bank/index.html`：物理精准练习题库（选题、审核、组卷、Word 导出）
 - `/data/knowledge/knowledge-db.js`：两端共用的知识点目录
 - `/data/question-knowledge-map.schema.json`：P0 映射数据约束
 
 原始两个仓库保持不动，整合功能只在本仓库迭代。
+
+### 三个页面各自独立
+
+学情可视化与知识宇宙沿用原仓库各自独立的 HTML；题库同样单独成页，全部代码只放在 `/question-bank/` 目录：
+
+| 要修改的内容 | 只需阅读 |
+| --- | --- |
+| 成绩、小题、错题本、座位等学情功能 | `/index.html` 及根目录脚本 |
+| 知识节点、关系、迷思诊断题 | `/knowledge/` |
+| 训练题导入、审核、筛选、试题篮、Word 导出 | `/question-bank/`（说明见 `question-bank/README.md`） |
+
+三页之间只通过链接和共享数据联系，不互相内嵌代码：
+
+- 学情主页「精准练习题库 · 选题组卷」按钮 → `question-bank/index.html`；
+- 知识星球节点详情 → `question-bank/index.html?concept_id=...`；
+- 题库与知识星球共用 `/data/knowledge/` 下的知识点目录与考法数据；
+- 题库只读学情主页的 IndexedDB `ScoreAnalysisDB` 获取学生名单，自身数据存放在 `PhysicsTrainingBankV1`。
+
+`node tools/audit-platform-integration.js` 会检查这条边界：学情主页和知识星球不得内嵌题库代码，`question-bank/index.html` 不含内联脚本/样式，入口链接必须存在。
 
 ## P0：统一 concept_id
 
