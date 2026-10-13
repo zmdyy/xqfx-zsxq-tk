@@ -173,12 +173,12 @@
    <div><h2 id="qrTitle">题库质量审核</h2></div>
    <div class="qr-head-buttons">
      <button id="qrExport" class="muted" type="button" title="导出本轮变化，含待修复、教师修改、重复处理和已排除四张表">导出修改清单 Excel</button>
-     <button id="qrClose" class="muted" type="button">关闭</button>
+     <button id="qrClose" class="muted" type="button">← 返回题库</button>
    </div>
  </div>
  <div class="qr-summary" id="qrSummary" hidden></div>
  <nav id="qrTabs" class="qr-tabs" aria-label="审核维度"></nav>
- <div class="qr-controls"><button type="button" id="qrQueueToggle" class="muted qr-queue-toggle" aria-expanded="false" aria-controls="qrDrawer">☰ 题目列表 <span id="qrQueueBadge"></span></button><button type="button" id="qrFocusToggle" class="muted qr-focus-toggle" aria-pressed="false" title="给公式、答案和知识点编辑留出更宽的空间">扩大编辑区</button><label>显示范围<select id="qrScope">
+ <div class="qr-controls"><button type="button" id="qrQueueToggle" class="muted qr-queue-toggle" aria-expanded="false" aria-controls="qrDrawer">☰ 题目列表 <span id="qrQueueBadge"></span></button><button type="button" id="qrUnifiedEditor" class="primary qr-unified-editor" title="在物理编辑器中修改单位、公式，并对照原件">打开物理编辑器 · 单位 / 公式 / 对照</button><button type="button" id="qrFocusToggle" class="muted qr-focus-toggle" aria-pressed="false" title="给公式、答案和知识点编辑留出更宽的空间">扩大编辑区</button><label>显示范围<select id="qrScope">
    <option value="risks">需要关注</option><option value="pending">尚未完成</option><option value="repair">需修复</option><option value="discuss">待讨论</option><option value="approved">已通过</option><option value="all">全部题目</option>
  </select></label><input id="qrSearch" type="search" placeholder="搜索题号、来源、题干和知识点"></div>
  <div id="qrGrid" class="qr-grid">

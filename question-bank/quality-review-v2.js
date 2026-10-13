@@ -165,6 +165,7 @@ function special(q){
 }
 function rendered(){
  const q=api.getQuestions().find(x=>x.id===id),host=$('qrContent');
+ $('qrUnifiedEditor').disabled=!q;
  if(!q){host.innerHTML='<p class="qr-empty">没有符合条件的题目</p>';return}
  const peer=mode==='duplicate'?(dupes.get(q.id)||[]).find(x=>x.id===peerId)||(dupes.get(q.id)||[])[0]:null;
  if(peer)peerId=peer.id;
@@ -181,7 +182,7 @@ function rendered(){
  '<div class="qr-side-scroll">'+diagnosticPanel(q)+special(q)+
  (mode==='overview'?'':'<label>教师备注<textarea id="qrNote" placeholder="可选：描述位置及问题">'+esc(audit(q,mode).note||'')+'</textarea></label>')+
  '</div>'+actions(q)+'</div>';
- host.innerHTML='<button type="button" data-unified-editor class="primary">打开物理编辑器 · 单位 / 公式 / 对照</button><div class="qr-review-layout"><section class="qr-evidence">'+left+'</section>'+side+'</div>';
+ host.innerHTML='<div class="qr-review-layout"><section class="qr-evidence">'+left+'</section>'+side+'</div>';
  selectIssue(selectedIssue);
 }
 function actions(q){
@@ -307,10 +308,27 @@ async function exportExcel(){
   message='已导出'+result.count+'项修改（仅元数据，无题图），发送此Excel即可';rendered();
  }catch(e){message='导出失败：'+e.message;rendered()}finally{button.disabled=false}
 }
+async function openUnifiedEditor(){
+ const stem=$('qrStem'),answer=$('qrAnswerEdit'),q=api.getQuestions().find(x=>x.id===id);if(!q)return;
+ if((stem&&stem.value!==q.stem)||(answer&&answer.value!==q.answer)||($('qrNote')&&$('qrNote').value!==(audit(q,mode).note||''))){message='请先保存当前审核区修改，再打开物理编辑器';rendered();return}
+ await api.openEditor(id,{review:true});
+}
+const PAGE_HASH='#review';
+function showPage(){
+ const page=$('qualityReviewDialog');if(page.open)return;
+ document.body.classList.add('qr-page-open');page.show();window.scrollTo(0,0);drawerSet(false);focusMode('overview');
+}
+function hidePage(){
+ const page=$('qualityReviewDialog');if(!page.open)return;
+ page.close();document.body.classList.remove('qr-page-open');
+}
+function syncPageWithHash(){if(location.hash===PAGE_HASH)showPage();else hidePage()}
 function init(options){
  api=options;
- $('qualityReviewBtn').addEventListener('click',()=>{$('qualityReviewDialog').showModal();drawerSet(false);focusMode('overview')});
- $('qrClose').addEventListener('click',()=>$('qualityReviewDialog').close());
+ $('qualityReviewBtn').addEventListener('click',()=>{if(location.hash!==PAGE_HASH)history.pushState(null,'',PAGE_HASH);showPage()});
+ $('qrClose').addEventListener('click',()=>{if(location.hash===PAGE_HASH)history.pushState(null,'',location.pathname+location.search);hidePage()});
+ window.addEventListener('hashchange',syncPageWithHash);window.addEventListener('popstate',syncPageWithHash);
+ $('qrUnifiedEditor').addEventListener('click',openUnifiedEditor);
  $('qrQueueToggle').addEventListener('click',()=>drawerSet(!drawer));
  $('qrDrawerClose').addEventListener('click',()=>drawerSet(false));$('qrDrawerBackdrop').addEventListener('click',()=>drawerSet(false));
  $('qrFocusToggle').addEventListener('click',()=>{const g=$('qrGrid'),enabled=!g.classList.contains('edit-focus');g.classList.toggle('edit-focus',enabled);$('qrFocusToggle').textContent=enabled?'恢复对照比例':'扩大编辑区'});
@@ -321,7 +339,6 @@ function init(options){
  $('qrPrevious').addEventListener('click',()=>next(-1));$('qrFollowing').addEventListener('click',()=>next(1));
  $('qrContent').addEventListener('change',e=>{if(e.target?.id==='qrPeerPicker'){peerId=e.target.value;rendered()}});
  $('qrContent').addEventListener('click',async e=>{
-  if(e.target.closest('[data-unified-editor]')){const stem=$('qrStem'),answer=$('qrAnswerEdit'),q=api.getQuestions().find(x=>x.id===id);if((stem&&stem.value!==q.stem)||(answer&&answer.value!==q.answer)||($('qrNote')&&$('qrNote').value!==(audit(q,mode).note||''))){message='请先保存当前审核区修改，再打开物理编辑器';const hint=document.createElement('p');hint.textContent=message;e.target.after(hint);return}await api.openEditor(id,{review:true});return}
   const zoom=e.target.closest('[data-zoom]');if(zoom){zoom.classList.toggle('expanded');return}
   const focus=e.target.closest('[data-switch]');if(focus){focusMode(focus.dataset.switch,focus.dataset.issueId);return}
   const highlight=e.target.closest('[data-issue-select]');if(highlight){
@@ -334,6 +351,7 @@ function init(options){
   if(e.target.closest('[data-save-all]')){await save();return}
  });
  $('qrExport').addEventListener('click',exportExcel);
+ syncPageWithHash();
 }
 root.PhysicsQualityReview={init,refresh:render,audit,overall,signature,pairDecision};
 })(typeof window!=='undefined'?window:globalThis);

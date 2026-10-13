@@ -246,3 +246,9 @@
 .quality-review-dialog .qr-diagnostic-positions .qr-diagnostic.active b{color:#134d78}
 .quality-review-dialog .qr-highlight.qr-current-issue{background:#bde5ff!important;outline:3px solid #1767a0;outline-offset:2px;border-bottom-color:#1767a0}
 .qr-selected-position{margin:8px 0 0;font-size:13px;font-weight:700;color:#134d78;line-height:1.5}
+/* 质量审核以整页视图打开，不再叠在题库主页上 */
+body.qr-page-open{overflow:hidden}
+body.qr-page-open>header.topbar,body.qr-page-open>main{display:none}
+body.qr-page-open .quality-review-dialog[open]{position:fixed;inset:0;z-index:20;width:100vw;max-width:none;height:100vh;height:100dvh;max-height:none;margin:0;border:0;border-radius:0;box-shadow:none}
+.qr-controls .qr-unified-editor{min-height:34px;font-weight:700}
+.qr-controls .qr-unified-editor:disabled{opacity:.5;cursor:not-allowed}
