@@ -6,7 +6,7 @@
 <title>物理精准练习题库 · 学情可视化</title>
 <link rel="stylesheet" href="./teacher-editor.css?v=20261013suggest2">
 <link rel="stylesheet" href="./style.css?v=20261013preview3">
-<link rel="stylesheet" href="./quality-review.css?v=20261012selection">
+<link rel="stylesheet" href="./quality-review.css?v=20261013review5">
 <script src="../jszip.min.js"></script>
 <script src="../katex.min.js"></script>
 <script src="../mathml2omml.js"></script>
@@ -21,6 +21,7 @@
 <script src="./word-export.js?v=20261013word4"></script>
 </head>
 <body>
+<div id="questionBankHome">
 <header class="topbar"><div><a href="../index.html">← 学情分析</a><a href="../knowledge/index.html">✦ 知识星球</a><h1>物理精准练习题库</h1></div><div class="top-actions"><button type="button" class="primary" id="bankDetailsButton" aria-expanded="false" aria-controls="bankDetailsPanel" title="展开或收起知识点统计">▤ 题库明细</button><button type="button" id="qualityReviewBtn" class="muted" title="统一审核题图、公式与单位、答案、重复题、知识点和题型">题库质量审核</button><label class="button muted" title="选择完整题库ZIP后自动核对版本并更新本地题库">更新题库版本<input type="file" id="bankVersionInput" accept=".zip" hidden></label><button type="button" id="newQuestionBtn">＋ 新建题目</button><button id="backupZipBtn" class="muted">完整ZIP备份</button><button id="backupBtn" class="muted">备份题库与记录</button><label class="button muted">恢复备份<input type="file" id="restoreInput" accept=".json,.zip" hidden></label></div></header>
 <main>
 <section class="bank-query-panel workflow-section" aria-label="题库检索与筛选">
@@ -138,6 +139,7 @@
 </aside>
 </div>
 </main>
+</div>
 <dialog id="studentNameDialog" class="student-name-dialog" aria-labelledby="studentNameTitle">
   <h2 id="studentNameTitle">选择学生后导出 Word</h2>
   <p class="hint">输入中文姓名、完整拼音或首字母，从已有学生名单选择。若学生不在名单中，可填写姓名与班级手动登记。</p>
@@ -169,12 +171,12 @@
  </div>
  <p id="repairNotice" role="status" aria-live="polite" class="repair-notice">自动SVG描摹或增强PNG不会自动纠正错误电路、光路和标注，请认真核对。</p>
 </dialog>
-<dialog id="qualityReviewDialog" class="quality-review-dialog" aria-labelledby="qrTitle">
+<dialog id="qualityReviewDialog" class="quality-review-dialog" aria-labelledby="qrTitle" aria-modal="false">
  <div class="qr-head">
-   <div><h2 id="qrTitle">题库质量审核</h2></div>
+   <div><h2 id="qrTitle" tabindex="-1">题库质量审核</h2></div>
    <div class="qr-head-buttons">
      <button id="qrExport" class="muted" type="button" title="导出本轮变化，含待修复、教师修改、重复处理和已排除四张表">导出修改清单 Excel</button>
-     <button id="qrClose" class="muted" type="button">关闭</button>
+     <button id="qrClose" class="muted" type="button">返回主页</button>
    </div>
  </div>
  <div class="qr-summary" id="qrSummary" hidden></div>
@@ -200,10 +202,10 @@
 <script src="./quality-diagnostics.js?v=20261012editor1"></script>
 <script src="./quality-export.js?v=20261012v5"></script>
 <script src="./bank-version-update.js?v=20261012editor1"></script>
-<script src="./quality-review-v2.js?v=20261012editor1"></script>
+<script src="./quality-review-v2.js?v=20261013review5"></script>
 <script src="./vendor/mathlive/mathlive.min.js"></script>
 <script src="./physics-input.js?v=20261013suggest2"></script>
-<script src="./teacher-editor.js?v=20261013suggest2"></script>
+<script src="./teacher-editor.js?v=20261013review5"></script>
 <script src="./app.js?v=20261013word4"></script>
 </body>
 </html>

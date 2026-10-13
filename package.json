@@ -6,7 +6,8 @@
     "test:browser": "node tests/seating-browser.test.cjs && node tests/seating-search-browser.test.cjs && node tests/seating-layout-browser.test.cjs",
     "test:editor": "node tests/question-bank-physics-input.test.cjs && node tests/question-bank-teacher-editor.test.cjs && node tests/question-bank-editor-layout-browser.test.cjs && node tests/question-bank-editor-suggestions-browser.test.cjs && node tests/question-bank-review-browser.test.cjs",
     "test:preview": "node tests/question-bank-paper-blocks.test.cjs && node tests/question-bank-preview-browser.test.cjs",
-    "test:word": "node tests/question-bank-word.test.cjs && node tests/question-bank-export-flow.test.cjs && node tests/question-bank-auto-a4.test.cjs && node tests/question-bank-word-browser.test.cjs"
+    "test:word": "node tests/question-bank-word.test.cjs && node tests/question-bank-export-flow.test.cjs && node tests/question-bank-auto-a4.test.cjs && node tests/question-bank-word-browser.test.cjs",
+    "test:review": "node tests/question-bank-review-route-browser.test.cjs && node tests/question-bank-review-browser.test.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

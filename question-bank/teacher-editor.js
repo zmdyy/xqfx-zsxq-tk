@@ -184,7 +184,7 @@ async function save(next=false){
  try{await writing;const result=await api.commit(base,work);base=clone(result);work=clone(result);undo=[];redo=[];status('正式版本已保存 · '+new Date().toLocaleTimeString());fillMeta();comparison();if(feedback){feedback.saved=true;showIssue();}if(next)await navigate(1);return true}catch(e){status('保存失败，草稿保留：'+e.message,true);return false}finally{saveBusy=false;dialog.querySelector('.te-layout').inert=false;dialog.querySelectorAll('button').forEach(b=>b.disabled=false);updateView();}
 }
 async function navigate(delta){await writing;const list=api.questions().filter(q=>!q.archivedAsDuplicate),i=list.findIndex(q=>q.id===work.id),next=list[i+delta];if(next)await open(next.id);else status(delta>0?'已到最后一题':'已到第一题')}
-async function close(){if(saveBusy)return;try{await writing;dialog.close();api.onClose?.()}catch(e){status('草稿未保存，暂不关闭：'+e.message,true)}}
+async function close(){if(saveBusy)return false;try{await writing;dialog.close();unlockBackground();api.onClose?.();return true}catch(e){status('草稿未保存，暂不关闭：'+e.message,true);return false}}
 function restoreHistory(){const records=base.teacherHistoryV1||[];$('teHistoryBody').innerHTML=records.length?records.map((h,i)=>'<p>'+E(h.at)+' · '+E(h.fields.join('、'))+' <button data-history="'+i+'">恢复此修改前版本为草稿</button></p>').join(''):'暂无历史版本';$('teHistoryDialog').showModal()}
 async function open(id,options={}){
  if(dialog?.open){collect();await writing;}const found=await api.getQuestion(id)||options.newQuestion;if(!found)return;
@@ -210,8 +210,8 @@ function build(options){
 function init(options){
  api=options;document.body.insertAdjacentHTML('beforeend','<dialog id="teacherEditorDialog" class="te-dialog" aria-label="题目编辑"></dialog><dialog id="teMathDialog" class="te-math-dialog"><h2>编辑公式</h2><p>点击公式位置输入；使用下方按钮插入结构。</p><math-field id="teMathValue" math-virtual-keyboard-policy="manual"></math-field><div class="te-tools"><button data-math-command="subscript">下标</button><button data-math-command="superscript">上标</button><button data-math-insert="\\frac{#0}{#?}">分式</button><button data-math-insert="\\sqrt{#0}">根式</button><button data-math-insert="\\times10^{#?}">×10ⁿ</button></div><p id="teMathError" role="alert"></p><button id="teMathCancel">取消</button><button id="teMathApply" class="primary">应用公式</button></dialog><dialog id="teHistoryDialog"><h2>版本与修改记录</h2><div id="teHistoryBody"></div><button id="teHistoryClose">关闭</button></dialog><dialog id="teImageDialog"><img alt="题图放大"><button id="teImageClose">关闭</button></dialog>');
  dialog=$('teacherEditorDialog');
- dialog.addEventListener('close',unlockBackground);
- dialog.addEventListener('close',()=>{clearTimeout(scanTimer);clearTimeout(appliedTimer);clearHighlights();});
+ dialog.addEventListener('close',()=>{if(!dialog.open)unlockBackground();});
+ dialog.addEventListener('close',()=>{if(dialog.open)return;clearTimeout(scanTimer);clearTimeout(appliedTimer);clearHighlights();});
  if(root.MathfieldElement){root.MathfieldElement.fontsDirectory=new URL('./vendor/mathlive/fonts',document.currentScript?.src||new URL('./teacher-editor.js',location.href)).href;root.MathfieldElement.soundsDirectory=null;}
  document.addEventListener('selectionchange',()=>{if(dialog.open)rememberRange()});
  // Toolbar mouse clicks must not replace the selection in the left editor.
@@ -258,5 +258,5 @@ function init(options){
  root.addEventListener('beforeunload',e=>{if(dialog.open&&/失败|正在保存/.test($('teStatus').textContent)){e.preventDefault();e.returnValue=''}});
 }
 function travel(forward){collect();const from=forward?redo:undo,to=forward?undo:redo;if(!from.length)return;to.push(clone(content(work)));Object.assign(work,from.pop());resetFeedback();renderFields();fillMeta();draft();scan()}
-root.PhysicsTeacherEditor={init,open,content,fingerprint,serialize};
+root.PhysicsTeacherEditor={init,open,close,content,fingerprint,serialize};
 })(window);

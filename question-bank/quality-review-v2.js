@@ -7,6 +7,7 @@ const TYPES=['选择题','填空题','作图题','实验题','计算题','综合
 const TASKS=['选项判断','填空','作图/连线','实验探究','计算','数据或图像处理','综合情境'];
 const STATUS={pending:'待核查',repair:'待修复',dismissed:'疑点已排除',modified:'已修改待复核',awaitingAcceptance:'修复待验收',stale:'内容改变待核验',approved:'已核查',resolved:'已处理',discuss:'待讨论'};
 let api,mode='overview',scope='risks',query='',id='',peerId='',queue=[],diag=new Map(),dupes=new Map(),drawer=false,selectedIssue='',message='',saving=false;
+let reviewActive=false,homeView=null,routeWork=Promise.resolve(),reviewVersion=null,returningHome=false;
 const D=()=>root.PhysicsQualityDiagnostics;
 const normalize=s=>D().norm(s);
 function signature(q,d){
@@ -307,10 +308,72 @@ async function exportExcel(){
   message='已导出'+result.count+'项修改（仅元数据，无题图），发送此Excel即可';rendered();
  }catch(e){message='导出失败：'+e.message;rendered()}finally{button.disabled=false}
 }
+function homeUrl(){return location.pathname+location.search;}
+function reviewState(returnUrl){return {...history.state,physicsReviewRoute:{returnUrl}};}
+function openReviewRoute(){
+ if(location.hash!=='#review')history.pushState(reviewState(homeUrl()+location.hash),'',homeUrl()+'#review');
+ queueRoute();
+}
+function returnHome(){
+ if(returningHome)return;
+ returningHome=true;
+ if(location.hash==='#review'&&history.state?.physicsReviewRoute?.returnUrl?.startsWith(homeUrl()))history.back();
+ else{history.replaceState(history.state,'',homeUrl());queueRoute();}
+}
+function queueRoute(){
+ if(location.hash!=='#review')returningHome=false;
+ routeWork=routeWork.then(syncRoute).catch(error=>{console.error('[题库审核导航]',error);});
+}
+async function syncRoute(){
+ const dialog=$('qualityReviewDialog'),home=$('questionBankHome');
+ if(location.hash==='#review'){
+  if(reviewActive)return;
+  // Finish the homepage editor before taking ownership of its scroll lock.
+  if($('teacherEditorDialog')?.open){
+   if(!await root.PhysicsTeacherEditor.close()){returnHome();return;}
+   for(const name of ['teMathDialog','teHistoryDialog','teImageDialog'])if($(name)?.open)$(name).close();
+   if(location.hash!=='#review')return;
+  }
+  // A pending export/name dialog must finish its own workflow before routing.
+  if(document.querySelector('dialog:modal')){returnHome();return;}
+  homeView={hidden:home.hidden,inert:home.inert,x:root.scrollX,y:root.scrollY,results:$('results').scrollTop,focus:document.activeElement,title:document.title,htmlOverflow:document.documentElement.style.overflow,bodyOverflow:document.body.style.overflow};
+  reviewActive=true;home.hidden=true;home.inert=true;
+  document.documentElement.classList.add('review-route');document.body.classList.add('review-route');
+  document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';
+  document.title='题库质量审核 · 物理精准练习题库';
+  const version=api.getQuestions().map(q=>q.id+':'+(q.revision||0)).join('|');
+  if(reviewVersion===null){drawerSet(false);focusMode('overview');}else if(version!==reviewVersion)render();
+  reviewVersion=version;
+  if(!dialog.open)dialog.show();
+  $('qrTitle').focus({preventScroll:true});
+  return;
+ }
+ if(!reviewActive)return;
+ if($('teacherEditorDialog')?.open){
+  const closed=await root.PhysicsTeacherEditor.close();
+  if(!closed){history.pushState(reviewState(homeUrl()+location.hash),'',homeUrl()+'#review');return;}
+ }
+ if(location.hash==='#review')return;
+ for(const name of ['teMathDialog','teHistoryDialog','teImageDialog','repairDialog','drawDialog','editorDialog'])if($(name)?.open)$(name).close();
+ reviewVersion=api.getQuestions().map(q=>q.id+':'+(q.revision||0)).join('|');
+ reviewActive=false;dialog.close();drawerSet(false);
+ dialog.querySelectorAll('[data-zoom].expanded').forEach(node=>node.classList.remove('expanded'));
+ const view=homeView;homeView=null;
+ home.hidden=view.hidden;home.inert=view.inert;
+ document.documentElement.classList.remove('review-route');document.body.classList.remove('review-route');
+ document.documentElement.style.overflow=view.htmlOverflow;document.body.style.overflow=view.bodyOverflow;document.title=view.title;
+ await new Promise(resolve=>requestAnimationFrame(resolve));
+ if(reviewActive||location.hash==='#review')return;
+ $('results').scrollTop=view.results;root.scrollTo(view.x,view.y);
+ if(view.focus?.isConnected&&home.contains(view.focus))view.focus.focus({preventScroll:true});else $('qualityReviewBtn').focus({preventScroll:true});
+}
 function init(options){
  api=options;
- $('qualityReviewBtn').addEventListener('click',()=>{$('qualityReviewDialog').showModal();drawerSet(false);focusMode('overview')});
- $('qrClose').addEventListener('click',()=>$('qualityReviewDialog').close());
+ $('qualityReviewBtn').addEventListener('click',openReviewRoute);
+ $('qrClose').addEventListener('click',returnHome);
+ root.addEventListener('popstate',queueRoute);root.addEventListener('hashchange',queueRoute);
+ $('qualityReviewDialog').addEventListener('close',()=>{if(reviewActive&&!$('qualityReviewDialog').open)returnHome();});
+ document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!reviewActive||document.querySelector('dialog:modal'))return;if(drawer){drawerSet(false);return}const zoom=$('qualityReviewDialog').querySelector('[data-zoom].expanded');if(zoom){zoom.classList.remove('expanded');return}returnHome();});
  $('qrQueueToggle').addEventListener('click',()=>drawerSet(!drawer));
  $('qrDrawerClose').addEventListener('click',()=>drawerSet(false));$('qrDrawerBackdrop').addEventListener('click',()=>drawerSet(false));
  $('qrFocusToggle').addEventListener('click',()=>{const g=$('qrGrid'),enabled=!g.classList.contains('edit-focus');g.classList.toggle('edit-focus',enabled);$('qrFocusToggle').textContent=enabled?'恢复对照比例':'扩大编辑区'});
@@ -334,6 +397,7 @@ function init(options){
   if(e.target.closest('[data-save-all]')){await save();return}
  });
  $('qrExport').addEventListener('click',exportExcel);
+ queueRoute();
 }
 root.PhysicsQualityReview={init,refresh:render,audit,overall,signature,pairDecision};
 })(typeof window!=='undefined'?window:globalThis);

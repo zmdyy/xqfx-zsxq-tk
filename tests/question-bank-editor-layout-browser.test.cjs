@@ -45,7 +45,7 @@ const fixture={id:'LAYOUT-A',source:'布局验收样例（非正式题库）',so
   assert.ok(await page.evaluate(()=>{const d=document.querySelector('#teacherEditorDialog');return d.scrollWidth<=d.clientWidth+2;}),'no horizontal dialog overflow');
  }
  if(process.env.EDITOR_LAYOUT_SCREENSHOT){await page.setViewportSize({width:1440,height:900});await page.click('[data-action="jumpStem"]');await page.selectOption('#teGroup','常用');await right.evaluate(n=>n.scrollTop=0);await page.screenshot({path:process.env.EDITOR_LAYOUT_SCREENSHOT});await page.click('[data-action="jumpAnswer"]');await page.screenshot({path:process.env.EDITOR_LAYOUT_SCREENSHOT.replace(/\.png$/,'-answer.png')});}
- await page.click('[data-action="close"]');await page.waitForFunction(()=>document.documentElement.style.overflow!=='hidden');assert.equal(await page.locator('#qualityReviewDialog').isVisible(),true);assert.deepEqual(errors,[]);
+ await page.click('[data-action="close"]');await page.waitForFunction(()=>!document.querySelector('#teacherEditorDialog').open);assert.equal(await page.locator('#qualityReviewDialog').isVisible(),true);assert.equal(await page.evaluate(()=>document.documentElement.style.overflow),'hidden','review route still owns the viewport');await page.click('#qrClose');await page.waitForFunction(()=>document.documentElement.style.overflow!=='hidden');assert.deepEqual(errors,[]);
  console.log('PASS: two-pane layout, independent real wheel scrolling, long-question end editing, read-only comparison, preserved selection, preview modes, save-next reset, desktop/mobile bounds, background unlock');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;server.close();});
