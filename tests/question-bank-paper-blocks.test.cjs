@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('assert/strict'),P=require('../question-bank/paper-layout.js');
+const choice={id:'Q',q:{type:'选择题'},stem:'26. 观察A、B、C三个位置，选择正确说法。\nA. 第一项\\(F_1=2\\)\n这一段仍属于A选项\nB. 第二项 C. 第三项 D. 第四项',answer:'（1）说明\n（2）计算',images:['img-B','img-A','unbound'],imageDetails:[{optionLabel:'B',sourceIndex:0},{optionLabel:'A',sourceIndex:1},{sourceIndex:2}]};
+const blocks=P.itemBlocks(choice,1);assert.equal(blocks[0].text,'观察A、B、C三个位置，选择正确说法。');
+assert.deepEqual(blocks.filter(b=>b.kind==='option').map(b=>b.label),['A','B','C','D']);
+assert.ok(blocks.find(b=>b.label==='A').text.includes('这一段仍属于A选项'));assert.equal(blocks.find(b=>b.label==='A').images[0].src,'img-A');assert.equal(blocks.find(b=>b.label==='B').images[0].src,'img-B');assert.equal(blocks.at(-1).images[0].src,'unbound');
+const answer=P.itemBlocks(choice,1,true);assert.equal(answer.length,2);assert.ok(answer.every(b=>b.kind==='paragraph'));
+const table=P.paragraphs('题干\n名称 | 表达式\n电压 | \\(U_1=2\\)\n答案');assert.equal(table.length,3);assert.equal(table[1].kind,'table');assert.equal(table[1].rows.length,2);
+const math=P.paragraphs('\\(A.\nB.\\)\n第二段');assert.equal(math.length,2);assert.equal(math[0].text,'\\(A.\nB.\\)');
+const unbound=P.itemBlocks({id:'U',q:{type:'选择题'},stem:'判断电路。\nA. B.\nC. D.',images:['1','2','3','4']},2);assert.equal(unbound.length,2);assert.equal(unbound[1].kind,'option-group');assert.deepEqual(unbound[1].images.map(i=>i.src),['1','2','3','4']);
+assert.equal(P.itemBlocks({id:'E',stem:'仅题干',answer:'',images:[]},1,true)[0].text,'答案待核对');
+console.log('PASS: paragraph/option/table blocks, math protection, original question number stripping, explicit option-image bindings and conservative unbound option groups');

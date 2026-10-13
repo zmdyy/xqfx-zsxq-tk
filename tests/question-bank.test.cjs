@@ -14,7 +14,7 @@ search:{value:''},conceptFilter:{value:''},conceptFilter2:{value:''},
 relationFilter:{value:'any'},typeFilter:{value:''},difficultyFilter:{value:''},
 usedFilter:{value:''},reviewFilter:{value:''},classFilter:{value:'801'}
 };
-const window={};
+const window={PhysicsPaperLayout:require('../question-bank/paper-layout.js')};
 vm.runInNewContext(modified,{window,document:{getElementById:id=>els[id]},console},{timeout:1000});
 const api=window.PhysicsQuestionBank;
 assert.equal(api.splitParts('（1）画力臂（2）画反射（3）连接电路').length,3);

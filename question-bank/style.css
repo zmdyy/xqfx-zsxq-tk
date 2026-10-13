@@ -9,6 +9,7 @@
 .part-image img{width:112px;height:76px;object-fit:contain;border:1px solid #cbd5e1;background:#fff}
 .part-image input{justify-self:start}
 #previewDialog .sheet.paper{width:210mm!important;height:297mm!important;padding:14mm 15mm!important;box-sizing:border-box}
+#previewDialog .sheet.paper.oversize{height:auto!important;min-height:297mm}
 #previewDialog .sheet.paper .foot{left:15mm;right:15mm;bottom:14mm;width:auto}
 #previewDialog .sheet.paper .images img{max-height:84mm}
 #previewDialog .sheet.paper .double .images img{max-height:58mm}

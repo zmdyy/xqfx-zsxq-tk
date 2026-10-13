@@ -25,7 +25,7 @@ const elements={
  wordDownloadLink:{style:{},click(){downloads++}},
  previewDownloadLink:{style:{}}
 };
-const window={PhysicsWordExport:{async createDocx(){calls++;return new MockBlob()}}};
+const window={PhysicsPaperLayout:require('../question-bank/paper-layout.js'),PhysicsWordExport:{async createDocx(){calls++;return new MockBlob()}}};
 let urlIndex=0;
 vm.runInNewContext(patched,{window,document:{getElementById:id=>elements[id]},Blob:MockBlob,confirm:()=>{confirmCount++;return true},console,
 URL:{createObjectURL:()=>('blob:mock-'+(++urlIndex)),revokeObjectURL(){}}

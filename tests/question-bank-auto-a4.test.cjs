@@ -26,7 +26,7 @@ for(const id of ['previewFront','previewBack']){
  sheet.querySelector=selector=>selector==='.foot'?{getBoundingClientRect:()=>({top:970,bottom:1000})}:null;
  sheet.querySelectorAll=selector=>selector==='img'?[]:[content(isDouble?830:1050),content(isDouble?850:1060)];
 }
-const window={StudentPracticeExport:{getSelection:()=>null,isStudentMode:()=>false,promptForExport:async()=>({mode:'generic',student:null})},
+const window={PhysicsPaperLayout:require('../question-bank/paper-layout.js'),StudentPracticeExport:{getSelection:()=>null,isStudentMode:()=>false,promptForExport:async()=>({mode:'generic',student:null})},
  PhysicsWordExport:{async createDocx(options){exported.push(options.layout);return new StubBlob()}}};
 let index=0;
 vm.runInNewContext(modified,{window,document:{getElementById:id=>elements[id]},Blob:StubBlob,console,confirm:()=>true,

@@ -267,25 +267,22 @@ const pid=id.split('::')[1],p=(q.parts||[]).find(x=>x.id===pid);
 if(pid&&!p)throw Error('子题不存在：'+id);
 if(p&&q.images?.length&&!p.verifiedImages)throw Error('第'+q.sourceNo+p.label+'题的配图尚未确认，请在“审核 / 拆题”中勾选属于此小问的原图。');
 const subset=(arr,indexes)=>p&&Array.isArray(indexes)?indexes.map(i=>arr[i]).filter(Boolean):arr;
+const media=(arr,indexes)=>subset(arr,indexes).map(m=>({src:mediaSrc(m),sourceIndex:arr.indexOf(m),optionLabel:m?.optionLabel,displayWidth:m?.displayWidth})).filter(m=>m.src);
+const imgs=media(q.images||[],p?.imageIndexes),ansImgs=media(q.answerImages||[],p?.answerImageIndexes);
 return {id,q,
 stem:p?[p.sharedContext,p.label+' '+p.stem].filter(Boolean).join('\n'):q.stem,
 answer:p?(p.answer||'该小问答案尚未单独审核'):q.answer||'答案暂缺，请教师审核后使用',
-images:subset(q.images||[],p?.imageIndexes).map(mediaSrc).filter(Boolean),
-answerImages:subset(q.answerImages||[],p?.answerImageIndexes).map(mediaSrc).filter(Boolean)}
+images:imgs.map(m=>m.src),imageDetails:imgs,optionImageIndexes:p?.optionImageIndexes||q.optionImageIndexes,
+answerImages:ansImgs.map(m=>m.src),answerImageDetails:ansImgs}
 }
 function autoLayout(){return $('layout').value==='auto'?'single':$('layout').value}
 function feedbackHtml(){return $('feedback').checked?'<table class="feedback"><tr><th colspan="2">完成后勾选（不影响评分）</th></tr><tr><td>完成：□ 独立　□ 某一步卡住　□ 需要提示</td><td>针对性：□ 正好　□ 部分相关　□ 不适合</td></tr><tr><td colspan="2">困难：□ 题图理解　□ 规律记忆　□ 步骤衔接　□ 作图表达　□ 其他：________</td></tr></table>':''}
 function paperImages(imgs){return imgs.length?'<div class="images">'+imgs.map(s=>'<img alt="题目插图" src="'+esc(s)+'">').join('')+'</div>':''}
-const PAPER_STYLE='@page{size:A4;margin:14mm 15mm}*{box-sizing:border-box}.sheet{background:white;color:#111;font:11pt "Microsoft YaHei",SimSun,sans-serif;height:269mm;overflow:hidden;position:relative;page-break-after:always}.sheet:last-child{page-break-after:auto}.sheet h2{text-align:center;font-size:17pt;margin:0 0 5mm}.sheet .meta{text-align:center;font-size:10pt;border-bottom:1px solid #888;padding-bottom:4mm;margin-bottom:5mm}.sheet .questions.double{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9mm;align-items:start}.sheet .paper-column{min-width:0}.sheet .question,.sheet .answer{break-inside:avoid;page-break-inside:avoid;margin-bottom:5mm}.sheet .stem{white-space:pre-wrap;line-height:1.58;margin-bottom:3mm}.sheet .images{display:flex;flex-wrap:wrap;gap:3mm}.sheet .images img{max-width:100%;max-height:67mm;width:auto;height:auto;object-fit:contain}.sheet .double .images img{max-height:49.5mm}.sheet .answer .images img{max-height:67mm}.sheet .double .answer .images img{max-height:49.5mm}.sheet .answer p{white-space:pre-wrap;line-height:1.6;margin:2mm 0}.sheet .feedback{width:100%;border-collapse:collapse;font-size:9pt;margin-top:4mm}.sheet .feedback td,.sheet .feedback th{border:1px solid #aaa;padding:2mm;text-align:left}.sheet .foot{position:absolute;bottom:0;width:100%;display:flex;justify-content:space-between;color:#777;font-size:9pt}';
+const PAPER_STYLE=window.PhysicsPaperLayout?.style||'';
 function renderPaperQuestions(items,layout,answerSide){
- const blocks=items.map((item,i)=>answerSide
-   ?'<div class="answer"><b>'+(i+1)+'.</b>'+paperImages(item.answerImages)+'<p>'+(window.PhysicsMathContent?.html(item.answer)||esc(item.answer))+'</p></div>'
-   :'<div class="question"><div class="stem"><b>'+(i+1)+'.</b> '+(window.PhysicsMathContent?.html(item.stem)||esc(item.stem))+'</div>'+paperImages(item.images)+'</div>');
- if(layout==='double'){
-   const col=(parity)=>blocks.filter((x,i)=>i%2===parity).join('');
-   return '<div class="questions double"><div class="paper-column">'+col(0)+'</div><div class="paper-column">'+col(1)+'</div></div>';
- }
- return '<div class="questions single">'+blocks.join('')+'</div>';
+ const PL=window.PhysicsPaperLayout;if(!PL)throw Error('打印排版模块未加载，请刷新页面');
+ const blocks=items.flatMap((item,i)=>PL.itemBlocks(item,i+1,answerSide));
+ return '<div class="questions '+layout+'"><div class="paper-column">'+blocks.map(b=>PL.renderBlock(b,window.PhysicsMathContent)).join('')+'</div>'+(layout==='double'?'<div class="paper-column"></div>':'')+'</div>';
 }
 function buildPages(forcedLayout){
  let items=state.basket.map(printable).filter(Boolean);
@@ -294,29 +291,36 @@ function buildPages(forcedLayout){
  const layout=forcedLayout||autoLayout(),title='物理精准练习 · '+today();
  const student=window.StudentPracticeExport?.getSelection?.();
  const meta=student?'班级：'+esc(student.className||'未设置')+'　姓名：'+esc(student.name):'班级：________　姓名：________';
- const front='<div class="sheet" id="frontSheet"><h2>'+title+'</h2><div class="meta">'+meta+'　日期：________　　少量多次 · 独立完成</div>'
-   +renderPaperQuestions(items,layout,false)+feedbackHtml()
-   +'<div class="foot"><span>请在独立完成后核对背面答案</span><span>1 / 2</span></div></div>';
- const back='<div class="sheet" id="backSheet"><h2>参考答案 · 自我核对</h2><div class="meta">与正面题号对应'
+ const front='<div class="sheet" id="frontSheet" data-side="front"><h2>'+title+'</h2><div class="meta">'+meta+'　日期：________　　少量多次 · 独立完成</div><p class="page-warning" hidden></p>'
+   +renderPaperQuestions(items,layout,false)+'<div class="feedback-slot">'+feedbackHtml()+'</div>'
+   +'<div class="foot"><span>请独立完成后核对答案</span><span class="page-label">题目 1/1 · 1/2</span></div></div>';
+ const back='<div class="sheet" id="backSheet" data-side="back"><h2>参考答案 · 自我核对</h2><div class="meta">与题目页题号对应'
    +($('answerMode').value==='separate'?' · 此页可单独打印':' · 默认双面打印')
-   +'</div>'+renderPaperQuestions(items,layout,true)
-   +'<table class="feedback"><tr><td>核对后：□ 能独立重做　□ 看懂但仍有困难　□ 还需要教师讲解</td></tr></table>'
-   +'<div class="foot"><span>建议用新情境的题目验证是否真正掌握</span><span>2 / 2</span></div></div>';
+   +'</div><p class="page-warning" hidden></p>'+renderPaperQuestions(items,layout,true)
+   +'<div class="feedback-slot"><table class="feedback"><tr><td>核对后：□ 能独立重做　□ 看懂但仍有困难　□ 还需要教师讲解</td></tr></table></div>'
+   +'<div class="foot"><span>建议用新情境验证是否掌握</span><span class="page-label">答案 1/1 · 2/2</span></div></div>';
  return {front,back,layout,items};
 }
-function printDocHtml(p){return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><style>'+PAPER_STYLE+'</style></head><body>'+p.front+p.back+'</body></html>'}
+function printDocHtml(p){return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><style>'+PAPER_STYLE+'</style></head><body>'+(p.pagedHtml||p.front+p.back)+'</body></html>'}
 function drawPreview(p){
  state.preview=p;
+ p.pagination=null;
  const convert=x=>x.replace('class="sheet"','class="paper sheet"');
  $('printPreview').innerHTML='<style>'+PAPER_STYLE+'</style>'
    +convert(p.front).replace('id="frontSheet"','id="previewFront"')
    +convert(p.back).replace('id="backSheet"','id="previewBack"');
 }
 async function waitForPreviewMedia(){
- await Promise.allSettled(Array.from($('printPreview').querySelectorAll('img')).map(img=>img.decode?.()));
+ await Promise.allSettled([...Array.from($('printPreview').querySelectorAll('img')).map(img=>img.decode?.()),document.fonts?.ready]);
  if(typeof requestAnimationFrame==='function')await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
 }
+async function preparePreview(p){drawPreview(p);await waitForPreviewMedia();p.pagination=window.PhysicsPaperLayout?.paginate($('printPreview'));if(p.pagination)p.pagedHtml=Array.from($('printPreview').querySelectorAll('.sheet')).map(s=>s.outerHTML).join('');return inspectPageFit();}
 function inspectPageFit(){
+ if(state.preview?.pagination){
+  const p=state.preview.pagination,issues=[];if(p.frontPages>1)issues.push('题目页');if(p.backPages>1)issues.push('答案页');
+  const invalid=Array.from($('printPreview').querySelectorAll('img')).some(img=>img.complete&&img.naturalWidth===0),wide=Array.from($('printPreview').querySelectorAll('.paper-block')).some(b=>b.scrollWidth>b.clientWidth+3);
+  if(p.oversize||invalid||wide)issues.push('不可拆分内容或图片');return {fits:issues.length===0,issues,score:Math.max(0,p.frontPages+p.backPages-2)*10000+p.oversize*50000+(invalid?100000:0)+(wide?50000:0),...p};
+ }
  const issues=[],scores=[];
  for(const [i,id] of ['previewFront','previewBack'].entries()){
    const sheet=$(id),label=i===0?'正面':'背面';
@@ -348,7 +352,8 @@ function checkPageOverflow(probe,layout,autoSwitched){
  const lowImages=Array.from($('printPreview').querySelectorAll('img'))
    .filter(img=>img.naturalWidth>0&&img.naturalWidth<300).length;
  const layoutLabel=layout==='double'?'双栏':'单栏';
- let message=result.fits?'A4正反面已检查，采用'+layoutLabel+'。':
+ const pageCount=result.frontPages?'题目 '+result.frontPages+' 页，答案 '+result.backPages+' 页':'';
+ let message=result.frontPages?pageCount+'，采用'+layoutLabel+'。'+(result.frontPages+result.backPages>2?'超出的内容已完整续页显示。':'')+(result.oversize?'有不可拆分内容超过一页高度，已完整显示，请检查打印效果。':'')+(result.issues.includes('不可拆分内容或图片')&&!result.oversize?'请检查图片加载与内容宽度。':''):result.fits?'A4正反面已检查，采用'+layoutLabel+'。':
    result.issues.join('、')+'排版超出A4安全区域：两种版式都无法保证一页，请减少题目或题图。';
  if(autoSwitched&&result.fits)message='已自动从单栏切换到双栏；'+message;
  if(lowImages)message+=' '+lowImages+'幅原图清晰度较低，建议检查印刷效果。';
@@ -356,7 +361,9 @@ function checkPageOverflow(probe,layout,autoSwitched){
  $('previewStatus').dataset.overflow=result.fits?'no':'yes';
  const info=$('layoutDecision');
  if(info){
-   info.textContent=$('layout').value==='auto'
+   info.textContent=result.frontPages
+    ?(($('layout').value==='auto'?'自动排版：'+(autoSwitched?'已切换为':'采用'):'手动选择：')+layoutLabel+'，'+pageCount+'。'+(!result.fits?'已显示全部内容，请检查打印效果。':''))
+    :$('layout').value==='auto'
     ?(result.fits?(autoSwitched?'自动排版：单栏超出A4，已切换为双栏（正反面均通过检查）。':'自动排版：单栏可容纳正反面内容。'):'自动排版：单栏与双栏均超出A4，请减少题量。')
     :('手动选择：'+layoutLabel+(result.fits?'，正反面已通过浏览器预览检查。':'，内容超出A4，请调整。'));
    info.classList.toggle('warning',!result.fits);
@@ -370,22 +377,17 @@ async function showPreview(){
    if(!$('previewDialog').open)$('previewDialog').showModal();
    const chosen=$('layout').value;
    let p=buildPages(chosen==='auto'?'single':chosen);
-   drawPreview(p);
-   await waitForPreviewMedia();
-   let fit=inspectPageFit(),autoSwitched=false;
+   let fit=await preparePreview(p),autoSwitched=false;
    if(chosen==='auto'&&!fit.fits){
      const single={...fit,p};
      p=buildPages('double');
-     drawPreview(p);
-     await waitForPreviewMedia();
-     const double=inspectPageFit();
+     const double=await preparePreview(p);
      if(double.fits||double.score<=single.score){
        fit=double;autoSwitched=true;
      }else{
        p=single.p;
        fit=single;
-       drawPreview(p);
-       await waitForPreviewMedia();
+       await preparePreview(p);
      }
    }
    checkPageOverflow(fit,p.layout,autoSwitched);

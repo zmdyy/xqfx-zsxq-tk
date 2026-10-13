@@ -8,6 +8,7 @@ const root={pinyinPro:{pinyin(name){return ({
  '张三':['zhang','san'],'王善嘉':['wang','shan','jia'],
  '李言':['li','yan']
 })[name]||[name]}}};
+root.PhysicsPaperLayout=require('../question-bank/paper-layout.js');
 vm.runInNewContext(common,{window:root,console},{timeout:1000});
 const matcher=root.StudentNameSearch;
 const xs=[matcher.indexStudent({name:'张三',class:'801'}),matcher.indexStudent({name:'王善嘉',class:'801'}),matcher.indexStudent({name:'李言',class:'802'})];
