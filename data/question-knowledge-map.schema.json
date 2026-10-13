@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QuestionConceptMappingV1",
+  "description": "P0 题目—知识点映射。concept_id 必须等于知识星球节点的 id。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["exam_id", "question_no", "concept_id"],
+  "properties": {
+    "exam_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "考试批次的稳定 ID"
+    },
+    "question_no": {
+      "type": "string",
+      "minLength": 1,
+      "description": "题号。当前实现使用 科目/题号，避免不同科目同号冲突"
+    },
+    "concept_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "主知识点 ID，与 data/knowledge/knowledge-db.js 中节点 id 完全一致"
+    }
+  }
+}

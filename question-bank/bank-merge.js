@@ -1,0 +1,173 @@
+/* 增量题库自动去重：不覆盖教师审核信息、个人导出历史。
+ * 仅当规范化完整题干一致、图片数量及内容一致，才确认完全重复。
+ * 对变式题保守保留，附人工复核提示。
+ */
+(function(root){
+'use strict';
+function normalizeStem(text){
+  return String(text||'').replace(/^\s*(?:[（(]多选[）)]\s*)?\d{1,3}[．.、]\s*/,'')
+    .replace(/^\s*[（(]\s*\d+分\s*[）)]\s*/,'')
+    .replace(/^\s*[（(]20\d{2}[•·—-][^）)]{0,45}[）)]\s*/,'')
+    .normalize('NFKC').toLowerCase().replace(/[\s、，。：；,.!?？！“”'"\(\)（）【】]/g,'');
+}
+function imagesMatch(a,b){
+ a=Array.isArray(a)?a:[];b=Array.isArray(b)?b:[];
+ if(a.length!==b.length)return false;
+ return a.every((x,i)=>{
+   const y=b[i];if(!y)return false;
+   const aHash=String(x.contentHash||''),bHash=String(y.contentHash||'');
+   if(aHash&&bHash&&(aHash===bHash||aHash.startsWith(bHash)||bHash.startsWith(aHash)))return true;
+   return !!(x.data&&y.data&&x.data===y.data);
+ });
+}
+function sameQuestion(a,b){
+ const an=normalizeStem(a.stem),bn=normalizeStem(b.stem);
+ return an===bn&&imagesMatch(a.images,b.images)&&(an.length>10||((a.images||[]).length>0));
+}
+function attachRepairCandidates(target,source){
+ let inserted=0;
+ for(const side of ['images','answerImages']){
+   const old=target[side]||[],incoming=source[side]||[];
+   incoming.forEach((m,i)=>{
+     if(!m?.repair?.candidateData||!old[i])return;
+     const curr=old[i],repair=m.repair;
+     // Keep the teacher's approved image, but permit a separate raster alternative for review.
+     if(curr.repair?.status==='approved'){
+       if(repair.alternativeCandidateData&&!curr.repair.alternativeCandidateData){
+         curr.repair.alternativeCandidateData=repair.alternativeCandidateData;
+         inserted++;
+       }
+       return;
+     }
+     if(curr.useRedraw)return;
+     const hashesAgree=Boolean(curr.contentHash&&m.contentHash&&curr.contentHash===m.contentHash);
+     const identicalOriginal=Boolean(curr.data&&m.data&&curr.data===m.data);
+     const originalInRepair=Boolean(curr.data&&repair.originalData&&curr.data===repair.originalData);
+     if(!hashesAgree&&!identicalOriginal&&!originalInRepair)return;
+     // A rejected auto-vector trace may receive a substantially different PNG
+     // proposal; the previous rejection is retained, and the official original remains.
+     if(curr.repair?.status==='rejected'){
+       const freshAlternative=repair.previousReview?.status==='rejected' &&
+         /PNG/.test(repair.method||'') && /矢量/.test(curr.repair.method||'');
+       if(!freshAlternative)return;
+       curr.repair={...repair,status:'pending'};
+       inserted++;return;
+     }
+     if(repair.status==='approved'){
+       if(target.review==='approved'||Number(target.revision||1)>Number(source.revision||1))return;
+       const original=repair.originalData||curr.data;
+       curr.data=m.data;curr.useRedraw=false;
+       curr.repair={...repair,originalData:original,status:'approved'};
+       target.revision=Math.max(Number(target.revision||1),Number(source.revision||1));
+     }else{
+       curr.repair={...repair,status:'pending'};
+     }
+     inserted++;
+   });
+ }
+ return inserted;
+}
+function mergeExisting(target,source){
+ if(!target.teacherEditedAt)attachRepairCandidates(target,source);
+ const refs=target.sourceRefs||[{file:target.source,no:target.sourceNo}];
+ const keys=new Set(refs.map(r=>r.file+'#'+r.no));
+ for(const x of source.sourceRefs||[{file:source.source,no:source.sourceNo}]){
+   if(!x.file)continue;
+   const key=x.file+'#'+x.no;if(keys.has(key))continue;
+   refs.push(x);keys.add(key);
+ }
+ target.sourceRefs=refs;if(!target.sourceEvidenceV1&&source.sourceEvidenceV1)target.sourceEvidenceV1=source.sourceEvidenceV1;
+ if(!target.teacherEditedAt&&!target.answer&&source.answer)target.answer=source.answer;
+ if(!target.teacherEditedAt&&!target.answerImages?.length&&source.answerImages?.length)target.answerImages=source.answerImages;
+ if(!target.teacherEditedAt&&!target.tags?.length&&source.tags?.length)target.tags=source.tags.slice();
+ if(!target.teacherEditedAt&&(!target.relation||target.relation==='pending')&&source.relation&&source.relation!=='pending')target.relation=source.relation;
+ if(!target.curriculum2022&&source.curriculum2022)target.curriculum2022=source.curriculum2022;
+ if(!target.knowledgeReview&&source.knowledgeReview)target.knowledgeReview=source.knowledgeReview;
+ if(source.qualityReviewV1){
+   target.qualityReviewV1={...source.qualityReviewV1,...(target.qualityReviewV1||{})};
+ }
+ if(Array.isArray(source.qualityEditHistory)&&!(target.qualityEditHistory||[]).length)
+   target.qualityEditHistory=source.qualityEditHistory.slice();
+ 
+ if(source.typeAudit20261011){
+   if(!target.typeAudit20261011) target.typeAudit20261011={...source.typeAudit20261011};
+   else {
+     // 批量导入复核标记时保护教师已确认的题型和专项记录。
+     const manual=target.typeAudit20261011.teacherReview;
+     target.typeAudit20261011={...source.typeAudit20261011,...target.typeAudit20261011};
+     if(manual)target.typeAudit20261011.teacherReview=manual;
+   }
+ }
+ if(!target.concept_ids?.length&&source.concept_ids?.length)target.concept_ids=source.concept_ids.slice();
+ target.warnings=Array.from(new Set([...(target.warnings||[]),...(source.warnings||[])]));
+ return target;
+}
+function applyQualityRepair(target,source,now){
+ if(target.teacherEditedAt)return false;
+ const quality=Array.isArray(source.qualityFixes)?source.qualityFixes:[];
+ const fields=new Set(quality.filter(x=>x&&['stem','answer','type','tags'].includes(x.field)).map(x=>x.field));
+ const incomingRevision=Number(source.revision||1),currentRevision=Number(target.revision||1);
+ if(!fields.size||!Number.isFinite(incomingRevision)||incomingRevision<=currentRevision)return false;
+ if(target.review==='approved'||String(target.source||'')!==String(source.source||'')||
+    String(target.sourceNo||'')!==String(source.sourceNo||''))return false;
+ for(const field of fields){
+   if(field==='tags'&&Array.isArray(source.tags)){target.tags=[...source.tags];continue}
+   if(typeof source[field]==='string'&&source[field].trim())target[field]=source[field];
+ }
+ // Picture restoration is allowed only if the original question had no picture.
+ if(fields.has('stem')&&!(target.images||[]).length&&(source.images||[]).length)
+   target.images=source.images;
+ target.qualityFixes=[...(target.qualityFixes||[]),...quality];
+ target.revision=incomingRevision;
+ mergeExisting(target,source);
+ target.updatedAt=now();
+ return true;
+}
+async function mergeQuestions(incoming,options){
+ const {questions,save,updateConcepts,now,hash}=options;
+ const index=new Map(),byId=new Map(),stats={added:0,merged:0,suspected:0,referenceUpdates:0,qualityUpdated:0,qualitySkipped:0};
+ for(const q of questions){
+   byId.set(q.id,q);
+   let key=normalizeStem(q.stem);if(!index.has(key))index.set(key,[]);index.get(key).push(q);
+ }
+ for(const item of incoming||[]){
+   if(!item||!item.stem)continue;
+   item.images=item.images||[];item.answerImages=item.answerImages||[];
+   item.tags=item.tags||[];item.sourceRefs=item.sourceRefs||[{file:item.source,no:item.sourceNo}];
+   item.review='pending';
+   const oldById=byId.get(item.id);
+   if(oldById){
+     const changed=applyQualityRepair(oldById,item,now);
+     if(changed)stats.qualityUpdated++;
+     else if(Array.isArray(item.qualityFixes)&&item.qualityFixes.length)stats.qualitySkipped++;
+     mergeExisting(oldById,item);
+     updateConcepts(oldById);await save(oldById);
+     stats.merged++;continue;  // same stable ID must never create a second record
+   }
+   const key=normalizeStem(item.stem),similar=index.get(key)||[];
+   const duplicate=similar.find(x=>sameQuestion(x,item));
+   if(duplicate){
+     mergeExisting(duplicate,item);duplicate.updatedAt=now();
+     updateConcepts(duplicate);await save(duplicate);
+     stats.merged++;continue;
+   }
+   if(similar.length){
+     item.warnings=Array.from(new Set([...(item.warnings||[]),'相同题干的题图不同，可能是变式题；已保留待教师复核。']));
+     stats.suspected++;
+   }
+   if(questions.some(x=>x.id===item.id))item.id+='-'+hash(item.source+':'+item.sourceNo).slice(0,7);
+   updateConcepts(item);await save(item);
+   questions.push(item);byId.set(item.id,item);
+   if(!index.has(key))index.set(key,[]);index.get(key).push(item);
+   stats.added++;
+ }
+ for(const update of options.provenanceUpdates||[]){
+   const old=questions.find(x=>x.id===update.existingId);
+   if(!old)continue;
+   mergeExisting(old,{sourceRefs:[update.sourceRef]});old.updatedAt=now();await save(old);
+   stats.referenceUpdates++;
+ }
+ return stats;
+}
+root.QuestionBankMerge={normalizeStem,imagesMatch,sameQuestion,mergeQuestions,applyQualityRepair,attachRepairCandidates};
+})(typeof window!=='undefined'?window:globalThis);

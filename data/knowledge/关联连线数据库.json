@@ -1,0 +1,3589 @@
+{
+  "version": "2.6",
+  "update_date": "2026-10-12",
+  "total_count": 438,
+  "connection_types": {
+    "prerequisite": "前置关联",
+    "causal": "因果推导",
+    "parallel": "平行关联",
+    "historical": "历史启发",
+    "cross_module": "跨模块关联",
+    "cross_disciplinary": "跨学科关联",
+    "support": "支撑关联",
+    "application": "应用关联",
+    "extension": "二级拓展"
+  },
+  "data": [
+    {
+      "from": "mech_motion_reference",
+      "to": "mech_motion_speed",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_motion_speed",
+      "to": "mech_uniform_motion",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_uniform_motion",
+      "to": "mech_variable_motion",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_variable_motion",
+      "to": "mech_avg_speed",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_avg_speed",
+      "to": "mech_instant_speed",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_time_measure",
+      "to": "mech_length_measure",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_length_measure",
+      "to": "mech_motion_reference",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_sound_production",
+      "to": "mech_sound_propagation",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_sound_propagation",
+      "to": "mech_sound_speed",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_sound_propagation",
+      "to": "mech_noise_control",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_sound_speed",
+      "to": "mech_pitch",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pitch",
+      "to": "mech_loudness",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_loudness",
+      "to": "mech_timbre",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_sound_speed",
+      "to": "mech_ultrasound_infrasound",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_mass",
+      "to": "mech_mass_measurement",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_mass_measurement",
+      "to": "mech_density",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_density",
+      "to": "mech_density_measurement",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_density_measurement",
+      "to": "mech_material_identification",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_density_measurement",
+      "to": "mech_hollow_problem",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_concept",
+      "to": "mech_force_effects",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_effects",
+      "to": "mech_force_elements",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_elements",
+      "to": "mech_force_diagram",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_diagram",
+      "to": "mech_force_gravity",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_gravity",
+      "to": "mech_force_elastic",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_elastic",
+      "to": "mech_friction",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_friction",
+      "to": "mech_force_analysis",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_newton1",
+      "to": "mech_inertia",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_inertia",
+      "to": "mech_balance_forces",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_balance_forces",
+      "to": "mech_balanced_vs_interaction",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_newton1",
+      "to": "mech_force_motion_state",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pressure_force",
+      "to": "mech_pressure",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pressure",
+      "to": "mech_liquid_pressure",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_liquid_pressure",
+      "to": "mech_atmospheric_pressure",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_atmospheric_pressure",
+      "to": "mech_pressure_measure",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pressure_measure",
+      "to": "mech_fluid_pressure",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_liquid_pressure",
+      "to": "mech_communicating_vessels",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pressure",
+      "to": "mech_pascal_principle",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_buoyancy_cause",
+      "to": "mech_archimedes",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_archimedes",
+      "to": "mech_float_sink_condition",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_float_sink_condition",
+      "to": "mech_浮力应用_轮船",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_浮力应用_轮船",
+      "to": "mech_浮力应用_潜水艇",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_浮力应用_潜水艇",
+      "to": "mech_浮力应用_气球飞艇",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_lever",
+      "to": "mech_lever_balance",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_lever_balance",
+      "to": "mech_滑轮",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_滑轮",
+      "to": "mech_滑轮组",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_滑轮组",
+      "to": "mech_inclined_plane",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_lever_balance",
+      "to": "mech_wheel_axle",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_work",
+      "to": "mech_power",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_power",
+      "to": "mech_efficiency",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_work",
+      "to": "mech_mechanical_energy",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_newton1_core",
+      "to": "mech_newton1",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_archimedes_core",
+      "to": "mech_archimedes",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_balance_forces_core",
+      "to": "mech_balance_forces",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_gravity",
+      "to": "mech_pressure_force",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_gravity",
+      "to": "mech_buoyancy_cause",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_effects",
+      "to": "mech_force_motion_state",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_friction",
+      "to": "mech_force_analysis",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_temperature",
+      "to": "therm_thermometer",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_thermometer",
+      "to": "therm_melting_freezing",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_melting_freezing",
+      "to": "therm_熔化吸热与凝固放热",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_熔化吸热与凝固放热",
+      "to": "therm_汽化与液化",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_汽化与液化",
+      "to": "therm_蒸发与沸腾",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_蒸发与沸腾",
+      "to": "therm_液化方法",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_汽化与液化",
+      "to": "therm_升华与凝华",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_物质的构成",
+      "to": "therm_分子热运动",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_分子热运动",
+      "to": "therm_扩散现象",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_扩散现象",
+      "to": "therm_分子间作用力",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_分子间作用力",
+      "to": "therm_internal_energy",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_internal_energy",
+      "to": "therm_改变内能的方式",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_改变内能的方式",
+      "to": "therm_热量",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_热量",
+      "to": "therm_热传递",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_specific_heat",
+      "to": "therm_heat_calculation",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_heat_calculation",
+      "to": "therm_水的比热容",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_水的比热容",
+      "to": "therm_calorific_value",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_calorific_value",
+      "to": "therm_heat_engine",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_heat_engine",
+      "to": "therm_heat_engine_efficiency",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_熔点与凝固点",
+      "to": "therm_晶体与非晶体",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_晶体与非晶体",
+      "to": "therm_沸点与气压",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_蒸发与沸腾",
+      "to": "therm_蒸发致冷",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_蒸发致冷",
+      "to": "therm_物态变化中的能量转化",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_物态变化中的能量转化",
+      "to": "therm_物态变化图像",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_物态变化中的能量转化",
+      "to": "therm_自然界水循环",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_能量守恒定律_热学",
+      "to": "therm_热力学第一定律",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_热力学第一定律",
+      "to": "therm_热传递方向",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_分子热运动",
+      "to": "therm_温度与分子运动",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_temperature",
+      "to": "therm_热膨胀",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_物态变化中的能量转化",
+      "to": "therm_相变潜热",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_internal_energy",
+      "to": "therm_specific_heat",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_改变内能的方式",
+      "to": "therm_能量守恒定律_热学",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_melting_freezing",
+      "to": "therm_熔点与凝固点",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_蒸发与沸腾",
+      "to": "therm_沸点与气压",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_light_source",
+      "to": "opt_rectilinear_propagation",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_rectilinear_propagation",
+      "to": "opt_light_speed",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_light_speed",
+      "to": "opt_影子的形成",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_影子的形成",
+      "to": "opt_日食与月食",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_日食与月食",
+      "to": "opt_小孔成像",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_reflection_law",
+      "to": "opt_镜面反射与漫反射",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_镜面反射与漫反射",
+      "to": "opt_平面镜成像",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_平面镜成像",
+      "to": "opt_平面镜应用",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_平面镜应用",
+      "to": "opt_球面镜",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_球面镜",
+      "to": "opt_凹面镜",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_球面镜",
+      "to": "opt_凸面镜",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_reflection_law",
+      "to": "opt_光路可逆性",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_refraction_law",
+      "to": "opt_折射现象",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_折射现象",
+      "to": "opt_透镜",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_透镜",
+      "to": "opt_凸透镜对光的作用",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_凸透镜对光的作用",
+      "to": "opt_凹透镜对光的作用",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_透镜",
+      "to": "opt_生活中的透镜",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_lens_imaging",
+      "to": "opt_u_2f成像",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_u_2f成像",
+      "to": "opt_f_u_2f成像",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_f_u_2f成像",
+      "to": "opt_u_f成像",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_u_f成像",
+      "to": "opt_照相机",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_f_u_2f成像",
+      "to": "opt_投影仪",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_u_f成像",
+      "to": "opt_放大镜",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_放大镜",
+      "to": "opt_眼镜与视力矫正",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_dispersion",
+      "to": "opt_色光混合",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_色光混合",
+      "to": "opt_物体的颜色",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_物体的颜色",
+      "to": "opt_红外线与紫外线",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_rectilinear_propagation",
+      "to": "opt_reflection_law",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_rectilinear_propagation",
+      "to": "opt_refraction_law",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_凸透镜对光的作用",
+      "to": "opt_lens_imaging",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_平面镜成像",
+      "to": "opt_lens_imaging",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_charge",
+      "to": "elec_摩擦起电",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_摩擦起电",
+      "to": "elec_导体与绝缘体",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_导体与绝缘体",
+      "to": "elec_current",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_current",
+      "to": "elec_电路",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电路",
+      "to": "elec_series_circuit",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_series_circuit",
+      "to": "elec_parallel_circuit",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_current",
+      "to": "elec_电流表",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_voltage",
+      "to": "elec_电压表",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_current",
+      "to": "elec_voltage",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_resistance",
+      "to": "elec_影响电阻的因素",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_影响电阻的因素",
+      "to": "elec_滑动变阻器",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_滑动变阻器",
+      "to": "elec_ohm_law",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_ohm_law",
+      "to": "elec_伏安法测电阻",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_伏安法测电阻",
+      "to": "elec_串联电路特点",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_串联电路特点",
+      "to": "elec_并联电路特点",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_串联电路特点",
+      "to": "elec_电路故障分析",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electric_work",
+      "to": "elec_电能表",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电能表",
+      "to": "elec_electric_power",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electric_power",
+      "to": "elec_额定功率与实际功率",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_额定功率与实际功率",
+      "to": "elec_joule_law",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_joule_law",
+      "to": "elec_电热利用与防止",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电热利用与防止",
+      "to": "elec_家庭电路",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_家庭电路",
+      "to": "elec_安全用电",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_安全用电",
+      "to": "elec_测电笔",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_测电笔",
+      "to": "elec_触电急救",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_磁现象",
+      "to": "elec_magnetic_field",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_magnetic_field",
+      "to": "elec_地磁场",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_current",
+      "to": "elec_电流的磁效应",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电流的磁效应",
+      "to": "elec_电磁铁",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电磁铁",
+      "to": "elec_电磁继电器",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电流的磁效应",
+      "to": "elec_磁场对电流的作用",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_磁场对电流的作用",
+      "to": "elec_electric_motor",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electromagnetic_induction",
+      "to": "elec_generator",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_generator",
+      "to": "elec_交流电",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_交流电",
+      "to": "elec_变压器",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electromagnetic_induction",
+      "to": "elec_电磁波",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_voltage",
+      "to": "elec_resistance",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_ohm_law",
+      "to": "elec_electric_power",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_joule_law",
+      "to": "elec_electric_work",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电流的磁效应",
+      "to": "elec_electromagnetic_induction",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_energy_conservation",
+      "to": "energy_energy_classification",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_energy_classification",
+      "to": "energy_solar_energy",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_solar_energy",
+      "to": "energy_nuclear_energy",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_nuclear_energy",
+      "to": "energy_nuclear_fusion_fission",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_nuclear_fusion_fission",
+      "to": "energy_renewable_nonrenewable",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_renewable_nonrenewable",
+      "to": "energy_energy_environment",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_energy_environment",
+      "to": "energy_sustainable_可持续发展",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_work",
+      "to": "therm_改变内能的方式",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_mechanical_energy",
+      "to": "energy_energy_conservation",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_能量守恒定律_热学",
+      "to": "energy_energy_conservation",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_改变内能的方式",
+      "to": "therm_能量守恒定律_热学",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_dispersion",
+      "to": "opt_reflection_law",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_joule_law",
+      "to": "therm_改变内能的方式",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electric_power",
+      "to": "mech_power",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electromagnetic_induction",
+      "to": "mech_work",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_heat_engine",
+      "to": "mech_work",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_透镜",
+      "to": "elec_current",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_newton1",
+      "to": "therm_能量守恒定律_热学",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_archimedes",
+      "to": "therm_水的比热容",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_motion_speed",
+      "to": "math_unit_conversion",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_motion_reference",
+      "to": "mech_avg_speed",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_motion_speed",
+      "to": "mech_variable_motion",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_uniform_motion",
+      "to": "mech_avg_speed",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_length_measure",
+      "to": "mech_time_measure",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_sound_production",
+      "to": "mech_pitch",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_sound_propagation",
+      "to": "mech_timbre",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_sound_speed",
+      "to": "mech_loudness",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_noise_control",
+      "to": "mech_sound_propagation",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_mass",
+      "to": "mech_density",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_mass_measurement",
+      "to": "mech_density_measurement",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_density",
+      "to": "mech_hollow_problem",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_material_identification",
+      "to": "mech_density_measurement",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_concept",
+      "to": "mech_newton1",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_effects",
+      "to": "mech_inertia",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_gravity",
+      "to": "mech_newton1",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_friction",
+      "to": "mech_inertia",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_newton1",
+      "to": "mech_pressure",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_balance_forces",
+      "to": "mech_lever_balance",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_motion_state",
+      "to": "mech_force_concept",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pressure_force",
+      "to": "mech_buoyancy_cause",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pressure",
+      "to": "mech_archimedes",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_liquid_pressure",
+      "to": "mech_float_sink_condition",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_atmospheric_pressure",
+      "to": "mech_浮力应用_轮船",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_buoyancy_cause",
+      "to": "mech_float_sink_condition",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_archimedes",
+      "to": "mech_浮力应用_轮船",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_float_sink_condition",
+      "to": "mech_浮力应用_潜水艇",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_lever",
+      "to": "mech_work",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_lever_balance",
+      "to": "mech_efficiency",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_滑轮",
+      "to": "mech_power",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_滑轮组",
+      "to": "mech_inclined_plane",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_work",
+      "to": "mech_mechanical_energy",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_power",
+      "to": "mech_efficiency",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_temperature",
+      "to": "therm_热膨胀",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_thermometer",
+      "to": "therm_熔点与凝固点",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_melting_freezing",
+      "to": "therm_升华与凝华",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_熔化吸热与凝固放热",
+      "to": "therm_液化方法",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_汽化与液化",
+      "to": "therm_蒸发致冷",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_蒸发与沸腾",
+      "to": "therm_物态变化图像",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_液化方法",
+      "to": "therm_升华与凝华",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_物质的构成",
+      "to": "therm_internal_energy",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_分子热运动",
+      "to": "therm_热量",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_扩散现象",
+      "to": "therm_改变内能的方式",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_分子间作用力",
+      "to": "therm_热传递",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_internal_energy",
+      "to": "therm_能量守恒定律_热学",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_改变内能的方式",
+      "to": "therm_specific_heat",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_热量",
+      "to": "therm_heat_calculation",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_热传递",
+      "to": "therm_水的比热容",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_specific_heat",
+      "to": "therm_能量守恒定律_热学",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_heat_calculation",
+      "to": "therm_calorific_value",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_水的比热容",
+      "to": "therm_heat_engine_efficiency",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_calorific_value",
+      "to": "therm_heat_engine",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_熔点与凝固点",
+      "to": "therm_物态变化图像",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_晶体与非晶体",
+      "to": "therm_沸点与气压",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_蒸发致冷",
+      "to": "therm_相变潜热",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_物态变化中的能量转化",
+      "to": "therm_热力学第一定律",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_自然界水循环",
+      "to": "therm_热膨胀",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_能量守恒定律_热学",
+      "to": "therm_相变潜热",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_热力学第一定律",
+      "to": "therm_热传递方向",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_温度与分子运动",
+      "to": "therm_internal_energy",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_light_source",
+      "to": "opt_影子的形成",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_rectilinear_propagation",
+      "to": "opt_小孔成像",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_light_speed",
+      "to": "opt_日食与月食",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_影子的形成",
+      "to": "opt_小孔成像",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_reflection_law",
+      "to": "opt_refraction_law",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_镜面反射与漫反射",
+      "to": "opt_光路可逆性",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_平面镜成像",
+      "to": "opt_球面镜",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_平面镜应用",
+      "to": "opt_凹面镜",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_refraction_law",
+      "to": "opt_dispersion",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_折射现象",
+      "to": "opt_生活中的透镜",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_透镜",
+      "to": "opt_lens_imaging",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_凸透镜对光的作用",
+      "to": "opt_dispersion",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_凹透镜对光的作用",
+      "to": "opt_生活中的透镜",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_lens_imaging",
+      "to": "opt_眼镜与视力矫正",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_u_2f成像",
+      "to": "opt_照相机",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_f_u_2f成像",
+      "to": "opt_投影仪",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_u_f成像",
+      "to": "opt_放大镜",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_照相机",
+      "to": "opt_眼镜与视力矫正",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_投影仪",
+      "to": "opt_放大镜",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_dispersion",
+      "to": "opt_红外线与紫外线",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_色光混合",
+      "to": "opt_物体的颜色",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_物体的颜色",
+      "to": "opt_红外线与紫外线",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_charge",
+      "to": "elec_current",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_摩擦起电",
+      "to": "elec_导体与绝缘体",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_导体与绝缘体",
+      "to": "elec_电路",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_current",
+      "to": "elec_resistance",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电路",
+      "to": "elec_电流表",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_series_circuit",
+      "to": "elec_voltage",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_parallel_circuit",
+      "to": "elec_电压表",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电流表",
+      "to": "elec_电压表",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_resistance",
+      "to": "elec_ohm_law",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_影响电阻的因素",
+      "to": "elec_ohm_law",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_滑动变阻器",
+      "to": "elec_伏安法测电阻",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_ohm_law",
+      "to": "elec_electric_power",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_伏安法测电阻",
+      "to": "elec_电路故障分析",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_串联电路特点",
+      "to": "elec_并联电路特点",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_并联电路特点",
+      "to": "elec_电路故障分析",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electric_work",
+      "to": "elec_electric_power",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电能表",
+      "to": "elec_额定功率与实际功率",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electric_power",
+      "to": "elec_joule_law",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_额定功率与实际功率",
+      "to": "elec_电热利用与防止",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_joule_law",
+      "to": "elec_家庭电路",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电热利用与防止",
+      "to": "elec_安全用电",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_家庭电路",
+      "to": "elec_触电急救",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_安全用电",
+      "to": "elec_测电笔",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_磁现象",
+      "to": "elec_电流的磁效应",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_magnetic_field",
+      "to": "elec_electromagnetic_induction",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_地磁场",
+      "to": "elec_电磁铁",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电流的磁效应",
+      "to": "elec_磁场对电流的作用",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电磁铁",
+      "to": "elec_电磁继电器",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电磁继电器",
+      "to": "elec_electric_motor",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_磁场对电流的作用",
+      "to": "elec_generator",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electric_motor",
+      "to": "elec_交流电",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electromagnetic_induction",
+      "to": "elec_变压器",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_generator",
+      "to": "elec_电磁波",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_交流电",
+      "to": "elec_电磁波",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_变压器",
+      "to": "elec_电磁波",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_energy_conservation",
+      "to": "energy_solar_energy",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_energy_classification",
+      "to": "energy_renewable_nonrenewable",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_solar_energy",
+      "to": "energy_energy_environment",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_nuclear_energy",
+      "to": "energy_renewable_nonrenewable",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_nuclear_fusion_fission",
+      "to": "energy_sustainable_可持续发展",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_renewable_nonrenewable",
+      "to": "energy_energy_environment",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_energy_environment",
+      "to": "energy_sustainable_可持续发展",
+      "type": "causal",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_archimedes",
+      "to": "therm_水的比热容",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_friction",
+      "to": "elec_磁现象",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_liquid_pressure",
+      "to": "therm_沸点与气压",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_fluid_pressure",
+      "to": "therm_蒸发与沸腾",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_mechanical_energy",
+      "to": "elec_electric_power",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_internal_energy",
+      "to": "elec_joule_law",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_改变内能的方式",
+      "to": "elec_electric_work",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_能量守恒定律_热学",
+      "to": "opt_dispersion",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_rectilinear_propagation",
+      "to": "mech_motion_speed",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_refraction_law",
+      "to": "elec_current",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_lens_imaging",
+      "to": "elec_ohm_law",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_charge",
+      "to": "therm_物质的构成",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_current",
+      "to": "therm_分子热运动",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电流的磁效应",
+      "to": "mech_newton1",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_磁场对电流的作用",
+      "to": "mech_work",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_generator",
+      "to": "energy_energy_conservation",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_energy_conservation",
+      "to": "therm_能量守恒定律_热学",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_energy_classification",
+      "to": "mech_work",
+      "type": "cross_module",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_motion_speed",
+      "to": "math_linear_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_uniform_motion",
+      "to": "math_linear_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_density",
+      "to": "math_unit_conversion",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_length_measure",
+      "to": "math_unit_conversion",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_atmospheric_pressure",
+      "to": "math_unit_conversion",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_specific_heat",
+      "to": "math_unit_conversion",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_水的比热容",
+      "to": "math_unit_conversion",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_electric_work",
+      "to": "math_unit_conversion",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_atmospheric_pressure",
+      "to": "math_power_notation",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_水的比热容",
+      "to": "math_power_notation",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "opt_light_speed",
+      "to": "math_power_notation",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_kinetic_energy",
+      "to": "math_power_notation",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_joule_law",
+      "to": "math_power_notation",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pressure",
+      "to": "math_power_notation",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_density",
+      "to": "math_power_notation",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_elastic",
+      "to": "math_linear_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_gravity",
+      "to": "math_linear_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_ohm_law",
+      "to": "math_linear_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_resistance",
+      "to": "math_linear_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_voltage",
+      "to": "math_linear_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_current",
+      "to": "math_linear_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_motion_speed",
+      "to": "math_inverse_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_density",
+      "to": "math_inverse_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pressure",
+      "to": "math_inverse_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_pitch",
+      "to": "math_inverse_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_ohm_law",
+      "to": "math_inverse_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_resistance",
+      "to": "math_inverse_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_并联电路特点",
+      "to": "math_inverse_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_电磁波",
+      "to": "math_inverse_graph",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "math_power_notation",
+      "to": "math_unit_conversion",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "math_linear_graph",
+      "to": "math_inverse_graph",
+      "type": "parallel",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "energy_sustainable_可持续发展",
+      "to": "sat_application_应用_绿色建筑",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“可持续发展”在“绿色建筑”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "mech_density",
+      "to": "sat_cross_数学_比值关系",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "密度是质量与体积的比值，理解比值关系有助于正确解释密度大小，而不是只比较质量或体积。"
+    },
+    {
+      "from": "mech_liquid_pressure",
+      "to": "sat_cross_地理_海洋深度与压强",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "在同种海水中，深度增大时液体压强增大，可用于理解海洋不同深度的压力环境。"
+    },
+    {
+      "from": "mech_archimedes",
+      "to": "sat_cross_生物_水生生物浮沉与鱼鳔调节",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "水生生物可通过改变排开液体体积或整体平均密度调节浮沉，鱼鳔是典型例子。"
+    },
+    {
+      "from": "therm_自然界水循环",
+      "to": "sat_cross_地理_水循环",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "蒸发、液化和降水等物态变化共同构成自然界水循环，是物理与地理之间直接的知识迁移。"
+    },
+    {
+      "from": "therm_扩散现象",
+      "to": "sat_cross_化学_微粒运动与扩散",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "扩散可作为物质由微粒构成且微粒不停运动的宏观证据，并与化学中的微粒观相互支撑。"
+    },
+    {
+      "from": "therm_specific_heat",
+      "to": "sat_cross_地理_沿海气候",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "水的比热容较大，使海洋升温和降温相对缓慢，是理解沿海地区温度变化较缓的重要物理基础。"
+    },
+    {
+      "from": "opt_日食与月食",
+      "to": "sat_cross_地理_日_地_月位置关系",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "日食和月食取决于太阳、地球、月球的相对位置以及光的直线传播。"
+    },
+    {
+      "from": "opt_眼镜与视力矫正",
+      "to": "sat_cross_生物_眼睛",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "眼睛的晶状体和角膜共同完成屈光成像，眼镜通过改变入眼光线帮助像落在视网膜附近。"
+    },
+    {
+      "from": "opt_红外线与紫外线",
+      "to": "sat_application_应用_紫外线杀菌消毒",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "一定剂量的紫外线可破坏微生物的遗传物质，因此被用于部分消毒场景；使用时需注意防护。"
+    },
+    {
+      "from": "energy_solar_energy",
+      "to": "sat_cross_生物_光合作用",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "绿色植物通过光合作用把太阳辐射能转化并储存在化学能中，是太阳能进入生态系统的重要途径。"
+    },
+    {
+      "from": "energy_energy_environment",
+      "to": "sat_cross_地理_温室效应",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "化石能源利用会排放温室气体，能源选择与温室效应、气候环境之间存在明确联系。"
+    },
+    {
+      "from": "mech_pascal_principle",
+      "to": "sat_application_应用_液压系统",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "密闭液体中的压强能够向各个方向传递，液压千斤顶等装置利用帕斯卡原理实现力的传递与放大。"
+    },
+    {
+      "from": "mech_fluid_pressure",
+      "to": "sat_extension_生物_鸟类飞行",
+      "type": "extension",
+      "color": "",
+      "width": 2,
+      "strength": 1,
+      "note": "鸟类飞行涉及翼型、攻角、环量和非定常气流等多种因素；流速与压强关系只能作为其中一个拓展视角，不能简化为“上方空气快、压强小，所以产生全部升力”。"
+    },
+    {
+      "from": "mech_force_gravity",
+      "to": "sat_extension_地理_重力分布",
+      "type": "extension",
+      "color": "",
+      "width": 2,
+      "strength": 1,
+      "note": "地球表面不同纬度和海拔处的重力加速度会有小幅差异，可作为重力概念与地球形状、自转之间的拓展联系。"
+    },
+    {
+      "from": "mech_friction",
+      "to": "sat_application_应用_轴承润滑",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“摩擦力”在“轴承润滑”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "mech_force_analysis",
+      "to": "sat_application_应用_桥梁受力分析",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "桥梁结构设计需要先识别各构件受到的力，再分析力的平衡与传递。"
+    },
+    {
+      "from": "mech_pressure",
+      "to": "sat_application_应用_履带坦克",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“压强”在“履带坦克”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "mech_liquid_pressure",
+      "to": "sat_application_应用_水坝设计",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“液体压强”在“水坝设计”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "mech_fluid_pressure",
+      "to": "sat_application_应用_飞机机翼",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“流体压强与流速”在“飞机机翼”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "mech_archimedes",
+      "to": "sat_application_应用_船舶设计",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“阿基米德原理”在“船舶设计”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "mech_lever_balance",
+      "to": "sat_cross_生物_人体杠杆",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "骨骼、关节和肌肉在初中层面可简化为杠杆模型，用力臂和平衡条件解释部分人体动作。"
+    },
+    {
+      "from": "mech_power",
+      "to": "sat_application_应用_汽车功率",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“功率”在“汽车功率”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "mech_efficiency",
+      "to": "sat_application_应用_提高机械效率与机械节能",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "减少额外功和能量损失可以提高机械效率，是机械节能设计的重要思路。"
+    },
+    {
+      "from": "therm_thermometer",
+      "to": "sat_application_应用_温度传感器",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“温度计”在“温度传感器”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "therm_melting_freezing",
+      "to": "sat_application_应用_金属熔炼与铸造",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "金属熔炼与铸造利用熔化、凝固过程实现材料成形，是物态变化的典型工程应用。"
+    },
+    {
+      "from": "therm_扩散现象",
+      "to": "sat_application_应用_溶液扩散",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“扩散现象”在“溶液扩散”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "therm_改变内能的方式",
+      "to": "sat_application_应用_发动机冷却",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“改变内能的方式”在“发动机冷却”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "therm_specific_heat",
+      "to": "sat_cross_地理_海陆风",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "海洋和陆地受热、冷却速度不同会形成温差并驱动局地空气流动，可用于解释海陆风的基本形成条件。"
+    },
+    {
+      "from": "therm_水的比热容",
+      "to": "sat_application_应用_散热设计",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“水的比热容”在“散热设计”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "therm_heat_engine",
+      "to": "sat_application_应用_汽车发动机",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“热机”在“汽车发动机”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "therm_蒸发致冷",
+      "to": "sat_cross_生物_出汗降温",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "汗液蒸发需要吸热，能够带走皮肤表面的热量，是人体散热的重要方式之一。"
+    },
+    {
+      "from": "therm_自然界水循环",
+      "to": "sat_cross_地理_云雨形成",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "地表水蒸发形成水汽，水汽冷却后凝结形成云滴并在一定条件下形成降水。"
+    },
+    {
+      "from": "therm_热膨胀",
+      "to": "sat_application_应用_桥梁伸缩",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“热膨胀”在“桥梁伸缩”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "opt_影子的形成",
+      "to": "sat_cross_数学_相似三角形",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "点光源或近似点光源条件下，影子的几何大小可借助光的直线传播和相似三角形关系分析。"
+    },
+    {
+      "from": "opt_小孔成像",
+      "to": "sat_cross_数学_相似三角形",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "小孔成像中的物高、像高和物距、像距可形成相似三角形关系，用几何比例解释像的大小变化。"
+    },
+    {
+      "from": "opt_平面镜成像",
+      "to": "sat_cross_数学_轴对称",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "平面镜成像中像与物关于镜面对称，可用轴对称思想描述位置和大小关系。"
+    },
+    {
+      "from": "opt_平面镜应用",
+      "to": "sat_application_应用_潜望镜设计",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“平面镜应用”在“潜望镜设计”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "opt_凸透镜对光的作用",
+      "to": "sat_application_应用_凸透镜聚光与放大镜聚光",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "凸透镜对平行光具有会聚作用，放大镜在合适条件下可把太阳光会聚到较小区域。"
+    },
+    {
+      "from": "opt_lens_imaging",
+      "to": "sat_cross_生物_眼睛成像",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "眼睛的屈光系统可近似看作会聚透镜系统，在视网膜上形成倒立、缩小的实像。"
+    },
+    {
+      "from": "opt_u_2f成像",
+      "to": "sat_application_应用_相机设计",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“u>2f成像”在“相机设计”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "opt_照相机",
+      "to": "sat_application_应用_手机镜头",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“照相机”在“手机镜头”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "opt_眼镜与视力矫正",
+      "to": "sat_cross_生物_近视_远视的形成与矫正",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "近视和远视与眼球成像位置有关，可分别利用凹透镜或凸透镜改变入眼光线的会聚情况进行矫正。"
+    },
+    {
+      "from": "opt_色光混合",
+      "to": "sat_cross_艺术_色光混合与颜料混色对比",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "色光混合属于加色混合，颜料混色主要表现为减色混合，两者规律不同，不能直接等同。"
+    },
+    {
+      "from": "elec_导体与绝缘体",
+      "to": "sat_application_应用_电缆设计",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“导体与绝缘体”在“电缆设计”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_电路",
+      "to": "sat_application_应用_电路设计",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“电路”在“电路设计”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_parallel_circuit",
+      "to": "sat_application_应用_家庭布线",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“并联电路”在“家庭布线”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_resistance",
+      "to": "sat_application_应用_电阻器",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“电阻”在“电阻器”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_滑动变阻器",
+      "to": "sat_application_应用_电位器与可调电阻",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "电位器属于可调电阻器件，可通过改变有效电阻实现电压或信号幅度调节；不应把所有音量旋钮都称为滑动变阻器。"
+    },
+    {
+      "from": "elec_electric_power",
+      "to": "sat_application_应用_电器铭牌",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“电功率”在“电器铭牌”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_joule_law",
+      "to": "sat_application_应用_电饭煲",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“焦耳定律”在“电饭煲”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_家庭电路",
+      "to": "sat_application_应用_配电箱",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“家庭电路”在“配电箱”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_安全用电",
+      "to": "sat_application_应用_接地保护",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“安全用电”在“接地保护”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_地磁场",
+      "to": "sat_cross_地理_地磁导航",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "地球具有地磁场，指南针等装置可依据地磁场方向辅助辨别方向。"
+    },
+    {
+      "from": "elec_电磁铁",
+      "to": "sat_application_应用_电磁起重机",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“电磁铁”在“电磁起重机”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_electric_motor",
+      "to": "sat_application_应用_电动车",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“电动机”在“电动车”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_generator",
+      "to": "sat_application_应用_风力发电",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“发电机”在“风力发电”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "elec_电磁波",
+      "to": "sat_application_应用_无线通信",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“电磁波”在“无线通信”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "energy_energy_conservation",
+      "to": "sat_extension_化学_质量守恒",
+      "type": "extension",
+      "color": "",
+      "width": 2,
+      "strength": 1,
+      "note": "能量守恒和质量守恒是不同层面的守恒规律，只适合用于比较“守恒思想”，不能把一个规律说成由另一个规律推出。"
+    },
+    {
+      "from": "energy_energy_classification",
+      "to": "sat_cross_地理_化石燃料",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "煤、石油和天然气的形成与分布具有明显地域性，是能源分类与地理资源分布的交叉点。"
+    },
+    {
+      "from": "energy_solar_energy",
+      "to": "sat_application_应用_光伏发电",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“太阳能”在“光伏发电”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "energy_nuclear_energy",
+      "to": "sat_application_应用_核电站",
+      "type": "application",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "“核能”在“核电站”中的典型应用，用于把物理规律迁移到真实装置、工程或生活情境。"
+    },
+    {
+      "from": "energy_renewable_nonrenewable",
+      "to": "sat_cross_地理_能源分布",
+      "type": "cross_disciplinary",
+      "color": "",
+      "width": 2,
+      "strength": 3,
+      "note": "不同地区的太阳能、风能、水能和化石能源禀赋不同，能源可再生性与资源空间分布需要结合理解。"
+    },
+    {
+      "from": "micro_electron",
+      "to": "elec_charge",
+      "type": "support",
+      "color": "",
+      "width": 2,
+      "strength": 4,
+      "note": "电子是带负电的基本粒子，电荷概念直接连接现有“电子”节点，不再使用伪“化学·电子”外部引用。"
+    },
+    {
+      "from": "micro_nucleus",
+      "to": "energy_nuclear_fusion_fission",
+      "type": "support",
+      "color": "",
+      "width": 2,
+      "strength": 4,
+      "note": "核裂变和核聚变发生在原子核层面，直接连接现有“原子核”节点比“化学·原子结构”伪外部引用更准确。"
+    },
+    {
+      "from": "elec_electric_magnetic_relation",
+      "to": "elec_electric_motor",
+      "type": "support",
+      "color": "",
+      "width": 2,
+      "strength": 4,
+      "note": "电动机利用磁场对通电导体的作用，把电能转化为机械能，是“电与磁相互联系”的典型装置。"
+    },
+    {
+      "from": "elec_electric_magnetic_relation",
+      "to": "elec_generator",
+      "type": "support",
+      "color": "",
+      "width": 2,
+      "strength": 4,
+      "note": "发电机利用电磁感应把机械能转化为电能，是“磁生电”和“电与磁相互联系”的典型装置。"
+    },
+    {
+      "from": "energy_solar_energy",
+      "to": "micro_universe_structure",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 2
+    },
+    {
+      "from": "mech_length_measure",
+      "to": "mech_measurement_error",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_time_measure",
+      "to": "mech_measurement_error",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_length_measure",
+      "to": "mech_volume_measurement",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_elastic",
+      "to": "mech_spring_dynamometer",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_force_concept",
+      "to": "mech_force_interaction",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "mech_motion_reference",
+      "to": "mech_motion_relativity",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_家庭电路",
+      "to": "elec_household_wiring",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_安全用电",
+      "to": "elec_household_wiring",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_parallel_circuit",
+      "to": "elec_household_wiring",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_导体与绝缘体",
+      "to": "elec_semiconductor",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "elec_resistance",
+      "to": "elec_superconductor",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_物质的构成",
+      "to": "therm_material_states",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_物质的构成",
+      "to": "micro_nanometer_material",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "math_unit_conversion",
+      "to": "micro_nanometer_material",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_material_states",
+      "to": "mech_material_elasticity",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    },
+    {
+      "from": "therm_热传递",
+      "to": "therm_thermal_conductivity",
+      "type": "prerequisite",
+      "color": "",
+      "width": 2,
+      "strength": 3
+    }
+  ]
+}
