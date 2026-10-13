@@ -37,9 +37,10 @@ function smallTable(rows,width=10080){
  }).join('')+'</w:tr>').join('');
  return '<w:tbl><w:tblPr><w:tblW w:w="'+width+'" w:type="dxa"/><w:tblBorders><w:insideH w:val="single" w:sz="4" w:color="AAAAAA"/><w:insideV w:val="single" w:sz="4" w:color="AAAAAA"/></w:tblBorders></w:tblPr><w:tblGrid>'+widths.map(w=>'<w:gridCol w:w="'+w+'"/>').join('')+'</w:tblGrid>'+cells+'</w:tbl>';
 }
-function colsTable(left,right){
- const cell=(content,width)=>'<w:tc><w:tcPr><w:tcW w:w="'+width+'" w:type="dxa"/><w:tcMar><w:left w:w="130" w:type="dxa"/><w:right w:w="130" w:type="dxa"/></w:tcMar></w:tcPr>'+content+paragraph('',{after:0})+'</w:tc>';
- return '<w:tbl><w:tblPr><w:tblW w:w="10080" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders><w:insideV w:val="single" w:sz="4" w:color="DDDDDD"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="5040"/><w:gridCol w:w="5040"/></w:tblGrid><w:tr>'+cell(left,5040)+cell(right,5040)+'</w:tr></w:tbl>'
+const PAGE_SECT='<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="794" w:bottom="794" w:left="850" w:right="850" w:header="360" w:footer="360"/>';
+/* 结束前一节：其后的内容在 Word 中按 cols 栏自然续排，左栏写满后流入右栏。 */
+function sectionBreak(cols){
+ return '<w:p><w:pPr><w:spacing w:after="0"/><w:sectPr><w:type w:val="continuous"/>'+PAGE_SECT+'<w:cols w:num="'+cols+'" w:space="510"'+(cols>1?' w:sep="1"':'')+'/></w:sectPr></w:pPr></w:p>';
 }
 function bytesFromData(src){
  const m=/^data:(image\/(?:png|jpeg|jpg|gif|svg\+xml));base64,([\s\S]+)$/i.exec(src||'');
@@ -69,9 +70,10 @@ async function svgToPng(src){
  ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
  return canvas.toDataURL('image/png');
 }
-function pictureXml(relId,idx,cx,cy){
+function pictureXml(relId,idx,cx,cy){return '<w:p><w:pPr><w:spacing w:after="80"/></w:pPr>'+pictureRun(relId,idx,cx,cy)+'</w:p>'}
+function pictureRun(relId,idx,cx,cy){
  const xfrm='<a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm>';
- return '<w:p><w:pPr><w:spacing w:after="80"/></w:pPr><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+idx+'" name="题图 '+idx+'"/><a:graphic xmlns:a="'+DRAW+'"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="题图"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+relId+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr>'+xfrm+'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+ return '<w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+idx+'" name="题图 '+idx+'"/><a:graphic xmlns:a="'+DRAW+'"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="题图"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+relId+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr>'+xfrm+'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
 }
 async function createDocx(options){
  const zipLib=options.JSZip||root.JSZip;
@@ -81,8 +83,10 @@ async function createDocx(options){
  let imageId=0,docPr=0;
  async function addImages(images,limitInches,limitHeight){
    let xml='';
-   for(let src of images||[]){
-     if(!src)continue;
+   for(const src of images||[])if(src)xml+=pictureXml(...await embed(src,limitInches,limitHeight));
+   return xml;
+ }
+ async function embed(src,limitInches,limitHeight){
      let parsed=bytesFromData(src);
      if(parsed.mime==='image/svg+xml'){src=await svgToPng(src);parsed=bytesFromData(src)}
      const ext=parsed.mime==='image/jpeg'||parsed.mime==='image/jpg'?'jpg':parsed.mime==='image/gif'?'gif':'png';
@@ -95,30 +99,40 @@ async function createDocx(options){
      let inches=Math.min(limitInches,w/96),hi=inches*(h/w);
      if(hi>limitHeight){hi=limitHeight;inches=hi*w/h}
      const cx=Math.max(95000,Math.round(inches*914400)),cy=Math.max(95000,Math.round(hi*914400));
-     xml+=pictureXml(rid,++docPr,cx,cy);
-   }
-   return xml;
+     return [rid,++docPr,cx,cy];
+ }
+ function stemXml(text,width){
+   return root.PhysicsMathContent?root.PhysicsMathContent.blocks(text).map((b,i,blocks)=>b.type==='table'?smallTable(b.rows,width===3.0?4700:10080):paragraph(b.text,{after:100,size:21,bold:false,keep:blocks[i+1]?.type==='table'})).join(''):paragraph(text,{after:100,size:21,bold:false});
  }
  async function renderItem(item,num,isAnswer,width){
    const q=isAnswer?item.answer:item.stem;
    const content=String(q||'').replace(/^\s*\d{1,3}(?:[．、]|\.(?!\d))\s*/,'');
    const text=num+'. '+(content|| (isAnswer?'答案待核对':'题干缺失'));
-   let x=root.PhysicsMathContent?root.PhysicsMathContent.blocks(text).map((b,i,blocks)=>b.type==='table'?smallTable(b.rows,width===3.0?4700:10080):paragraph(b.text,{after:100,size:21,bold:false,keep:blocks[i+1]?.type==='table'})).join(''):paragraph(text,{after:100,size:21,bold:false});
+   const OI=root.PhysicsOptionImages;
+   if(!isAnswer&&OI?.hasAnchors(item.imageItems)){
+     let x='';
+     for(const b of OI.layout(text,item.imageItems)){
+       if(b.kind==='text'){x+=stemXml(b.text,width);continue}
+       if(b.kind==='images'){x+=await addImages(b.images.map(im=>im.src),b.option?Math.min(width,2.4):width,b.option?1.5:(width===3.0?1.95:2.65));continue}
+       // 选项图并排排在同一段，由 Word 自动换行，栏宽内通常两图一行。
+       let runs='';
+       for(const [k,c] of b.cells.entries()){
+         runs+=(k?textRun('　　'):'')+textRun(c.label+' ');
+         for(const im of c.images)runs+=pictureRun(...await embed(im.src,width===3.0?1.15:1.45,1.1));
+       }
+       x+='<w:p><w:pPr><w:spacing w:after="100"/></w:pPr>'+runs+'</w:p>';
+     }
+     return x+spacer(70);
+   }
+   let x=stemXml(text,width);
    x+=await addImages(isAnswer?item.answerImages:item.images,width,width===3.0?1.95:2.65);
    return x+spacer(70);
  }
  async function pageItems(isAnswer,layout){
-   if(layout==='double'){
-     let left='',right='';
-     for(let i=0;i<items.length;i++){
-       const xml=await renderItem(items[i],i+1,isAnswer,3.0);
-       if(i%2===0)left+=xml;else right+=xml;
-     }
-     return colsTable(left,right);
-   }
+   const double=layout==='double',width=double?3.0:6.65;
    let result='';
-   for(let i=0;i<items.length;i++)result+=await renderItem(items[i],i+1,isAnswer,6.65);
-   return result;
+   for(let i=0;i<items.length;i++)result+=await renderItem(items[i],i+1,isAnswer,width);
+   return double?sectionBreak(1)+result+sectionBreak(2):result;
  }
  const title=options.title||'物理精准练习';
  const date=options.date||new Date().toISOString().slice(0,10);
@@ -139,7 +153,7 @@ async function createDocx(options){
  body+=await pageItems(true,options.layout||'single');
  body+=smallTable([['核对后：□ 能独立重做　□ 看懂但有困难　□ 需要教师讲解']]);
  const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="'+W+'" xmlns:r="'+REL+'"><w:body>'+body+
- '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="794" w:bottom="794" w:left="850" w:right="850" w:header="360" w:footer="360"/></w:sectPr></w:body></w:document>';
+ '<w:sectPr><w:type w:val="continuous"/>'+PAGE_SECT+'</w:sectPr></w:body></w:document>';
  const contentTypes='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
  '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>'+
  Array.from(types).map(x=>'<Default Extension="'+x+'" ContentType="image/'+(x==='jpg'?'jpeg':x)+'"/>').join('')+
