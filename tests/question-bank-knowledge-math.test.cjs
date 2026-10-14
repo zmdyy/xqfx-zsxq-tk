@@ -3,7 +3,7 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const base=path.join(__dirname,'..');
 const win={katex:require('../katex.min.js'),JSZip:require('../jszip.min.js')};
 const ctx={window:win,console,atob,Uint8Array,Promise,Date,Map,Set};
-for(const p of ['data/knowledge/concept-assessment-data.js','data/knowledge/concept-assessment.js','mathml2omml.js','question-bank/math-content.js','question-bank/word-export.js','question-bank/quality-diagnostics.js','question-bank/quality-review-v2.js','question-bank/quality-export.js','question-bank/bank-version-update.js'])vm.runInNewContext(fs.readFileSync(path.join(base,p),'utf8'),ctx,{filename:p});
+for(const p of ['data/knowledge/concept-assessment-data.js','data/knowledge/concept-assessment.js','mathml2omml.js','question-bank/math-content.js','question-bank/paper-layout.js','question-bank/word-export.js','question-bank/quality-diagnostics.js','question-bank/quality-review-v2.js','question-bank/quality-export.js','question-bank/bank-version-update.js'])vm.runInNewContext(fs.readFileSync(path.join(base,p),'utf8'),ctx,{filename:p});
 const A=win.PhysicsConceptAssessment,M=win.PhysicsMathContent,R=win.PhysicsQualityReview,U=win.PhysicsBankVersionUpdate;
 const catalog=A.getCatalog(),known=new Set(catalog.concepts.map(c=>c.concept_id));
 for(const entry of catalog.aliases)for(const id of entry.concept_ids)assert.ok(known.has(id),entry.source+' targets an existing concept');

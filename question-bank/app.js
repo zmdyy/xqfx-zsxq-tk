@@ -290,7 +290,7 @@ async function commitTeacherEdit(base,work){
  result.teacherEditedAt=now();result.updatedAt=now();result.createdAt=result.createdAt||now();result.revision=(current?.revision||0)+1;
  result.qualityReviewV1=structuredClone(current?.qualityReviewV1||{});
  for(const dim of ['formula','answer','image','knowledge','duplicate','type'])if(window.PhysicsQualityReview.signature(base,dim)!==window.PhysicsQualityReview.signature(result,dim))result.qualityReviewV1[dim]={...(result.qualityReviewV1[dim]||{}),status:'modified',signature:window.PhysicsQualityReview.signature(result,dim),reviewedAt:now()};
- applyConcepts(result);store.put(result);tx.objectStore('settings').delete('teacher-draft:'+work.id);
+ applyConcepts(result);if(changed.some(k=>['tags','parts'].includes(k))&&current?.primary_concept_id&&!(result.concept_ids||[]).includes(current.primary_concept_id)){result.qualityEditHistory.at(-1).previousPrimaryConceptId=current.primary_concept_id;result.primary_concept_id=null;}store.put(result);tx.objectStore('settings').delete('teacher-draft:'+work.id);
  }catch(e){failure=e;tx.abort()}};
  tx.oncomplete=()=>yes(result);tx.onabort=()=>no(failure||tx.error||Error('保存事务未完成'));tx.onerror=()=>no(tx.error||Error('本地保存失败'));
  });
@@ -322,12 +322,14 @@ function download(blob,name){let url=URL.createObjectURL(blob),a=document.create
 async function backup(onlyHistory){let j={settings:onlyHistory?[]:await getAll('settings'),format:'physics-training-bank-v1',exportedAt:now(),questions:onlyHistory?[]:state.questions,events:state.events,meta:onlyHistory?{}:state.meta};download(new Blob([JSON.stringify(j)],{type:'application/json'}),(onlyHistory?'题目使用历史_':'私人题库完整备份_')+today()+'.json');tell('本地备份已导出，请避免公开传播第三方题目。')}
 
 async function restoreObject(j){
- window.PhysicsBankPackage.validate(j,'backup');const qs=window.PhysicsBankPackage.clone(j.questions||[]),events=window.PhysicsBankPackage.clone(j.events||[]),settings=j.settings||[];for(const q of qs)applyConcepts(q);const meta={...state.meta,...(j.meta||settings.find(s=>s.id==='meta')?.value||{})};
+ window.PhysicsBankPackage.validate(j,'backup');const qs=window.PhysicsBankPackage.clone(j.questions||[]),events=window.PhysicsBankPackage.clone(j.events||[]),settings=j.settings||[];const meta={...state.meta,...(j.meta||settings.find(s=>s.id==='meta')?.value||{})};
  await new Promise((yes,no)=>{
   const tx=db.transaction(['questions','events','settings'],'readwrite');let failure;
   tx.oncomplete=yes;tx.onabort=()=>no(failure||tx.error||Error('备份恢复失败，已完整回滚。'));tx.onerror=()=>{};
   try{for(const q of qs)tx.objectStore('questions').put(q);for(const e of events)tx.objectStore('events').put(e);for(const setting of settings)tx.objectStore('settings').put(setting);tx.objectStore('settings').put({id:'meta',value:meta})}catch(e){failure=e;tx.abort()}
  });
+ // Restore stored question records exactly; derived annotations belong to the display copy.
+ for(const q of qs)applyConcepts(q);
  const merged=new Map(state.questions.map(q=>[q.id,q]));for(const q of qs)merged.set(q.id,q);state.questions=[...merged.values()];const ev=new Map(state.events.map(e=>[e.id,e]));for(const e of events)ev.set(e.id,e);state.events=[...ev.values()];state.meta=meta;invalidateWordDownload();window.StudentPracticeExport?.renderHistory?.();
 }
 async function assignBasket(){if(!state.basket.length)return tell('试题篮为空',true);let cl=prompt('实际布置给哪个班级？',$('classFilter').value||'801');if(!cl||!cl.trim())return;let day=prompt('实际布置日期（YYYY-MM-DD）',today());if(!day)return;if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return tell('日期格式错误',true);let title=prompt('练习名称','物理精准练习')||'物理精准练习';let items=state.basket.map(id=>({id,revision:findQuestion(id)?.revision||1})),fingerprint=hash(cl.trim()+'|'+day+'|'+items.map(x=>x.id).sort().join('|'));if(state.events.some(e=>e.status==='assigned'&&e.fingerprint===fingerprint))return tell('同班同日同一套题已记录，避免重复计次。',true);if(!confirm('已经实际布置或印发给学生？只有确认后才计入使用次数。'))return;let ev={id:uid(),fingerprint,className:cl.trim(),date:day+'T12:00:00',title,items,status:'assigned',createdAt:now()};state.events.push(ev);await put('events',ev);$('classFilter').value=cl.trim();render();tell('已记录 '+cl+' 班实际布置 '+items.length+'题。')}

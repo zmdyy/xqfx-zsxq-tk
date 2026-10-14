@@ -11,7 +11,9 @@
     "test:management": "node tests/question-bank-management-browser.test.cjs",
     "test:review": "node tests/question-bank-review-route-browser.test.cjs && node tests/question-bank-review-browser.test.cjs",
     "test:backup": "node tests/question-bank-backup-browser.test.cjs",
-    "test:distribution": "node tests/question-bank-distribution.test.cjs && node tests/question-bank-distribution-browser.test.cjs"
+    "test:distribution": "node tests/question-bank-distribution.test.cjs && node tests/question-bank-distribution-browser.test.cjs",
+    "test:flow": "node tests/question-bank-full-flow-browser.test.cjs",
+    "test:release": "node tools/test-question-bank-release.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"
