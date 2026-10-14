@@ -35,6 +35,7 @@ function fillBlanks(text,render){
   const ranges=mathRanges(line);
   return line.replace(/[ \t\u00a0\u3000]+/g,(gap,pos)=>{
    if(!outside(ranges,pos)||!line.slice(0,pos).trim()||!line.slice(pos+gap.length).trim())return gap;
+   if((line[pos-1]==='('&&line[pos+gap.length]===')')||(line[pos-1]==='（'&&line[pos+gap.length]==='）'))return gap;
    if(gap.length<2&&!/[\t]/.test(gap)&&!(/^[\u00a0\u3000]{2,}$/.test(gap)))return gap;
    // Keep existing underline runs and English word alignment unchanged.
    if(/[A-D][.．、:：)）]$/.test(line.slice(0,pos))||line[pos-1]==='_'||line[pos+gap.length]==='_'||(/[A-Za-z]/.test(line[pos-1])&&/[A-Za-z]/.test(line[pos+gap.length])))return gap;

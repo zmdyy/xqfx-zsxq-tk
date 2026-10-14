@@ -245,9 +245,9 @@ function init(options){
  if(a==='undo'||a==='redo'){travel(a==='redo');return}if(a==='scan'){scan();return}
  if(a==='sub'||a==='sup'){
  rememberRange();const r=defaultRange().cloneRange(),selected=r.toString();
- if(selected&&r.startContainer===r.endContainer&&r.startContainer.nodeType===3&&/^[A-Za-z0-9′']{1,6}$/.test(selected)){
+ if(selected&&r.startContainer===r.endContainer&&r.startContainer.nodeType===3&&/^[A-Za-z0-9′'\u4e00-\u9fff]{1,12}$/.test(selected)){
   const text=r.startContainer.textContent,base=text.slice(0,r.startOffset).match(/[A-Za-zρΔηΩ]$|\d+(?:\.\d+)?$/)?.[0];
-  if(base){r.setStart(r.startContainer,r.startOffset-base.length);const prime=a==='sub'&&/^[0-9]+$/.test(selected)&&/['′]/.test(text[r.endOffset]||'')?'^{\\prime}':'';if(prime)r.setEnd(r.endContainer,r.endOffset+1);insertTex(base+(a==='sub'?'_{':'^{')+selected+'}'+prime,null,r);status('已设置'+(a==='sub'?'下标':'上标')+'，可点击公式继续编辑。');return}
+  if(base){const script=/[\u4e00-\u9fff]/.test(selected)?'\\text{'+selected+'}':selected;r.setStart(r.startContainer,r.startOffset-base.length);const prime=a==='sub'&&/['′]/.test(text[r.endOffset]||'')?'^{\\prime}':'';if(prime)r.setEnd(r.endContainer,r.endOffset+1);insertTex(base+(a==='sub'?'_{':'^{')+script+'}'+prime,null,r);status('已设置'+(a==='sub'?'下标':'上标')+'，可点击公式继续编辑。');return}
  }
  mathOpen(selected?'{}'+(a==='sub'?'_{':'^{')+selected+'}':(a==='sub'?'F_{1}':'x^{2}'));return
 }

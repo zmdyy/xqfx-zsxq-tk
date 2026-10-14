@@ -42,6 +42,8 @@ assert.equal((String(exported.files.get('word/document.xml')).match(/<w:tbl>/g)|
 const PL=root.PhysicsPaperLayout;
 assert.equal(PL.fillBlanks('比热容   的特点，气压为\u3000\u3000Pa。'), '比热容______的特点，气压为______Pa。');
 assert.equal(PL.fillBlanks(String.raw`公式\(a   b\)；English   words；表头 |   数值`),String.raw`公式\(a   b\)；English   words；表头 |   数值`);
+assert.equal(PL.fillBlanks('选择（　　）；判断(    )；填空   后继续。'),'选择（　　）；判断(    )；填空______后继续。');
+assert.equal(PL.fillBlanks('(　　)',()=>'<line/>'),'(　　)','editor rendering also leaves empty parentheses unlined');
 const full='【知识点】秘密知识\n【答案】结果甲\n【分析】秘密分析\n【解答】步骤乙\n【解析】秘密解析';
 for(const extras of [[],['知识点','分析','解析']]){
  const item={stem:'气压为   Pa。',answer:full,images:[],answerImages:[]};

@@ -13,6 +13,21 @@ assert.deepEqual(fixes.slice(0,7).map(x=>x.after),['\\(R_{0}\\)','\\(R_{0}^{\\pr
 for(const x of fixes)assert.deepEqual(M.validate(x.after),[],x.before);
 assert.equal(P.scan("型号 AF1X、R2025，原式 \\(R_{0}^{\\prime}\\)，已规范 R₀′").length,0);
 assert.deepEqual(P.scan('cm3；Q吸；1.25×103；J/kg℃').map(x=>x.category),['unit-exponent','text-subscript','scientific-exponent','unit-format']);
+for(const [before,after] of [
+ ['P1=U额2/R1',String.raw`\(P_{1}=\frac{U_{\text{额}}^{2}}{R_{1}}\)`],
+ ['P1=`U额2`/R1',String.raw`\(P_{1}=\frac{U_{\text{额}}^{2}}{R_{1}}\)`],
+ ['P=U²/R',String.raw`\(P=\frac{U^{2}}{R}\)`],
+ ['P1=U1^2/R1',String.raw`\(P_{1}=\frac{U_{1}^{2}}{R_{1}}\)`],
+ ['I=P/U',String.raw`\(I=\frac{P}{U}\)`],
+ ['I1=P额/U额',String.raw`\(I_{1}=\frac{P_{\text{额}}}{U_{\text{额}}}\)`],
+ ...['G','m','V'].map(b=>[b+'排','\\('+b+'_{\\text{排}}\\)'])
+]){
+ const fixes=P.scan(before);assert.equal(fixes.length,1,before);assert.equal(fixes[0].before,before);assert.equal(fixes[0].after,after);assert.deepEqual(M.validate(after),[]);assert.equal(P.scan(after).length,0,'already formatted '+before);
+}
+for(const raw of ["P1=U额2/R1'",'P1=U额2/R1^2','I=P/U1²'])assert.ok(!P.scan(raw).some(x=>x.category==='electric-power-formula'),'do not truncate denominator power/prime');
+assert.equal(P.scan('G排²')[0].after,String.raw`\(G_{\text{排}}^{2}\)`);
+assert.equal(P.scan("m排'")[0].after,String.raw`\(m_{\text{排}}^{\prime}\)`);
+assert.equal(P.scan('型号 AP1X=U额2/R1X').length,0,'do not rewrite model identifiers');
 console.log('PASS: all presets parse, thermal exclusions, conservative suggestions and no mutation');
 
 const vm=require('vm'),fs=require('fs'),path=require('path');

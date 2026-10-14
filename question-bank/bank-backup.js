@@ -17,7 +17,9 @@ async function backup({onProgress,extra,fileName}={}){
   const result=await active.promise;active.finalizing=true;onProgress?.({stage:'finishing'});
   let warning='';try{await api.setSetting('bankLastBackupV1',result.record)}catch(e){warning='备份文件已生成，但生成记录未保存：'+e.message}
   if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(result.blob);
-  const name=fileName||'私人题库完整备份_'+new Date().toISOString().slice(0,10)+'.zip';
+  const date=new Date(result.record?.generatedAt||Date.now()),pad=n=>String(n).padStart(2,'0');
+  const stamp=date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate())+'_'+pad(date.getHours())+'-'+pad(date.getMinutes());
+  const name=fileName||'私人题库完整备份_'+stamp+'.zip';
   const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
   return {...result,url,fileName:name,warning};
  }finally{if(job===active)job=null}
