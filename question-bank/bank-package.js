@@ -88,9 +88,10 @@ async function create(data,options={}){
  if(!root.JSZip)throw Error('JSZip未加载。');
  const kind=options.kind||'backup';if(!['backup','update'].includes(kind))throw Error('未知题库包用途。');
  validate(data,kind);validateImages(data);
- const zip=new root.JSZip(),resources={},memo=new Map();
- async function addResource(bytes){const hash=await sha(bytes),ref='media/'+hash+'.bin';if(!resources[ref]){zip.file(ref,bytes,{compression:'STORE'});resources[ref]={sha256:hash,size:bytes.length}}return ref}
+ const zip=new root.JSZip(),resources={},memo=new Map();let visited=0,resourceCount=0;
+ async function addResource(bytes){const hash=await sha(bytes),ref='media/'+hash+'.bin';if(!resources[ref]){zip.file(ref,bytes,{compression:'STORE'});resources[ref]={sha256:hash,size:bytes.length};resourceCount++}return ref}
  const bank=await walk({...data,format:FORMAT},async(value,path)=>{
+  options.onPrepare?.({visited:++visited,resources:resourceCount});
   if(marker(value))throw Error('尚未还原的资源标记：'+path);
   if(typeof value==='string'&&path.endsWith('.baseFingerprint'))return normalizeFingerprint(value);
   if(/\.(id|stem)$/.test(path))return;

@@ -127,16 +127,11 @@ async function exportZip(){
  busy=true;$('repairExportBtn').disabled=true;
  $('repairNotice').textContent='正在打包所有题目和原图；大题库可能需要一些时间…';
  try{
-   if(!root.PhysicsBankPackage||!api.getSnapshot)throw Error('完整备份模块未加载，请刷新题库页面。');
-   const c=count(),snapshot=await api.getSnapshot();
-   snapshot.diagramRepairBatch={questionCount:c.questions,candidateSlots:c.all,approved:c.approved,pending:c.pending,rejected:c.rejected,originalsPreserved:true};
-   const result=await root.PhysicsBankPackage.create(snapshot,{kind:'backup',onProgress:progress=>{if(progress.percent%10<1)$('repairNotice').textContent='正在生成统一完整备份：'+Math.floor(progress.percent)+'%'}}),blob=result.blob;
-   const url=URL.createObjectURL(blob),a=document.createElement('a');
-   a.href=url;a.download='physics_bank_image_review_'+new Date().toISOString().slice(0,10)+'.zip';
-   document.body.appendChild(a);a.click();a.remove();
-   setTimeout(()=>URL.revokeObjectURL(url),30000);
+   if(!api.backup)throw Error('后台备份模块未加载，请刷新题库页面。');
+   const c=count();$('repairDialog').close();
+   const result=await api.backup({extra:{questionCount:c.questions,candidateSlots:c.all,approved:c.approved,pending:c.pending,rejected:c.rejected,originalsPreserved:true},fileName:'physics_bank_image_review_'+new Date().toISOString().slice(0,10)+'.zip'}),blob=result.blob;
    $('repairNotice').textContent='已生成完整题库ZIP（'+(blob.size/1024/1024).toFixed(1)+' MB）：已确认'+c.approved+'幅；保留原图备份；其余继续待审。';
- }catch(e){$('repairNotice').textContent='导出失败：'+e.message;console.error(e)}
+ }catch(e){$('repairNotice').textContent=e.name==='AbortError'?'备份已取消。':'导出失败：'+e.message;if(e.name!=='AbortError')console.error(e)}
  finally{busy=false;render()}
 }
 function init(options){

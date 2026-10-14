@@ -336,3 +336,12 @@
 .bm-status{white-space:pre-line;min-height:24px}
 .bm-dialog [hidden]{display:none!important}
 @media(max-width:650px){.bm-dialog{padding:16px}.bank-source-filters{gap:10px}.bm-actions{gap:8px}.top-actions button{font-size:13px}.bm-head h2{font-size:19px}}
+
+/* Background backups stay visible without capturing page focus or wheel events. */
+.bm-backup-panel{position:fixed;right:18px;bottom:18px;z-index:1000;width:min(420px,calc(100vw - 36px));max-height:calc(100dvh - 36px);overflow:auto;background:#fff;border:1px solid #aabed1;border-radius:12px;padding:16px;box-shadow:0 8px 35px #102b4538;box-sizing:border-box;color:var(--ink)}
+.bm-backup-panel .bm-head{margin-bottom:8px}.bm-backup-panel .bm-head button{font-size:13px}.bm-backup-panel p{line-height:1.6;overflow-wrap:anywhere}
+.bm-backup-panel progress{width:100%;height:14px}.bm-backup-panel .bm-actions>*{flex-basis:140px;min-height:40px}
+.bm-backup-panel .error{color:#a62f39}.bm-backup-panel [hidden],.bm-backup-panel[hidden]{display:none!important}
+.bm-backup-panel .button{display:flex;align-items:center;justify-content:center;text-decoration:none}
+.bm-backup-panel .hint{font-size:12px;margin-bottom:0}
+@media(max-width:650px){.bm-backup-panel{right:10px;bottom:10px;width:calc(100vw - 20px);max-height:50dvh;padding:12px}}

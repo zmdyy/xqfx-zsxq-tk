@@ -1,0 +1,41 @@
+'use strict';
+const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert/strict'),{chromium}=require('playwright');
+const root=path.resolve(__dirname,'..'),JSZip=require(path.join(root,'jszip.min.js'));
+const server=http.createServer((req,res)=>{const u=decodeURIComponent(req.url.split('?')[0]),p=path.resolve(root,'.'+u+(u.endsWith('/')?'index.html':''));if(!p.startsWith(root+path.sep))return res.writeHead(403).end();fs.readFile(p,(e,d)=>{if(e)return res.writeHead(404).end();res.setHeader('Content-Type',({'.html':'text/html;charset=utf-8','.js':'application/javascript','.css':'text/css','.json':'application/json'}[path.extname(p)]||'application/octet-stream'));res.end(d)})});
+(async()=>{
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({executablePath:process.env.CHROME_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
+ try{
+ const page=await browser.newPage({viewport:{width:1440,height:960}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:'+server.address().port+'/question-bank/');await page.waitForSelector('#backupZipBtn',{state:'attached'});
+ const mutate=fn=>page.evaluate(fn);
+ await mutate(()=>new Promise((resolve,reject)=>{const r=indexedDB.open('PhysicsTrainingBankV1');r.onsuccess=()=>{const tx=r.result.transaction(['questions','settings'],'readwrite'),store=tx.objectStore('questions');for(let i=0;i<3500;i++)store.put({id:'Q'+i,stem:'物理大题库测试 '+i+'。'+('质量速度电学光学热学 '.repeat(400)),answer:'答案'+i,images:[],revision:1});tx.objectStore('settings').put({id:'teacher-draft:Q0',value:{content:{stem:'草稿'},baseFingerprint:JSON.stringify({stem:'物理原题',answer:'1'})}});tx.oncomplete=()=>{r.result.close();resolve()};tx.onabort=()=>reject(tx.error)}}));
+ await page.click('#bankManageBtn');await page.waitForFunction(()=>document.querySelector('#bmStorageData').textContent.includes('3500 道题'));
+ assert.match(await page.locator('#bmStorageData').innerText(),/还没有/);
+ // Request denial is an ordinary outcome, not a broken or stuck UI.
+ await page.evaluate(()=>{Object.defineProperty(navigator.storage,'persist',{configurable:true,value:async()=>false});Object.defineProperty(navigator.storage,'persisted',{configurable:true,value:async()=>false})});await page.click('#bmStorageRefresh');await page.waitForFunction(()=>!document.querySelector('#bmPersist').disabled);await page.click('#bmPersist');assert.match(await page.locator('#bmStorageProtection').innerText(),/未授予/);
+ await page.evaluate(()=>{window.framesDuringBackup=0;window.lastFrame=performance.now();window.maxFrameGap=0;window.heartbeat=setInterval(()=>{const now=performance.now();window.maxFrameGap=Math.max(window.maxFrameGap,now-window.lastFrame);window.lastFrame=now;window.framesDuringBackup++},20)});
+ let downloads=0;page.on('download',()=>downloads++);
+ await page.click('#backupZipBtn');await page.waitForFunction(()=>PhysicsBankBackup.busy);assert.equal(await page.locator('#backupZipBtn').isDisabled(),true);
+ // Global single-flight protection also covers image-review and programmatic entry points.
+ assert.match(await page.evaluate(()=>PhysicsBankManagement.backup().catch(e=>e.message)),/已有备份/);
+ await page.click('#bmBackupCancel');await page.waitForFunction(()=>document.querySelector('#bmBackupText').textContent.includes('已取消'));assert.equal(downloads,0);
+ assert.equal(await page.evaluate(()=>new Promise(resolve=>{const r=indexedDB.open('PhysicsTrainingBankV1');r.onsuccess=()=>{const q=r.result.transaction('settings').objectStore('settings').get('bankLastBackupV1');q.onsuccess=()=>{r.result.close();resolve(q.result||null)}}})),null);
+ // Retry, edit after the snapshot has been read, and continue using the page.
+ await page.click('#bankManageBtn');const download=page.waitForEvent('download',{timeout:90000});await page.click('#backupZipBtn');await page.waitForFunction(()=>/核对备份基线|整理题目|压缩完整/.test(document.querySelector('#bmBackupText').textContent));
+ await mutate(()=>new Promise(resolve=>{const r=indexedDB.open('PhysicsTrainingBankV1');r.onsuccess=()=>{const tx=r.result.transaction(['questions','events','settings'],'readwrite'),q=tx.objectStore('questions');q.put({id:'Q0',stem:'快照之后修改',images:[],revision:2});q.put({id:'NEW',stem:'快照之后新增',images:[]});q.delete('Q1');tx.objectStore('events').put({id:'E1',items:[]});tx.objectStore('settings').put({id:'teacher-draft:Q0',value:{content:{stem:'草稿改动'}}});tx.oncomplete=()=>{r.result.close();resolve()}}}));
+ await page.fill('#search','可以继续操作');await page.click('#bmBackupToggle');assert.equal(await page.locator('#bmBackupBody').isVisible(),false);await page.click('#bmBackupToggle');
+ const dl=await download,z=await JSZip.loadAsync(fs.readFileSync(await dl.path())),data=JSON.parse(await z.file('bank.json').async('text'));
+ assert.equal(data.questions.length,3500);assert.ok(data.questions.find(q=>q.id==='Q1'));assert.ok(!data.questions.find(q=>q.id==='NEW'));assert.match(data.questions.find(q=>q.id==='Q0').stem,/大题库测试/);assert.ok(data.settings.find(s=>s.id==='bankBackupSnapshotV1'));
+ await page.waitForFunction(()=>!PhysicsBankBackup.busy);const responsiveness=await page.evaluate(()=>{clearInterval(window.heartbeat);return {frames:framesDuringBackup,gap:maxFrameGap}});assert.ok(responsiveness.frames>10,JSON.stringify(responsiveness));assert.ok(responsiveness.gap<1000,JSON.stringify(responsiveness));
+ await page.click('#bankManageBtn');await page.waitForFunction(()=>document.querySelector('#bmStorageData').textContent.includes('相对备份快照'));assert.match(await page.locator('#bmStorageData').innerText(),/新增 1 道，修改 1 道，删除 1 道/);assert.match(await page.locator('#bmStorageData').innerText(),/使用记录变化 1 条/);assert.match(await page.locator('#bmStorageData').innerText(),/管理记录变化 1 条/);
+ await page.click('[data-bm-close="bankManageDialog"]');const retryDownload=page.waitForEvent('download');await page.click('#bmBackupSave');const redl=await retryDownload;assert.deepEqual(fs.readFileSync(await redl.path()),fs.readFileSync(await dl.path()),'re-download uses the exact same snapshot');
+ // Restoring the ZIP's baseline must produce zero false changes despite compacted draft fingerprints.
+ await page.evaluate(bank=>new Promise(resolve=>{const r=indexedDB.open('PhysicsTrainingBankV1');r.onsuccess=()=>{const tx=r.result.transaction(['questions','events','settings'],'readwrite');for(const name of ['questions','events','settings']){const store=tx.objectStore(name);store.clear();for(const row of bank[name])store.put(row)}tx.oncomplete=()=>{r.result.close();resolve()}}}),data);
+ const restored=await page.evaluate(()=>PhysicsBankBackup.status());assert.ok(restored.saved.snapshotAt);assert.equal(restored.saved.generatedAt,undefined);for(const c of Object.values(restored.changes))assert.deepEqual(c,{added:0,modified:0,deleted:0});
+ // Unsupported storage APIs and worker loading errors must not freeze management.
+ await page.evaluate(()=>{Object.defineProperty(navigator.storage,'estimate',{configurable:true,value:undefined});Object.defineProperty(navigator.storage,'persisted',{configurable:true,value:undefined})});await page.click('#bankManageBtn');await page.waitForFunction(()=>document.querySelector('#bmStorageUsage').textContent.includes('无法估算'));assert.match(await page.locator('#bmStorageProtection').innerText(),/无法查询/);
+ await page.route('**/bank-backup-worker.js*',r=>r.abort());await page.click('#backupZipBtn');await page.waitForFunction(()=>document.querySelector('#bmBackupText').textContent.includes('备份失败'));assert.equal(await page.locator('#backupZipBtn').isDisabled(),false);await page.unroute('**/bank-backup-worker.js*');
+ await page.setViewportSize({width:390,height:844});const bounds=await page.locator('#bmBackupPanel').boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=390&&bounds.height<=422);assert.deepEqual(errors,[]);if(process.env.BACKUP_SCREENSHOT){await page.screenshot({path:process.env.BACKUP_SCREENSHOT})}
+ console.log('PASS: 3500-question background backup, responsive page '+JSON.stringify(responsiveness)+', cancel/retry, single-flight, immutable snapshot, exact changes, re-download, persistence denial, unsupported APIs, worker failure and mobile bounds');
+ }finally{await browser.close();await new Promise(r=>server.close(r))}
+})().catch(e=>{console.error(e);process.exitCode=1});

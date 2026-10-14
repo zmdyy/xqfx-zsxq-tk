@@ -9,7 +9,8 @@
     "test:word": "node tests/question-bank-word.test.cjs && node tests/question-bank-export-flow.test.cjs && node tests/question-bank-auto-a4.test.cjs && node tests/question-bank-word-browser.test.cjs",
     "test:package": "node tests/question-bank-package.test.cjs && node tests/question-bank-package-browser.test.cjs",
     "test:management": "node tests/question-bank-management-browser.test.cjs",
-    "test:review": "node tests/question-bank-review-route-browser.test.cjs && node tests/question-bank-review-browser.test.cjs"
+    "test:review": "node tests/question-bank-review-route-browser.test.cjs && node tests/question-bank-review-browser.test.cjs",
+    "test:backup": "node tests/question-bank-backup-browser.test.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"
