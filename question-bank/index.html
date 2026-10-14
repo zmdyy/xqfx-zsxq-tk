@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>物理精准练习题库 · 学情可视化</title>
-<link rel="stylesheet" href="./teacher-editor.css?v=20261013suggest2">
+<title>题库 · 学情可视化</title>
+<link rel="stylesheet" href="./teacher-editor.css?v=20261014export7">
 <link rel="stylesheet" href="./style.css?v=20261014edit6">
 <link rel="stylesheet" href="./quality-review.css?v=20261013review5">
 <script src="../jszip.min.js"></script>
@@ -13,10 +13,10 @@
 <script src="../mathml2omml.js"></script>
 <script src="../data/knowledge/concept-assessment-data.js?v=20261012v5"></script>
 <script src="../data/knowledge/concept-assessment.js?v=20261012v5"></script>
-<script src="./math-content.js?v=20261012v5"></script>
-<script src="./paper-layout.js?v=20261013preview3"></script>
-<script src="./physics-distribution.js?v=20261014edit6"></script>
-<script src="./bank-classify.js?v=20261014edit6"></script>
+<script src="./math-content.js?v=20261014export7"></script>
+<script src="./paper-layout.js?v=20261014export7"></script>
+<script src="./physics-distribution.js?v=20261014export7"></script>
+<script src="./bank-classify.js?v=20261014export7"></script>
 <script src="./question-sources.js?v=20261014manage2"></script>
 <script src="./bank-backup.js?v=20261014backup3"></script>
 <script src="./bank-management.js?v=20261014backup3"></script>
@@ -24,11 +24,11 @@
 <script src="../pinyin-pro.js"></script>
 <script src="../student-name-search.js?v=20261011alias2"></script>
 <script src="./student-export.js?v=20261011alias"></script>
-<script src="./word-export.js?v=20261013word4"></script>
+<script src="./word-export.js?v=20261014export7"></script>
 </head>
 <body>
 <div id="questionBankHome">
-<header class="topbar"><div><a href="../index.html">← 学情分析</a><a href="../knowledge/index.html">✦ 知识星球</a><h1>物理精准练习题库</h1></div><div class="top-actions"><button type="button" class="primary" id="bankDetailsButton" aria-expanded="false" aria-controls="bankDetailsPanel">▤ 题库明细</button><button type="button" id="qualityReviewBtn" class="muted">题库质量审核</button><button type="button" id="addQuestionsBtn">＋ 添加题目</button><button type="button" id="bankManageBtn" class="muted">备份与恢复</button></div></header>
+<header class="topbar"><div><a href="../index.html">← 学情分析</a><a href="../knowledge/index.html">✦ 知识星球</a><h1>题库</h1></div><div class="top-actions"><button type="button" class="primary" id="bankDetailsButton" aria-expanded="false" aria-controls="bankDetailsPanel">▤ 题库明细</button><button type="button" id="qualityReviewBtn" class="muted">题库质量审核</button><button type="button" id="addQuestionsBtn">＋ 添加题目</button><button type="button" id="bankManageBtn" class="muted">备份与恢复</button></div></header>
 <main>
 <section class="bank-query-panel workflow-section" aria-label="题库检索与筛选">
   <div class="workflow-heading"><div class="workflow-step"><span aria-hidden="true">01</span><div><h2>检索与筛选</h2><p>先定位知识点，再选择合适的练习题</p></div></div><span class="workflow-side-note">题库管理</span></div>
@@ -128,6 +128,11 @@
     <label for="layout">版面布局<select id="layout"><option value="auto">自动选择</option><option value="single">单栏</option><option value="double">双栏</option></select></label>
     <label for="answerMode">答案位置<select id="answerMode"><option value="back">背面答案（推荐）</option><option value="separate">答案另页</option></select></label>
   </div>
+  <fieldset><legend>答案内容</legend><p class="print-setting-hint">默认包含【答案】和【解答】；完整解析仍保留在题库中。</p>
+    <label><input type="checkbox" id="answerKnowledge"> 知识点</label>
+    <label><input type="checkbox" id="answerAnalysis"> 分析</label>
+    <label><input type="checkbox" id="answerExplanation"> 解析</label>
+  </fieldset>
   <label class="print-feedback-setting"><input type="checkbox" id="feedback" checked> 附学生反馈表格</label>
   <div id="layoutDecision" class="layout-decision" aria-live="polite">当前为自动排版：预览时按正反面内容检查，并选择适合的一栏或两栏。</div>
   <p class="print-setting-hint">自动排版先尝试单栏，若 A4 超出则尝试双栏；超出时会提示，仍可导出 Word，并在 Word 中调整分页。</p>
@@ -209,10 +214,10 @@
 <script src="./quality-diagnostics.js?v=20261012editor1"></script>
 <script src="./quality-export.js?v=20261012v5"></script>
 <script src="./bank-version-update.js?v=20261014package1"></script>
-<script src="./quality-review-v2.js?v=20261014release5"></script>
+<script src="./quality-review-v2.js?v=20261014export7"></script>
 <script src="./vendor/mathlive/mathlive.min.js"></script>
 <script src="./physics-input.js?v=20261014edit6"></script>
-<script src="./teacher-editor.js?v=20261014edit6"></script>
-<script src="./app.js?v=20261014edit6"></script>
+<script src="./teacher-editor.js?v=20261014export7"></script>
+<script src="./app.js?v=20261014export7"></script>
 </body>
 </html>

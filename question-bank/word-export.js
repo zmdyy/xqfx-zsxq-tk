@@ -102,7 +102,7 @@ async function createDocx(options){
  }
  async function renderItem(item,num,isAnswer){
    let xml='';
-   for(const block of PL.itemBlocks(item,num,isAnswer)){
+   for(const block of PL.itemBlocks(item,num,isAnswer,options)){
      const prefix=block.first?num+'. ':'';
      const images=block.images||[],gallery=block.kind==='option-group',after=block.last?150:100;
      if(block.kind==='table'){
@@ -126,7 +126,7 @@ async function createDocx(options){
  const date=options.date||new Date().toISOString().slice(0,10);
  let body=paragraph(title+' · '+date,{align:'center',bold:true,size:30,after:170});
  const personal=options.student;
- const nameLine=personal?('班级：'+(personal.className||'________')+'　姓名：'+personal.name+'　日期：________　　少量多次 · 独立完成'):'班级：________　姓名：________　日期：________　　少量多次 · 独立完成';
+ const nameLine=personal?('班级：'+(personal.className||'________')+'　姓名：'+personal.name):'班级：________　姓名：________';
  body+=paragraph(nameLine,{align:'center',size:19,after:190});
  body+=sectionEnd(1,'nextPage');
  body+=await pageItems(false);

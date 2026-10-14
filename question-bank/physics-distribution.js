@@ -111,5 +111,5 @@ function update(questions,options){if(!$('detailDistribution'))return;api=option
 }
 function reset(){select('[]')}
 function resize(){if(chart&&data)paintChart(nodes.get(selected)||data.tree)}
-root.PhysicsBankDistribution={GROUPS,TYPES,uniqueQuestions,classify,infer,matches,compute,init,update,reset,resize,select};
+root.PhysicsBankDistribution={GROUPS,TYPES,category,uniqueQuestions,classify,infer,matches,compute,init,update,reset,resize,select};
 })(typeof window!=='undefined'?window:globalThis);

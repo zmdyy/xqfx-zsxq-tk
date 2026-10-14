@@ -47,8 +47,8 @@ function scrollDocumentTo(target){
 }
 function status(s,error=false){$('teStatus').textContent=s;$('teStatus').classList.toggle('error',error)}
 function atom(tex){return '<span class="te-atom" contenteditable="false" tabindex="0" role="button" aria-label="编辑公式" data-tex="'+E(tex)+'">'+root.PhysicsMathContent.inline('\\('+tex+'\\)')+'</span>'}
-function richInline(s){return root.PhysicsMathContent.tokens(s||'').map(t=>t.type==='math'?atom(t.text):E(t.text)).join('')}
-function rich(s){return root.PhysicsMathContent.blocks(s||'').map(b=>b.type==='table'?'<table><tbody>'+b.rows.map(row=>'<tr>'+row.map(c=>'<td>'+richInline(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>':richInline(b.text)).join('\n')}
+function richInline(s,blanks=false){return root.PhysicsMathContent.tokens(s||'').map(t=>t.type==='math'?atom(t.text):blanks&&root.PhysicsPaperLayout?root.PhysicsPaperLayout.fillBlanks(E(t.text),gap=>'<span class="te-fill-blank">'+gap+'</span>'):E(t.text)).join('')}
+function rich(s,blanks=false){return root.PhysicsMathContent.blocks(s||'').map(b=>b.type==='table'?'<table><tbody>'+b.rows.map(row=>'<tr>'+row.map(c=>'<td>'+richInline(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>':richInline(b.text,blanks)).join('\n')}
 function serialized(node){
  const out={text:'',pieces:[]};
  const add=part=>{const shift=out.text.length;out.text+=part.text;out.pieces.push(...part.pieces.map(p=>({...p,start:p.start+shift,end:p.end+shift})));};
@@ -99,7 +99,7 @@ function insertTex(tex,target=null,r=null){
 }
 function textInsert(text){checkpoint();const r=defaultRange();r.deleteContents();const n=document.createTextNode(text);r.insertNode(n);range=document.createRange();range.setStartAfter(n);range.collapse(true);selectRange(range);changed();scan()}
 function renderFields(){
- const box=(label,key)=>'<section class="te-field-section"><h3>'+label+'</h3><div class="te-rich" contenteditable="true" role="textbox" aria-multiline="true" aria-label="'+label+'" data-field="'+key+'">'+rich(getField(key)||'')+'</div></section>';
+ const box=(label,key)=>'<section class="te-field-section"><h3>'+label+'</h3><div class="te-rich" contenteditable="true" role="textbox" aria-multiline="true" aria-label="'+label+'" data-field="'+key+'">'+rich(getField(key)||'',/stem$/.test(key))+'</div></section>';
  $('teFields').innerHTML=box('题干与选项','stem')+images('images')+box('答案与解析','answer')+images('answerImages')+
  (work.parts?.length?'<details class="te-parts" open><summary>独立小问（分别编辑，不自动覆盖整题）</summary>'+work.parts.map((p,i)=>box('小问 '+(i+1)+' 题干','part:'+i+':stem')+box('小问 '+(i+1)+' 答案','part:'+i+':answer')).join('')+'</details>':'');
  range=null;activeField=fieldNodes()[0];

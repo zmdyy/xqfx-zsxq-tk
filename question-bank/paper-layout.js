@@ -28,8 +28,30 @@ function splitOptions(blocks,choice){
   ms.forEach((m,i)=>{active={kind:'option',label:m[1],text:b.text.slice(m.index,ms[i+1]?.index??b.text.length).trim()};out.push(active);});
  }return out;
 }
-function itemBlocks(item,num,answerSide=false){
- const raw=String((answerSide?item.answer:item.stem)||'').replace(/^\s*\d{1,3}(?:[．、]|\.(?!\d))\s*/,''),blocks=answerSide?paragraphs(raw):splitOptions(paragraphs(raw),/选择/.test(item.q?.type||''));
+// Presentation only: never change stored source text. Math and table spacing remain intact.
+function fillBlanks(text,render){
+ return lines(String(text||'')).map(line=>{
+  if(tableCells(line).length>1)return line;
+  const ranges=mathRanges(line);
+  return line.replace(/[ \t\u00a0\u3000]+/g,(gap,pos)=>{
+   if(!outside(ranges,pos)||!line.slice(0,pos).trim()||!line.slice(pos+gap.length).trim())return gap;
+   if(gap.length<2&&!/[\t]/.test(gap)&&!(/^[\u00a0\u3000]{2,}$/.test(gap)))return gap;
+   // Keep existing underline runs and English word alignment unchanged.
+   if(/[A-D][.．、:：)）]$/.test(line.slice(0,pos))||line[pos-1]==='_'||line[pos+gap.length]==='_'||(/[A-Za-z]/.test(line[pos-1])&&/[A-Za-z]/.test(line[pos+gap.length])))return gap;
+   return render?render(gap):'_'.repeat(Math.max(6,Math.min(20,gap.length)));
+  });
+ }).join('\n');
+}
+function selectAnswerSections(text,extras=[]){
+ text=String(text||'');const ranges=mathRanges(text),marks=[...text.matchAll(/【(答案|知识点|分析|解析|解答)】/g)].filter(m=>outside(ranges,m.index));
+ if(!marks.length)return text; // Unlabelled legacy answers stay usable.
+ const allowed=new Set(['答案','解答',...extras]);
+ const pieces=[text.slice(0,marks[0].index)];
+ marks.forEach((m,i)=>{if(allowed.has(m[1]))pieces.push(text.slice(m.index,marks[i+1]?.index??text.length));});
+ return pieces.join('').trim()||'本题仅有未勾选的答案栏目，请勾选对应栏目后导出。';
+}
+function itemBlocks(item,num,answerSide=false,options={}){
+ const raw=(answerSide?selectAnswerSections(item.answer,options.answerSections):fillBlanks(item.stem)).replace(/^\s*\d{1,3}(?:[．、]|\.(?!\d))\s*/,''),blocks=answerSide?paragraphs(raw):splitOptions(paragraphs(raw),/选择/.test(item.q?.type||''));
  if(!blocks.length)blocks.push({kind:'paragraph',text:answerSide?'答案待核对':'题干缺失'});
  const sources=answerSide?item.answerImages||[]:item.images||[],details=answerSide?item.answerImageDetails||[]:item.imageDetails||[];
  let unboundOptions=null;
@@ -90,5 +112,5 @@ function paginate(host){
  results.pages.forEach((p,i)=>{const answer=p.dataset.side==='back',n=p.dataset.facePage,total=answer?results.backPages:results.frontPages;p.querySelector('.page-label').textContent=(answer?'答案':'题目')+' '+n+'/'+total+' · '+(i+1)+'/'+results.pages.length;});
  return {...results,pages:results.pages.map(p=>({side:p.dataset.side,number:Number(p.dataset.facePage),oversize:p.classList.contains('oversize')}))};
 }
-root.PhysicsPaperLayout={settings,style,paragraphs,splitOptions,itemBlocks,renderBlock,paginate};if(typeof module!=='undefined')module.exports=root.PhysicsPaperLayout;
+root.PhysicsPaperLayout={settings,style,fillBlanks,selectAnswerSections,paragraphs,splitOptions,itemBlocks,renderBlock,paginate};if(typeof module!=='undefined')module.exports=root.PhysicsPaperLayout;
 })(typeof window!=='undefined'?window:globalThis);

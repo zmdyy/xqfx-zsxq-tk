@@ -4,6 +4,12 @@
 const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let api,ids=[],index=0,current=null,busy=false,suggestion=null,session=0;
 function message(t){$('bcStatus').textContent=t}
+function refreshPrimary(preferred=$('bcPrimary').value){
+ const group=$('bcCategory').value,D=root.PhysicsBankDistribution;
+ const concepts=[...api.catalogById.values()].filter(c=>!group||D.category(c)===group);
+ $('bcPrimary').innerHTML='<option value="">暂不确定</option>'+concepts.map(c=>'<option value="'+E(c.concept_id)+'">'+E(c.module+' / '+c.name)+'</option>').join('');
+ $('bcPrimary').value=concepts.some(c=>c.concept_id===preferred)?preferred:'';
+}
 async function load(){
  const token=++session;current=null;message('正在读取题目…');const q=await api.getQuestion(ids[index]);if(token!==session)return;if(!q){message('该题已不存在，请关闭后重新打开。');return}current=q;
  const D=root.PhysicsBankDistribution,a=D.classify(q,api);suggestion=D.infer(q,api);
@@ -12,7 +18,7 @@ async function load(){
  $('bcCategory').value=q.physicsCategoryV1?.source==='teacher'?q.physicsCategoryV1.category:'';
  $('bcCurrent').textContent='当前归属：'+a.category+' / '+a.conceptName+'。'+a.reason;
  $('bcRefine').checked=false;$('bcFine').hidden=true;
- $('bcPrimary').innerHTML='<option value="">暂不确定</option>'+[...api.catalogById.values()].map(c=>'<option value="'+E(c.concept_id)+'">'+E(c.module+' / '+c.name)+'</option>').join('');$('bcPrimary').value=q.primary_concept_id||'';
+ refreshPrimary(q.primary_concept_id||'');
  $('bcRelated').value=(q.tags||[]).join('；');
  $('bcSuggestion').textContent=suggestion.category==='待归类'?'自动建议：尚无可靠大类依据，建议手动选择。':'自动建议：'+suggestion.category+'。依据：'+suggestion.reason+'；'+suggestion.conceptName;
  $('bcUseSuggestion').disabled=suggestion.category==='待归类';message('只选大类即可保存，知识点可以稍后细化。');
@@ -31,7 +37,8 @@ async function save(next){
 }
 function init(options){api=options;document.body.insertAdjacentHTML('beforeend',`<dialog id="bcDialog" class="bc-dialog" aria-labelledby="bcTitle"><header class="bm-head"><h2 id="bcTitle">整理题目分类</h2><button id="bcClose">关闭</button></header><div class="bc-layout"><section id="bcQuestion" class="bc-question"></section><section class="bc-controls"><h3>快速归类</h3><p id="bcCurrent"></p><label>大类<select id="bcCategory"><option value="">按已有知识点自动归类（撤销手动指定）</option>${root.PhysicsBankDistribution.GROUPS.filter(g=>g!=='待归类').map(g=>'<option>'+g+'</option>').join('')}</select></label><p>只选大类即可保存，不要求填写主知识点和关联知识点。</p><p id="bcSuggestion"></p><button id="bcUseSuggestion">采用大类建议</button><label><input type="checkbox" id="bcRefine">同时细化知识点（可选）</label><div id="bcFine" hidden><label>主知识点<select id="bcPrimary"></select></label><label>关联知识点（使用目录名称，以分号分隔）<textarea id="bcRelated"></textarea></label><p>新增的知识点会补入标签，原有标签保留。</p></div><p id="bcStatus" role="status" aria-live="polite"></p><div class="bm-actions"><button id="bcPrev">上一题</button><button id="bcNext">下一题</button></div><div class="bm-actions"><button id="bcSave">保存</button><button id="bcSaveNext" class="primary">保存并下一题</button></div></section></div></dialog>`);
  $('bcClose').onclick=()=>{if(!busy){session++;$('bcDialog').close()}};$('bcDialog').addEventListener('cancel',e=>{if(busy)e.preventDefault();else session++});$('bcRefine').onchange=()=>$('bcFine').hidden=!$('bcRefine').checked;
- $('bcUseSuggestion').onclick=()=>{$('bcCategory').value=suggestion.category;message('已选择建议大类；点击保存后写入题库。')};$('bcSave').onclick=()=>save(false);$('bcSaveNext').onclick=()=>save(true);
+ $('bcCategory').onchange=()=>refreshPrimary();
+ $('bcUseSuggestion').onclick=()=>{$('bcCategory').value=suggestion.category;refreshPrimary();message('已选择建议大类；点击保存后写入题库。')};$('bcSave').onclick=()=>save(false);$('bcSaveNext').onclick=()=>save(true);
  for(const [id,step]of [['bcPrev',-1],['bcNext',1]])$(id).onclick=()=>{if(busy)return;if(index+step<0||index+step>=ids.length){message('已到本组边界。');return}index+=step;load().catch(e=>message(e.message))};
 }
 async function open(filter={}){if(busy)return;ids=root.PhysicsBankDistribution.uniqueQuestions(api.questions()).filter(q=>root.PhysicsBankDistribution.matches(q,filter,api)).map(q=>q.id);index=0;if(!ids.length)return; $('bcDialog').showModal();try{await load()}catch(e){message('读取失败：'+e.message)}}

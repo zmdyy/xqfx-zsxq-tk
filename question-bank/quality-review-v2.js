@@ -340,7 +340,7 @@ async function syncRoute(){
   reviewActive=true;home.hidden=true;home.inert=true;
   document.documentElement.classList.add('review-route');document.body.classList.add('review-route');
   document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';
-  document.title='题库质量审核 · 物理精准练习题库';
+  document.title='题库质量审核 · 题库';
   const version=api.getQuestions().map(q=>q.id+':'+(q.revision||0)).join('|');
   if(reviewVersion===null){drawerSet(false);focusMode('overview');}else if(version!==reviewVersion)render();
   reviewVersion=version;
