@@ -12,7 +12,7 @@ function pick(q,kind){return kind==='type'?(TYPES.includes(q.type)?q.type:'其�
 function questionTags(q,api){
  const result=[];
  const knownById=api.catalogById||new Map(),knownByName=api.catalogByName||new Map();
- for(const id of q.concept_ids||[]){
+ for(const id of [...(q.concept_ids||[]),q.primary_concept_id].filter(Boolean)){
    const hit=knownById.get(id);if(hit&&hit.name)result.push({name:hit.name,module:hit.module||'知识图谱',id});
  }
  for(const tag of q.tags||[]){
@@ -26,7 +26,7 @@ function questionTags(q,api){
  return result.filter(x=>{const k=norm(x.name);if(seen.has(k))return false;seen.add(k);return true});
 }
 function compute(questions,api){
- const scoped=Array.isArray(questions)?questions:[];
+ const seen=new Set();const scoped=(Array.isArray(questions)?questions:[]).filter(q=>q&&q.id&&!q.archivedAsDuplicate&&!seen.has(q.id)&&seen.add(q.id));
  const stats=new Map();
  let untagged=0;
  for(const q of scoped){
@@ -110,30 +110,30 @@ function paintTable(rows){
 function update(questions,api){
  lastApi=api;
  const scope=$('detailScope').value;
- scopeQuestions=(questions||[]).filter(q=>scope!=='approved'||q.review==='approved');
+ scopeQuestions=(questions||[]).filter(q=>!q.archivedAsDuplicate&&(scope!=='approved'||q.review==='approved'));
  const r=compute(scopeQuestions,api);allRows=r.rows;
  $('detailKpis').innerHTML=[
    ['实际大题',r.total],['有知识点标签',r.total-r.untagged],['待标注',r.untagged],
    ['覆盖知识点',r.concepts],['多知识点大题',r.multi],['教师已审核',r.approved]
  ].map(([k,v])=>'<div class="detail-kpi"><small>'+k+'</small><b>'+v+'</b></div>').join('');
- paintStack(allRows,$('detailMetric').value);showPie('detailTypeChart',r.types,TYPE_COLORS);showPie('detailDifficultyChart',r.levels,LEVEL_COLORS);paintTable(allRows);
+ root.PhysicsBankDistribution?.update(scopeQuestions,api);paintStack(allRows,$('detailMetric').value);showPie('detailTypeChart',r.types,TYPE_COLORS);showPie('detailDifficultyChart',r.levels,LEVEL_COLORS);paintTable(allRows);
 }
 function init(api){
  if(started)return;started=true;
- lastApi=api;
+ lastApi=api;root.PhysicsBankDistribution?.init(api);
  for(const id of ['detailScope','detailMetric','detailTop'])$(id)?.addEventListener('change',()=>update(api.getQuestions(),api));
  $('detailSearch')?.addEventListener('input',()=>paintTable(allRows));
  $('detailToggle')?.addEventListener('click',()=>{
    const content=$('detailContent'),open=!content.hidden;content.hidden=open;
    $('detailToggle').textContent=open?'展开明细':'收起明细';$('detailToggle').setAttribute('aria-expanded',String(!open));
-   if(!open)requestAnimationFrame(()=>Object.values(charts).forEach(c=>c.resize()));
+   if(!open)requestAnimationFrame(()=>{Object.values(charts).forEach(c=>c.resize());root.PhysicsBankDistribution?.resize()});
  });
- $('detailReset')?.addEventListener('click',()=>api.resetFilters());
+ $('detailReset')?.addEventListener('click',()=>{root.PhysicsBankDistribution?.reset();api.resetFilters()});
  $('detailConceptRows')?.addEventListener('click',e=>{
    const btn=e.target.closest('[data-concept]');if(!btn)return;
    const row=allRows.find(r=>r.name===decodeURIComponent(btn.dataset.concept));if(row)focus(row)
  });
- root.addEventListener?.('resize',()=>Object.values(charts).forEach(x=>x.resize()));
+ root.addEventListener?.('resize',()=>{Object.values(charts).forEach(x=>x.resize());root.PhysicsBankDistribution?.resize()});
 }
 root.PhysicsBankDetails={init,update,compute,questionTags};
 })(typeof window!=='undefined'?window:globalThis);

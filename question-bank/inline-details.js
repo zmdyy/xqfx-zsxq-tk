@@ -14,7 +14,7 @@ async function ensureCharts(){
  if(root.echarts&&root.PhysicsBankDetails)return;
  if(!loadPromise)loadPromise=(async()=>{
    if(!root.echarts)await loadScript('../echarts.min.js');
-   if(!root.PhysicsBankDetails)await loadScript('./details.js?v=20261010b');
+   if(!root.PhysicsBankDetails)await loadScript('./details.js?v=20261014distribution4');
  })().catch(e=>{loadPromise=null;throw e});
  await loadPromise;
 }

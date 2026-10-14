@@ -29,7 +29,7 @@ function readQuestions(){
  });
 }
 async function readKnowledgeCatalog(){
- const byName=new Map(),byId=new Map();
+ const byName=new Map(),byId=new Map();let error=null;
  try{
    const response=await fetch('../data/knowledge/exam-annotation-catalog.json');
    if(!response.ok)throw new Error('知识点目录HTTP '+response.status);
@@ -40,12 +40,15 @@ async function readKnowledgeCatalog(){
      if(item.concept_id)byId.set(item.concept_id,item);
    }
  }catch(e){
-   showStatus('题库已读取，但知识图谱目录暂不可用；仍可根据题目标签查看统计。',true);
+   error=e;
  }
- return {byName,byId};
+ return {byName,byId,error};
 }
 function focusConcept(name){
  root.location.href='./index.html?concept_name='+encodeURIComponent(name);
+}
+function focusDistribution(filter){
+ const params=new URLSearchParams();for(const key of ['category','type','concept'])if(filter[key])params.set('distribution_'+key,filter[key]);if(filter.approved)params.set('distribution_approved','1');root.location.href='./index.html?'+params.toString();
 }
 function resetFilters(){
  $('detailScope').value='all';
@@ -64,11 +67,12 @@ async function init(){
      catalogByName:lookup.byName,
      catalogById:lookup.byId,
      focusConcept,
+     focusDistribution,
      resetFilters
    };
    root.PhysicsBankDetails.init(api);
    root.PhysicsBankDetails.update(questions,api);
-   if(questions.length){
+   if(lookup.error){showStatus('已读取题库，但知识点目录暂不可用，部分题目将列为待归类；请刷新页面重试。',true)}else if(questions.length){
      showStatus('已读取当前浏览器 '+questions.length+' 道题。点击知识点图表或表格中的名称，可返回题库并筛选该知识点。');
    }else{
      showStatus('当前浏览器中还没有题库。请返回题库主页导入 ZIP，再打开本页面查看统计。');
@@ -78,6 +82,6 @@ async function init(){
    console.error('[题库明细]',e);
  }
 }
-root.QuestionBankDashboard={readQuestions,focusConcept,resetFilters};
+root.QuestionBankDashboard={readQuestions,focusConcept,focusDistribution,resetFilters};
 document.addEventListener('DOMContentLoaded',init);
 })(typeof window!=='undefined'?window:globalThis);
