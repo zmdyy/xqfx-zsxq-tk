@@ -50,6 +50,7 @@ function focusConcept(name){
 function focusDistribution(filter){
  const params=new URLSearchParams();for(const key of ['category','type','concept'])if(filter[key])params.set('distribution_'+key,filter[key]);if(filter.approved)params.set('distribution_approved','1');root.location.href='./index.html?'+params.toString();
 }
+function classifyDistribution(filter){const p=new URLSearchParams();for(const key of ['category','type','concept'])if(filter[key])p.set('distribution_'+key,filter[key]);if(filter.approved)p.set('distribution_approved','1');p.set('classify','1');root.location.href='./index.html?'+p.toString()}
 function resetFilters(){
  $('detailScope').value='all';
  $('detailMetric').value='type';
@@ -68,6 +69,7 @@ async function init(){
      catalogById:lookup.byId,
      focusConcept,
      focusDistribution,
+     classifyDistribution,
      resetFilters
    };
    root.PhysicsBankDetails.init(api);

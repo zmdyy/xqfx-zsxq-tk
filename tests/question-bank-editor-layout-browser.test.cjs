@@ -34,8 +34,8 @@ const fixture={id:'LAYOUT-A',source:'布局验收样例（非正式题库）',so
  await page.click('[data-action="jumpStem"]');assert.ok((await metrics()).teDocumentScroll.scroll<10);
  // Preserve the exact text selection while moving to a right-pane tool.
  await page.evaluate(()=>{const el=document.querySelector('[data-field="stem"]'),n=el.firstChild,i=n.textContent.indexOf('F1')+1,r=document.createRange();el.focus({preventScroll:true});r.setStart(n,i);r.setEnd(n,i+1);getSelection().removeAllRanges();getSelection().addRange(r);});
- await page.locator('[data-action="sub"]').click();assert.equal(await page.locator('#teMathValue').evaluate(n=>n.value),'{}_{1}');await page.click('#teMathApply');
- assert.ok((await page.locator('[data-field="stem"]').evaluate(n=>PhysicsTeacherEditor.serialize(n))).includes('F\\({}_{1}\\)=2 N'));
+ await page.locator('[data-action="sub"]').click();assert.equal(await page.locator('#teMathDialog').isVisible(),false);
+ assert.ok((await page.locator('[data-field="stem"]').evaluate(n=>PhysicsTeacherEditor.serialize(n))).includes('\\(F_{1}\\)=2 N'));
  await page.click('[data-action="preview"]');assert.equal(await page.locator('[data-field="stem"]').getAttribute('contenteditable'),'false');assert.equal(await page.locator('[data-action="accept"]').isDisabled(),true);await page.click('[data-action="preview"]');assert.equal(await page.locator('[data-field="stem"]').getAttribute('contenteditable'),'true');
  await page.click('[data-action="saveNext"]');await page.waitForFunction(()=>document.querySelector('.te-head').textContent.includes('LAYOUT-B'));assert.equal((await metrics()).teDocumentScroll.scroll,0);assert.equal((await metrics()).teControls.scroll,0);assert.equal(await page.locator('[data-action="sub"]').isEnabled(),true);
  await page.click('[data-action="prev"]');await page.waitForFunction(()=>document.querySelector('.te-head').textContent.includes('LAYOUT-A'));assert.equal((await metrics()).teDocumentScroll.scroll,0);assert.ok((await page.locator('[data-field="answer"]').innerText()).includes('已验证末尾编辑'));

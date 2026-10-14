@@ -13,7 +13,7 @@ function category(c){
  if(['光学','热学','力学','电磁学'].includes(c.module))return c.module;
  return '其他';
 }
-function classify(original,api){
+function infer(original,api){
  // Annotation is performed on a shallow copy, never written back to IndexedDB or the source question.
  const q=root.PhysicsConceptAssessment?.annotate?root.PhysicsConceptAssessment.annotate({...original,knowledgeMappingV1:original.knowledgeMappingV1?{...original.knowledgeMappingV1}:undefined}):original;
  const byId=api.catalogById||new Map(),byName=api.catalogByName||new Map(),type=TYPES.includes(q.type)?q.type:'其他';
@@ -43,6 +43,14 @@ function classify(original,api){
  if(groups.size===1)return result([...groups][0],null,list.length?'多个关联知识点，主知识点待确认':'只标注了物理大类');
  return result('待归类',null,groups.size>1?'跨大类关联，整题主归属待确认':'无可识别的主知识点或大类');
 }
+function classify(original,api){
+ const inferred=infer(original,api),manual=original.physicsCategoryV1;
+ if(manual?.source==='teacher'&&GROUPS.includes(manual.category)&&manual.category!=='待归类'){
+  if(inferred.category===manual.category&&inferred.conceptKey!=='pending')return {...inferred,reason:'教师指定大类；'+inferred.reason};
+  return {...inferred,category:manual.category,conceptKey:'category-only',conceptName:'知识点待细化',reason:'教师已指定大类，知识点可稍后补充'};
+ }
+ return inferred;
+}
 function matches(q,filter,api){if(q.archivedAsDuplicate)return false;if(filter.approved&&q.review!=='approved')return false;const a=classify(q,api);return (!filter.category||a.category===filter.category)&&(!filter.type||a.type===filter.type)&&(!filter.concept||a.conceptKey===filter.concept)}
 const nodeId=path=>JSON.stringify(path);
 function compute(rows,api){
@@ -56,7 +64,7 @@ function compute(rows,api){
   });
   const value=children.reduce((n,c)=>n+c.value,0),node={id:nodeId([name]),name,value,path:[name],filter:{category:name},itemStyle:{color:COLORS[i]},children};if(value)tree.children.push(node);return {name,value,color:COLORS[i],id:node.id};
  });
- return {tree,counts,assignments,questions,unconfirmed:[...assignments.values()].filter(a=>a.conceptKey==='pending').length};
+ return {tree,counts,assignments,questions,unconfirmed:[...assignments.values()].filter(a=>['pending','category-only'].includes(a.conceptKey)).length};
 }
 let api,data,chart,selected='[]',nodes=new Map();
 function indexTree(node){nodes.set(node.id,node);for(const child of node.children||[])indexTree(child)}
@@ -87,12 +95,13 @@ function select(id){selected=nodes.has(id)?id:'[]';const node=nodes.get(selected
  $('detailDistributionSample').innerHTML=questionIds.length?'<p class="hint">本组题目示例（最多 5 道）</p>'+questionIds.slice(0,5).map(id=>{const q=data.questions.find(q=>q.id===id),a=data.assignments.get(id);return '<p>'+escape(q.sourceTitle||q.source||id)+' · '+escape(q.sourceNo||id)+'<small>'+escape(a.reason)+'</small></p>'}).join(''):'';
  $('detailDistributionView').disabled=!node.value||!api.focusDistribution;
  $('detailDistributionView').onclick=()=>api.focusDistribution({...node.filter,approved:$('detailScope').value==='approved'});
+ $('detailDistributionClassify').disabled=!node.value||!api.classifyDistribution;$('detailDistributionClassify').onclick=()=>api.classifyDistribution({...node.filter,approved:$('detailScope').value==='approved'});
  $('detailDistributionCounts').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.distributionNode===selected)));
  paintChart(node);
 }
 function init(options){
  api=options;if($('detailDistribution'))return;
- $('detailKpis')?.insertAdjacentHTML('afterend',`<section id="detailDistribution" class="physics-distribution" aria-label="物理大类与旭日图"><div class="detail-chart-title">物理大类与题目结构 <span>总题数 → 大类 → 题型 → 主知识点</span></div><p class="hint">每道有效大题只计一次，不计归档重复题。声现象单列为声学；跨大类且主归属未定的题目列入待归类。能源、数学等列入其他。</p><div id="detailDistributionCounts" class="distribution-counts"></div><div class="distribution-toolbar"><nav id="detailDistributionBreadcrumb" aria-label="当前统计层级"></nav><button id="detailDistributionReset">返回总览</button></div><div class="distribution-layout"><div id="detailSunburstChart" role="img" aria-label="四层物理题库旭日图"></div><div class="distribution-branch"><h3 id="detailDistributionTitle" role="status" aria-live="polite"></h3><p class="hint">点击扇区或下面的分组可展开；悬停查看题量和占比。</p><div id="detailDistributionGroups"></div><button id="detailDistributionView" class="primary">查看本组题目</button><div id="detailDistributionSample"></div></div></div><p id="detailDistributionFoot" class="detail-foot"></p></section>`);
+ $('detailKpis')?.insertAdjacentHTML('afterend',`<section id="detailDistribution" class="physics-distribution" aria-label="物理大类与旭日图"><div class="detail-chart-title">物理大类与题目结构 <span>总题数 → 大类 → 题型 → 主知识点</span></div><p class="hint">每道有效大题只计一次，不计归档重复题。声现象单列为声学；跨大类且主归属未定的题目列入待归类。能源、数学等列入其他。</p><div id="detailDistributionCounts" class="distribution-counts"></div><div class="distribution-toolbar"><nav id="detailDistributionBreadcrumb" aria-label="当前统计层级"></nav><button id="detailDistributionReset">返回总览</button></div><div class="distribution-layout"><div id="detailSunburstChart" role="img" aria-label="四层物理题库旭日图"></div><div class="distribution-branch"><h3 id="detailDistributionTitle" role="status" aria-live="polite"></h3><p class="hint">点击扇区或下面的分组可展开；悬停查看题量和占比。</p><div id="detailDistributionGroups"></div><button id="detailDistributionView" class="primary">查看本组题目</button><button id="detailDistributionClassify">整理本组分类</button><div id="detailDistributionSample"></div></div></div><p id="detailDistributionFoot" class="detail-foot"></p></section>`);
  $('detailDistribution').addEventListener('click',e=>{const b=e.target.closest('[data-distribution-node]');if(b)select(b.dataset.distributionNode)});
  $('detailDistributionReset').onclick=()=>select('[]');
 }
@@ -102,5 +111,5 @@ function update(questions,options){if(!$('detailDistribution'))return;api=option
 }
 function reset(){select('[]')}
 function resize(){if(chart&&data)paintChart(nodes.get(selected)||data.tree)}
-root.PhysicsBankDistribution={GROUPS,TYPES,uniqueQuestions,classify,matches,compute,init,update,reset,resize,select};
+root.PhysicsBankDistribution={GROUPS,TYPES,uniqueQuestions,classify,infer,matches,compute,init,update,reset,resize,select};
 })(typeof window!=='undefined'?window:globalThis);

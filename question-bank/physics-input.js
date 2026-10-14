@@ -13,12 +13,18 @@ const formulas=[
 ['吸热','Q_{\\text{吸}}=cm(t-t_0)','无物态变化、比热容可视为不变；t 表示温度'],['放热','Q_{\\text{放}}=cm(t_0-t)','无物态变化；放热量取正值'],['热量与温度变化','Q=cm\\Delta t','Δt 为温度变化大小；不用于物态变化吸放热'],['燃烧放热（质量）','Q_{\\text{放}}=mq','完全燃烧；q 按质量计'],['燃烧放热（体积）','Q_{\\text{放}}=Vq','完全燃烧；q 按体积计'],['加热效率','\\eta=\\frac{Q_{\\text{吸}}}{Q_{\\text{放}}}\\times100\\%','被加热物体吸热与燃料放热之比'],['热机效率','\\eta=\\frac{W_{\\text{有用}}}{Q_{\\text{放}}}\\times100\\%','有用机械功与燃料放热之比'],['焦耳定律','Q=I^2Rt','t 表示时间'],['理想热交换','Q_{\\text{吸}}=Q_{\\text{放}}','不计对外热损失等条件']];
 for(const [label,tex,note]of formulas)add('公式',label,tex,note);
 function scan(text){
- text=String(text||'');const out=[],ranges=Array.from(text.matchAll(/\\\([\s\S]*?\\\)/g),m=>[m.index,m.index+m[0].length]);
- function addMatches(re,replace,reason,category,label){for(const m of text.matchAll(re)){const start=m.index,end=start+m[0].length;if(ranges.some(([a,b])=>start<b&&end>a)||out.some(x=>start<x.end&&end>x.start))continue;out.push({start,end,before:m[0],after:replace(m),reason,category,label})}}
+ text=String(text||'');const out=[],protectedText=Array.from(text.matchAll(/\\(?:text|mathrm|operatorname)\{[^{}]*\}/g),m=>[m.index,m.index+m[0].length]),ranges=Array.from(text.matchAll(/\\\([\s\S]*?\\\)/g),m=>[m.index,m.index+m[0].length]);
+ function addMatches(re,replace,reason,category,label,needsSource=false){for(const m of text.matchAll(re)){const start=m.index,end=start+m[0].length;if(protectedText.some(([a,b])=>start<b&&end>a)||out.some(x=>start<x.end&&end>x.start))continue;const inside=ranges.some(([a,b])=>start>=a+2&&end<=b-2);let after=replace(m);if(after.startsWith('\\(')&&after.slice(2,-2)===m[0])continue;if(after===m[0])continue;if(inside&&after.startsWith('\\('))after=after.slice(2,-2);out.push({start,end,before:m[0],after,reason,category,label,needsSource})}}
+ const texSymbols=value=>value.replace(/([mFGUIRPWQVvstlhLSρT])([0-9]{1,2})(['′]?)/g,(_,b,n,p)=>(b==='ρ'?'\\rho':b)+'_{'+n+'}'+(p?'^{\\prime}':'' )).replace(/V([MN])|([RUI])([gMN])/g,(_,v,b,n)=>v?'V_{'+v+'}':b+'_{'+n+'}');
+ addMatches(/(?<![A-Za-z0-9_])([RUI])0([1-9])(?![A-Za-z0-9_])/g,m=>'\\('+m[1]+'_{0}I_{'+m[2]+'}\\)','可能有字母I误识或遗漏；必须对照原Word/图片，不能直接把两个数字都改成下标','ocr-ambiguous','字符提取待核对',true);
+ addMatches(/(?<![A-Za-z0-9_\\])[A-Za-z][A-Za-z0-9′']{0,5}\s*=\s*[A-Za-z0-9()′'·×+*/-]+(?:\s*[+*/·×-]\s*[A-Za-z0-9()′']+)*(?![A-Za-z0-9_])/g,m=>[...m[0].matchAll(/[mFGUIRPWQVvstlhLSρT][0-9]{1,2}|V[MN]|[RUI][gMN]/g)].length>=2?'\\('+texSymbols(m[0])+'\\)':m[0],'连续公式中的数字/字母可能是下标；请核对整式，撇号保持上标','formula-structure','连续公式');
+ addMatches(/(?<![A-Za-z0-9_])(?:[mFGUIRPWQVvstlhLSρT][0-9]{1,2}){2,}(?![A-Za-z0-9_])/g,m=>'\\('+texSymbols(m[0])+'\\)','连续物理量相乘，分别核对各符号下标','compound-symbol','连续物理符号');
+ addMatches(/(?<![A-Za-z0-9_])(?:V[MN]|[RUI][gMN])(?![A-Za-z0-9_])/g,m=>'\\('+texSymbols(m[0])+'\\)','疑似物理量的字母下标；若为乘积或型号，应保留原文','letter-subscript','字母下标');
+ addMatches(/(?<![A-Za-z0-9_])m([12])(?![A-Za-z0-9_])/g,m=>/\d\s*$/.test(text.slice(0,m.index))?m[0]:'\\(m_{'+m[1]+'}\\)','若m表示质量，数字应为下标；若表示面积单位，应使用m²，请结合上下文确认','numeric-subscript','数字下标');
  addMatches(/(?<![A-Za-z0-9_])(?:kg\/m3|g\/cm3|[kM]?J\/m3|cm[23]|mm[23]|m[23])(?![A-Za-z0-9_])/g,m=>m[0].replace(/2/g,'²').replace(/3/g,'³'),'疑似单位指数，请确认这里表示物理单位','unit-exponent','单位指数');
  addMatches(/J\s*\/\s*kg\s*[·⋅]?\s*℃/g,()=> 'J/(kg·℃)','核对是否为比热容单位','unit-format','比热容单位');
  const powers='⁰¹²³⁴⁵⁶⁷⁸⁹';
- addMatches(/(?<![A-Za-z0-9_])([FGUIRPWQVvstlhLSρT])([0-9]{1,2})((?:['′’‘″]{1,2}|\^(?:\{[+-]?[0-9]{1,2}\}|[+-]?[0-9]{1,2})|[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+){0,2})(?![A-Za-z0-9_])/g,m=>{
+ addMatches(/(?<![A-Za-z0-9_])([mFGUIRPWQVvstlhLSρT])([0-9]{1,2})((?:['′’‘″]{1,2}|\^(?:\{[+-]?[0-9]{1,2}\}|[+-]?[0-9]{1,2})|[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+){0,2})(?![A-Za-z0-9_])/g,m=>{
    // Digits alone are subscripts. Primes and existing powers stay above the symbol.
    const upper=m[3].replace(/\^\{([+-]?[0-9]+)\}|\^([+-]?[0-9]+)|['′’‘″]|[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]/g,(s,a,b)=>a||b||(s==='″'?'\\prime\\prime ':"'′’‘".includes(s)?'\\prime ':s==='⁻'?'-':s==='⁺'?'+':String(powers.indexOf(s))));
    return '\\('+(m[1]==='ρ'?'\\rho':m[1])+'_{'+m[2]+'}'+(upper?'^{'+upper.trim()+'}':'')+'\\)';

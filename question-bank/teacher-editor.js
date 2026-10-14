@@ -29,7 +29,7 @@ function updateView(){
  dialog.querySelectorAll('[data-mode]').forEach(b=>{const selected=b.dataset.mode===viewMode;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));});
  $('teViewState').textContent=editable?'正在编辑 · 点击左侧文字即可修改':comparing?'只读对照 · 点击“编辑”返回':'阅读预览 · 点击“返回编辑”继续修改';
  dialog.querySelector('[data-action="preview"]').textContent=viewMode==='read'?'返回编辑':'阅读预览';
- dialog.querySelectorAll('.te-toolbar button,.te-issue [data-action="accept"],.te-issue [data-action="acceptSame"],.te-issue [data-action="correct"]').forEach(b=>b.disabled=saveBusy||!editable);
+ dialog.querySelectorAll('.te-toolbar button,.te-issue [data-action="accept"],.te-issue [data-action="acceptSame"],.te-issue [data-action="correct"]').forEach(b=>b.disabled=saveBusy||!editable||(b.dataset.action==='acceptSame'&&issues[issueIndex]?.needsSource));
  $('tePalette').inert=!editable;
  dialog.querySelectorAll('[data-image-replace],[data-image-add],[data-image-width]').forEach(n=>n.disabled=!editable);
  dialog.querySelectorAll('.te-issue [data-action="issuePrev"],.te-issue [data-action="issueNext"]').forEach(b=>b.disabled=saveBusy||!issues.length);
@@ -136,8 +136,8 @@ function showIssue(){
  if(feedback){$('teIssue').innerHTML='<div class="te-feedback" role="status"><b>'+E(feedback.message)+'</b><p>'+(feedback.saved?'正式版本已保存。':'已进入草稿，点击保存后更新正式版本；可用撤销还原本次操作。')+'</p>'+(feedback.changes.length===1?'<ul class="te-feedback-list">'+changeDetails()+'</ul>':'<details><summary>查看本次 '+feedback.changes.length+' 处修改</summary><ul class="te-feedback-list">'+changeDetails()+'</ul></details>')+'</div><p>本题还有 '+issues.length+' 处待核对'+(issues.length?'，点击下一处继续。':'。')+'</p>'+nav;}
  else if(x){
   const same=issues.filter(i=>i.category===x.category),counts=new Map();same.forEach(i=>counts.set(i.field,(counts.get(i.field)||0)+1));
-  $('teIssue').innerHTML='<div class="te-issue-heading"><b>本题 '+issues.length+' 处待核对 · 第 '+(issueIndex+1)+' 处</b>'+nav+'</div><p class="te-location">'+E(fieldLabel(x.field))+' · '+E(x.label)+'</p><p><code>'+E(x.before)+'</code> → '+root.PhysicsMathContent.inline(x.after)+' · '+E(x.reason)+'</p><div class="te-tools"><button data-action="accept">采用建议</button><button data-action="locate">手动修改 / 定位</button><button data-action="correct">原文正确</button></div><button class="te-batch" data-action="acceptSame">一键修改本题'+E(x.label)+'（'+same.length+'处）</button><p class="te-batch-scope">'+[...counts].map(([f,n])=>E(fieldLabel(f))+' '+n+' 处').join('；')+'</p>';
- }else $('teIssue').innerHTML='<b>未发现本轮规则覆盖的书写疑点</b><p>不代表物理内容已审核通过</p>';
+  $('teIssue').innerHTML='<div class="te-issue-heading"><b>本题 '+issues.length+' 处待核对 · 第 '+(issueIndex+1)+' 处</b>'+nav+'</div><p class="te-location">'+E(fieldLabel(x.field))+' · '+E(x.label)+'</p><p><code>'+E(x.before)+'</code> → '+root.PhysicsMathContent.inline(x.after)+' · '+E(x.reason)+'</p><div class="te-tools"><button data-action="accept">采用建议</button><button data-action="locate">手动修改 / 定位</button><button data-action="correct">原文正确</button></div><button class="te-batch" data-action="acceptSame">'+(x.needsSource?'须逐处核对原件，不能批量采用':'一键修改本题'+E(x.label)+'（'+same.length+'处）')+'</button><p class="te-batch-scope">'+[...counts].map(([f,n])=>E(fieldLabel(f))+' '+n+' 处').join('；')+'</p>';
+ }else $('teIssue').innerHTML='<b>未发现本轮规则覆盖的书写疑点</b><p>已检查常见下标、单位和公式书写；字符遗漏及未覆盖写法仍需对照原件核对，不代表物理内容已审核通过。</p>';
  $('teIssue').dataset.currentField=feedback?'':x?.field||'';$('teIssue').dataset.currentStart=feedback?'':String(x?.start??'');updateView();
 }
 function revealRange(r){const host=$('teDocumentScroll'),rect=r.getBoundingClientRect(),box=host.getBoundingClientRect();if(rect.top<box.top+20||rect.bottom>box.bottom-20)scrollDocumentTo(r);}
@@ -162,6 +162,7 @@ function keepCorrectDecisions(edits,oldTexts){
  });
 }
 function accept(all=false){
+ if(issues[issueIndex]?.needsSource){if(all){status('字符提取疑点必须逐处核对原件，不能一键批量修改。',true);return}if(!confirm('这处可能涉及字符遗漏或误认。请先核对原 Word / 图片，确认建议与原件一致后再采用。确定已经核对？'))return;}
  const selected=issues[issueIndex];if(!selected)return;collect();if(getField(selected.field).slice(selected.start,selected.end)!==selected.before){scan();status('正文已变化，请核对更新后的建议');return;}
  scan();const active=issues.find(x=>x.field===selected.field&&x.start===selected.start&&x.before===selected.before);if(!active)return;
  const targets=all?issues.filter(x=>x.category===active.category):[active],edits=new Map(),oldTexts=new Map();
@@ -208,7 +209,7 @@ function build(options){
  dialog.classList.remove('te-preview');
 }
 function init(options){
- api=options;document.body.insertAdjacentHTML('beforeend','<dialog id="teacherEditorDialog" class="te-dialog" aria-label="题目编辑"></dialog><dialog id="teMathDialog" class="te-math-dialog"><h2>编辑公式</h2><p>点击公式位置输入；使用下方按钮插入结构。</p><math-field id="teMathValue" math-virtual-keyboard-policy="manual"></math-field><div class="te-tools"><button data-math-command="subscript">下标</button><button data-math-command="superscript">上标</button><button data-math-insert="\\frac{#0}{#?}">分式</button><button data-math-insert="\\sqrt{#0}">根式</button><button data-math-insert="\\times10^{#?}">×10ⁿ</button></div><p id="teMathError" role="alert"></p><button id="teMathCancel">取消</button><button id="teMathApply" class="primary">应用公式</button></dialog><dialog id="teHistoryDialog"><h2>版本与修改记录</h2><div id="teHistoryBody"></div><button id="teHistoryClose">关闭</button></dialog><dialog id="teImageDialog"><img alt="题图放大"><button id="teImageClose">关闭</button></dialog>');
+ api=options;document.body.insertAdjacentHTML('beforeend','<dialog id="teacherEditorDialog" class="te-dialog" aria-label="题目编辑"></dialog><dialog id="teMathDialog" class="te-math-dialog"><h2>编辑公式</h2><p>选中要设为上下标的字符，或把光标放在基符号后，再点击按钮输入。</p><math-field id="teMathValue" math-virtual-keyboard-policy="manual"></math-field><div class="te-tools"><button data-math-script="sub">下标</button><button data-math-script="sup">上标</button><button data-math-insert="\\frac{#0}{#?}">分式</button><button data-math-insert="\\sqrt{#0}">根式</button><button data-math-insert="\\times10^{#?}">×10ⁿ</button></div><p id="teMathError" role="alert"></p><button id="teMathCancel">取消</button><button id="teMathApply" class="primary">应用公式</button></dialog><dialog id="teHistoryDialog"><h2>版本与修改记录</h2><div id="teHistoryBody"></div><button id="teHistoryClose">关闭</button></dialog><dialog id="teImageDialog"><img alt="题图放大"><button id="teImageClose">关闭</button></dialog>');
  dialog=$('teacherEditorDialog');
  dialog.addEventListener('close',()=>{if(!dialog.open)unlockBackground();});
  dialog.addEventListener('close',()=>{if(dialog.open)return;clearTimeout(scanTimer);clearTimeout(appliedTimer);clearHighlights();});
@@ -242,7 +243,14 @@ function init(options){
  if(a==='compare'){setView($('teCompare').hidden?'before':'edit');return}if(a==='preview'){setView(viewMode==='read'?'edit':'read');return}
  if(['jumpStem','jumpImages','jumpAnswer'].includes(a)){if(viewMode!=='edit')setView('edit');const target=a==='jumpImages'?dialog.querySelector('.te-images'):fieldNodes().find(n=>n.dataset.field===(a==='jumpStem'?'stem':'answer')).closest('section');scrollDocumentTo(target);return}
  if(a==='undo'||a==='redo'){travel(a==='redo');return}if(a==='scan'){scan();return}
- if(a==='sub'||a==='sup'){rememberRange();const selected=range?.toString()||'x';mathOpen(range?.toString()?'{}'+(a==='sub'?'_{':'^{')+selected+'}':(a==='sub'?'F_{1}':'x^{2}'));return}
+ if(a==='sub'||a==='sup'){
+ rememberRange();const r=defaultRange().cloneRange(),selected=r.toString();
+ if(selected&&r.startContainer===r.endContainer&&r.startContainer.nodeType===3&&/^[A-Za-z0-9′']{1,6}$/.test(selected)){
+  const text=r.startContainer.textContent,base=text.slice(0,r.startOffset).match(/[A-Za-zρΔηΩ]$|\d+(?:\.\d+)?$/)?.[0];
+  if(base){r.setStart(r.startContainer,r.startOffset-base.length);const prime=a==='sub'&&/^[0-9]+$/.test(selected)&&/['′]/.test(text[r.endOffset]||'')?'^{\\prime}':'';if(prime)r.setEnd(r.endContainer,r.endOffset+1);insertTex(base+(a==='sub'?'_{':'^{')+selected+'}'+prime,null,r);status('已设置'+(a==='sub'?'下标':'上标')+'，可点击公式继续编辑。');return}
+ }
+ mathOpen(selected?'{}'+(a==='sub'?'_{':'^{')+selected+'}':(a==='sub'?'F_{1}':'x^{2}'));return
+}
  if(a==='fraction'){mathOpen('\\frac{a}{b}');return}if(a==='science'){mathOpen('a\\times10^{n}');return}
  if(a==='table'){checkpoint();const at=defaultRange(),holder=document.createElement('div');holder.innerHTML='<table><tbody><tr><td>项目</td><td>数值</td></tr><tr><td>物理量</td><td>0</td></tr></tbody></table>';at.deleteContents();at.insertNode(holder.firstChild);changed();return}
  if(a==='accept'||a==='acceptSame'){accept(a==='acceptSame');return}if(a==='locate'){locate();return}if(a==='correct'){const x=issues[issueIndex];if(x){collect();if(getField(x.field).slice(x.start,x.end)!==x.before){scan();return;}checkpoint();work.normalizationDecisionsV1??=[];work.normalizationDecisionsV1.push({key:issueKey(x,getField(x.field)),field:x.field,start:x.start,end:x.end,before:x.before,status:'correct',at:stamp()});draft();scan();locate(false);}return}
@@ -252,7 +260,8 @@ function init(options){
  if(a==='split'||a==='clearParts'){collect();if(work.parts?.length&&!confirm('替换现有小问草稿？正式版本仍可在历史中恢复。'))return;checkpoint();work.parts=a==='split'?api.split(work.stem):[];resetFeedback();renderFields();draft();scan()}
  }catch(err){status(err.message,true)}});
  $('teHistoryBody').addEventListener('click',e=>{const b=e.target.closest('[data-history]');if(b){checkpoint();Object.assign(work,clone(base.teacherHistoryV1[Number(b.dataset.history)].before));resetFeedback();renderFields();fillMeta();draft();scan();$('teHistoryDialog').close()}});
- $('teMathDialog').addEventListener('click',e=>{const b=e.target.closest('button');if(b?.dataset.mathCommand)$('teMathValue').executeCommand(b.dataset.mathCommand);if(b?.dataset.mathInsert)$('teMathValue').insert(b.dataset.mathInsert)});
+ $('teMathDialog').addEventListener('mousedown',e=>{if(e.target.closest('[data-math-script],[data-math-insert]'))e.preventDefault()});
+ $('teMathDialog').addEventListener('click',e=>{const b=e.target.closest('button'),mf=$('teMathValue');if(!b)return;if(b.dataset.mathScript){mf.focus();const selected=mf.selection?.ranges?.some(([a,z])=>a!==z);mf.insert((mf.value.trim()?'':'x')+(b.dataset.mathScript==='sub'?'_{':'^{')+(selected?'#0':'#?')+'}');$('teMathError').textContent='请填写标记的上下标位置，完成后点击“应用公式”。'}if(b.dataset.mathInsert){mf.focus();mf.insert(b.dataset.mathInsert)}});
  $('teMathApply').onclick=()=>{const tex=$('teMathValue').value;try{if(!tex.trim()||/\\placeholder/.test(tex))throw Error('请填写公式中的空位');root.PhysicsMathContent.mathml(tex);insertTex(tex,mathTarget,mathRange);$('teMathDialog').close()}catch(e){$('teMathError').textContent='公式无法保存：'+e.message}};
  $('teMathCancel').onclick=()=>$('teMathDialog').close();$('teHistoryClose').onclick=()=>$('teHistoryDialog').close();$('teImageClose').onclick=()=>$('teImageDialog').close();
  root.addEventListener('beforeunload',e=>{if(dialog.open&&/失败|正在保存/.test($('teStatus').textContent)){e.preventDefault();e.returnValue=''}});
