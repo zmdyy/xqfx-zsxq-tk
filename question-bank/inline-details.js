@@ -29,10 +29,11 @@ function refreshIfOpen(){
 }
 function init(options){
  api=options;
+ root.PhysicsExamTrends?.init(options);
  const button=$('bankDetailsButton'),panel=$('bankDetailsPanel');
  if(!button||!panel)return;
  button.addEventListener('click',async()=>{
-   if(open){
+   if(!panel.hidden){
      open=false;panel.hidden=true;
      button.setAttribute('aria-expanded','false');
      button.textContent='▤ 题库明细';

@@ -1,0 +1,4304 @@
+{
+  "version": "20261017",
+  "title": "历年中考考情",
+  "exam": "中考物理（地区待确认）",
+  "years": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "defaultYears": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "sourceNote": "依据用户提供的22张考情图片整理，尚未与原试卷逐题核对；地区与题号未提供。2020年仅有机械效率和电磁学部分资料。",
+  "modules": [
+    {
+      "id": "sound",
+      "group": "声学",
+      "name": "声现象",
+      "source": "exam-sources/sound.png",
+      "conceptIds": [
+        "mech_sound_propagation",
+        "mech_pitch",
+        "mech_loudness",
+        "mech_timbre",
+        "mech_noise_control",
+        "mech_ultrasound_infrasound"
+      ]
+    },
+    {
+      "id": "reflection",
+      "group": "光学",
+      "name": "光的传播、反射与平面镜",
+      "source": "exam-sources/reflection.png",
+      "conceptIds": [
+        "opt_reflection_law",
+        "opt_rectilinear_propagation",
+        "opt_平面镜成像",
+        "opt_light_source",
+        "opt_refraction_law"
+      ]
+    },
+    {
+      "id": "lens",
+      "group": "光学",
+      "name": "凸透镜成像",
+      "source": "exam-sources/lens.png",
+      "conceptIds": [
+        "opt_lens_imaging",
+        "opt_凸透镜对光的作用",
+        "opt_照相机",
+        "opt_透镜"
+      ]
+    },
+    {
+      "id": "phase",
+      "group": "热学",
+      "name": "物态变化",
+      "source": "exam-sources/phase.png",
+      "conceptIds": [
+        "therm_melting_freezing",
+        "therm_汽化与液化",
+        "therm_升华与凝华",
+        "therm_蒸发与沸腾",
+        "therm_temperature"
+      ]
+    },
+    {
+      "id": "heat",
+      "group": "热学",
+      "name": "内能、热量与比热容",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_分子热运动",
+        "therm_internal_energy",
+        "therm_热量",
+        "therm_specific_heat",
+        "therm_heat_calculation",
+        "therm_改变内能的方式",
+        "therm_calorific_value"
+      ]
+    },
+    {
+      "id": "engine",
+      "group": "热学",
+      "name": "热机",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_heat_engine",
+        "therm_heat_engine_efficiency"
+      ]
+    },
+    {
+      "id": "density",
+      "group": "力学",
+      "name": "质量与密度",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_mass",
+        "mech_mass_measurement",
+        "mech_density",
+        "mech_density_measurement"
+      ]
+    },
+    {
+      "id": "motion",
+      "group": "力学",
+      "name": "机械运动与测量",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_motion_relativity",
+        "mech_length_measure",
+        "mech_time_measure",
+        "mech_avg_speed",
+        "mech_motion_speed",
+        "math_unit_conversion"
+      ]
+    },
+    {
+      "id": "force",
+      "group": "力学",
+      "name": "力、重力与测力计",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_diagram",
+        "mech_force_gravity",
+        "mech_force_interaction",
+        "mech_force_effects",
+        "mech_spring_dynamometer"
+      ]
+    },
+    {
+      "id": "balance",
+      "group": "力学",
+      "name": "摩擦力、惯性与二力平衡",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_friction",
+        "mech_inertia",
+        "mech_balance_forces",
+        "mech_balanced_vs_interaction",
+        "mech_force_diagram"
+      ]
+    },
+    {
+      "id": "pressure",
+      "group": "力学",
+      "name": "压强",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_pressure",
+        "mech_liquid_pressure",
+        "mech_pressure_force",
+        "mech_communicating_vessels"
+      ]
+    },
+    {
+      "id": "atmosphere",
+      "group": "力学",
+      "name": "流体压强与大气压强",
+      "source": "exam-sources/atmosphere.png",
+      "conceptIds": [
+        "mech_fluid_pressure",
+        "mech_atmospheric_pressure",
+        "therm_沸点与气压"
+      ]
+    },
+    {
+      "id": "buoyancy",
+      "group": "力学",
+      "name": "浮力与阿基米德原理",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_buoyancy",
+        "mech_archimedes"
+      ]
+    },
+    {
+      "id": "float",
+      "group": "力学",
+      "name": "浮沉条件",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_float_sink_condition"
+      ]
+    },
+    {
+      "id": "work",
+      "group": "力学",
+      "name": "功和功率",
+      "source": "exam-sources/work.png",
+      "conceptIds": [
+        "mech_work",
+        "mech_power",
+        "mech_work_conditions"
+      ]
+    },
+    {
+      "id": "mechanical",
+      "group": "力学",
+      "name": "机械能及其转化",
+      "source": "exam-sources/mechanical.png",
+      "conceptIds": [
+        "mech_mechanical_energy",
+        "mech_kinetic_energy",
+        "mech_gravitational_potential_energy",
+        "mech_mechanical_energy_conversion"
+      ]
+    },
+    {
+      "id": "lever",
+      "group": "力学",
+      "name": "杠杆与滑轮",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_lever",
+        "mech_lever_balance",
+        "mech_滑轮",
+        "mech_滑轮组"
+      ]
+    },
+    {
+      "id": "efficiency",
+      "group": "力学",
+      "name": "机械效率与有用功",
+      "source": "exam-sources/efficiency.png",
+      "conceptIds": [
+        "mech_efficiency",
+        "mech_useful_work",
+        "mech_extra_work",
+        "mech_total_work"
+      ]
+    },
+    {
+      "id": "circuit",
+      "group": "电学",
+      "name": "电路基础",
+      "source": "exam-sources/circuit.png",
+      "conceptIds": [
+        "elec_电路",
+        "elec_导体与绝缘体",
+        "elec_series_circuit",
+        "elec_parallel_circuit"
+      ]
+    },
+    {
+      "id": "rules",
+      "group": "电学",
+      "name": "电流、电压与电阻规律",
+      "source": "exam-sources/rules.png",
+      "conceptIds": [
+        "elec_current",
+        "elec_voltage",
+        "elec_resistance",
+        "elec_series_current_rule",
+        "elec_parallel_current_rule",
+        "elec_series_voltage_rule",
+        "elec_parallel_voltage_rule"
+      ]
+    },
+    {
+      "id": "ohm",
+      "group": "电学",
+      "name": "欧姆定律及探究实验",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law",
+        "elec_current",
+        "elec_voltage",
+        "elec_resistance"
+      ]
+    },
+    {
+      "id": "electric-power",
+      "group": "电学",
+      "name": "电能、电功率与焦耳定律",
+      "source": "exam-sources/electric-power.png",
+      "conceptIds": [
+        "elec_electric_energy",
+        "elec_electric_work",
+        "elec_electric_power",
+        "elec_joule_law",
+        "elec_measure_lamp_power"
+      ]
+    },
+    {
+      "id": "safety",
+      "group": "电学",
+      "name": "安全用电",
+      "source": "exam-sources/safety.png",
+      "conceptIds": [
+        "elec_安全用电",
+        "elec_家庭电路",
+        "elec_household_wiring"
+      ]
+    },
+    {
+      "id": "magnetism",
+      "group": "电磁学与能源",
+      "name": "电磁学",
+      "source": "exam-sources/magnetism.png",
+      "conceptIds": [
+        "elec_电流的磁效应",
+        "elec_solenoid",
+        "elec_electric_motor",
+        "elec_electromagnetic_induction",
+        "elec_magnetic_pole",
+        "elec_magnetic_field",
+        "elec_电磁铁"
+      ]
+    },
+    {
+      "id": "energy",
+      "group": "电磁学与能源",
+      "name": "能源与信息",
+      "source": "exam-sources/energy.png",
+      "conceptIds": [
+        "energy_energy_classification",
+        "elec_电磁波",
+        "energy_energy_environment",
+        "energy_nuclear_energy"
+      ]
+    }
+  ],
+  "records": [
+    {
+      "id": "sound-1",
+      "moduleId": "sound",
+      "year": 2025,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "声音的特性",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/sound.png",
+      "conceptIds": [
+        "mech_pitch",
+        "mech_loudness",
+        "mech_timbre"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "sound-2",
+      "moduleId": "sound",
+      "year": 2024,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "声音的特性",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/sound.png",
+      "conceptIds": [
+        "mech_pitch",
+        "mech_loudness",
+        "mech_timbre"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "sound-3",
+      "moduleId": "sound",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "声音的传播、声音的特性、噪声的控制、次声波的定义",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/sound.png",
+      "conceptIds": [
+        "mech_sound_propagation",
+        "mech_pitch",
+        "mech_loudness",
+        "mech_timbre",
+        "mech_noise_control",
+        "mech_ultrasound_infrasound"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "sound-4",
+      "moduleId": "sound",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "噪声的控制",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/sound.png",
+      "conceptIds": [
+        "mech_noise_control"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "sound-5",
+      "moduleId": "sound",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "声音的传播条件、声的利用、声音的特性、噪声的控制",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/sound.png",
+      "conceptIds": [
+        "mech_sound_propagation",
+        "mech_pitch",
+        "mech_loudness",
+        "mech_timbre",
+        "mech_noise_control",
+        "mech_ultrasound_infrasound"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "reflection-1",
+      "moduleId": "reflection",
+      "year": 2025,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "光的反射现象",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/reflection.png",
+      "conceptIds": [
+        "opt_reflection_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "reflection-2",
+      "moduleId": "reflection",
+      "year": 2024,
+      "types": [
+        "作图题",
+        "填空题"
+      ],
+      "scores": [
+        2.0,
+        3.0
+      ],
+      "content": "光的反射；光能传递信息；光的直线传播",
+      "levels": [
+        "理解",
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/reflection.png",
+      "conceptIds": [
+        "opt_reflection_law",
+        "opt_rectilinear_propagation"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "reflection-3",
+      "moduleId": "reflection",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "光源的定义、光的反射现象",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/reflection.png",
+      "conceptIds": [
+        "opt_light_source",
+        "opt_reflection_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "reflection-4",
+      "moduleId": "reflection",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "光的直线传播、反射、折射等现象",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/reflection.png",
+      "conceptIds": [
+        "opt_rectilinear_propagation",
+        "opt_reflection_law",
+        "opt_refraction_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "reflection-5",
+      "moduleId": "reflection",
+      "year": 2022,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "探究平面镜成像的特点",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/reflection.png",
+      "conceptIds": [
+        "opt_平面镜成像"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "reflection-6",
+      "moduleId": "reflection",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "光的直线传播、反射、折射等现象",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/reflection.png",
+      "conceptIds": [
+        "opt_rectilinear_propagation",
+        "opt_reflection_law",
+        "opt_refraction_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lens-1",
+      "moduleId": "lens",
+      "year": 2025,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "凸透镜对光的会聚作用",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lens.png",
+      "conceptIds": [
+        "opt_凸透镜对光的作用"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lens-2",
+      "moduleId": "lens",
+      "year": 2024,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "凸透镜成像规律的应用",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lens.png",
+      "conceptIds": [
+        "opt_lens_imaging"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lens-3",
+      "moduleId": "lens",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "照相机的成像特点",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lens.png",
+      "conceptIds": [
+        "opt_照相机"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lens-4",
+      "moduleId": "lens",
+      "year": 2023,
+      "types": [
+        "作图题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "凸透镜的三条特殊光线",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lens.png",
+      "conceptIds": [
+        "opt_透镜",
+        "opt_凸透镜对光的作用"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lens-5",
+      "moduleId": "lens",
+      "year": 2022,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/lens.png",
+      "conceptIds": [
+        "opt_lens_imaging",
+        "opt_凸透镜对光的作用",
+        "opt_照相机",
+        "opt_透镜"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "lens-6",
+      "moduleId": "lens",
+      "year": 2021,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "探究凸透镜成像规律",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lens.png",
+      "conceptIds": [
+        "opt_lens_imaging"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "phase-1",
+      "moduleId": "phase",
+      "year": 2025,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "运用物态变化知识说明自然界和生活中的现象",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/phase.png",
+      "conceptIds": [
+        "therm_melting_freezing",
+        "therm_汽化与液化",
+        "therm_升华与凝华",
+        "therm_蒸发与沸腾",
+        "therm_temperature"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "phase-2",
+      "moduleId": "phase",
+      "year": 2024,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "常见物态变化及吸放热",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/phase.png",
+      "conceptIds": [
+        "therm_melting_freezing",
+        "therm_汽化与液化",
+        "therm_升华与凝华",
+        "therm_蒸发与沸腾",
+        "therm_temperature"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "phase-3",
+      "moduleId": "phase",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "物态变化",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/phase.png",
+      "conceptIds": [
+        "therm_melting_freezing",
+        "therm_汽化与液化",
+        "therm_升华与凝华",
+        "therm_蒸发与沸腾",
+        "therm_temperature"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "phase-4",
+      "moduleId": "phase",
+      "year": 2023,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        5.0
+      ],
+      "content": "探究水沸腾时温度变化规律",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/phase.png",
+      "conceptIds": [
+        "therm_蒸发与沸腾"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "phase-5",
+      "moduleId": "phase",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "常见物态变化",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/phase.png",
+      "conceptIds": [
+        "therm_melting_freezing",
+        "therm_汽化与液化",
+        "therm_升华与凝华",
+        "therm_蒸发与沸腾",
+        "therm_temperature"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "phase-6",
+      "moduleId": "phase",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "物态变化、吸放热、人体正常体温",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/phase.png",
+      "conceptIds": [
+        "therm_melting_freezing",
+        "therm_汽化与液化",
+        "therm_升华与凝华",
+        "therm_蒸发与沸腾",
+        "therm_temperature"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "heat-1",
+      "moduleId": "heat",
+      "year": 2025,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        6.0
+      ],
+      "content": "热运动的主要特点",
+      "levels": [
+        "综合"
+      ],
+      "tested": true,
+      "issue": "可能与同年热量、比热容共用综合题6分，暂不累计",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_分子热运动"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "heat-2",
+      "moduleId": "heat",
+      "year": 2025,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        6.0
+      ],
+      "content": "热量",
+      "levels": [
+        "综合"
+      ],
+      "tested": true,
+      "issue": "可能与同年热运动、比热容共用综合题6分，暂不累计",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_热量"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "heat-3",
+      "moduleId": "heat",
+      "year": 2025,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        6.0
+      ],
+      "content": "通过实验了解比热容",
+      "levels": [
+        "综合"
+      ],
+      "tested": true,
+      "issue": "可能与同年热运动、热量共用综合题6分，暂不累计",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_specific_heat"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "heat-4",
+      "moduleId": "heat",
+      "year": 2024,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "分子热运动与温度的关系",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_分子热运动"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "heat-5",
+      "moduleId": "heat",
+      "year": 2023,
+      "types": [
+        "选择题",
+        "填空题"
+      ],
+      "scores": [
+        1.0,
+        2.0
+      ],
+      "content": "能量转化、改变内能的两种方式",
+      "levels": [
+        "理解",
+        "分析"
+      ],
+      "tested": true,
+      "issue": "可能与同年热量计算共用分值组，暂不累计",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_改变内能的方式"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "heat-6",
+      "moduleId": "heat",
+      "year": 2023,
+      "types": [
+        "选择题",
+        "填空题"
+      ],
+      "scores": [
+        1.0,
+        2.0
+      ],
+      "content": "热量的计算",
+      "levels": [
+        "理解",
+        "分析"
+      ],
+      "tested": true,
+      "issue": "可能与同年改变内能记录共用分值组，暂不累计",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_heat_calculation"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "heat-7",
+      "moduleId": "heat",
+      "year": 2022,
+      "types": [
+        "选择题",
+        "综合题"
+      ],
+      "scores": [
+        2.0,
+        1.0
+      ],
+      "content": "内能、热值的概念",
+      "levels": [
+        "理解",
+        "应用"
+      ],
+      "tested": true,
+      "issue": "可能与同年热量计算共用分值组，暂不累计",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_internal_energy",
+        "therm_calorific_value"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "heat-8",
+      "moduleId": "heat",
+      "year": 2022,
+      "types": [
+        "选择题",
+        "综合题"
+      ],
+      "scores": [
+        2.0,
+        1.0
+      ],
+      "content": "热量的计算",
+      "levels": [
+        "理解",
+        "应用"
+      ],
+      "tested": true,
+      "issue": "可能与同年内能概念共用分值组，暂不累计",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_heat_calculation"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "heat-9",
+      "moduleId": "heat",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0,
+        2.0
+      ],
+      "content": "改变内能的两种方式；热量、热值、比热容概念",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_分子热运动",
+        "therm_internal_energy",
+        "therm_热量",
+        "therm_specific_heat",
+        "therm_heat_calculation",
+        "therm_改变内能的方式",
+        "therm_calorific_value"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "engine-1",
+      "moduleId": "engine",
+      "year": 2025,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "内燃机压缩过程的能量和温度变化",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_heat_engine",
+        "therm_heat_engine_efficiency"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "engine-2",
+      "moduleId": "engine",
+      "year": 2024,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "辨认内燃机冲程",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_heat_engine",
+        "therm_heat_engine_efficiency"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "engine-3",
+      "moduleId": "engine",
+      "year": 2023,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_heat_engine",
+        "therm_heat_engine_efficiency"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "engine-4",
+      "moduleId": "engine",
+      "year": 2022,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_heat_engine",
+        "therm_heat_engine_efficiency"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "engine-5",
+      "moduleId": "engine",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "汽油机与柴油机的区别",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/heat.png",
+      "conceptIds": [
+        "therm_heat_engine",
+        "therm_heat_engine_efficiency"
+      ],
+      "scoreStatus": "known",
+      "rawType": "双选题"
+    },
+    {
+      "id": "density-1",
+      "moduleId": "density",
+      "year": 2025,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "质量的含义",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_mass"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "density-2",
+      "moduleId": "density",
+      "year": 2025,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "质量的计算",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_mass",
+        "mech_density"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "density-3",
+      "moduleId": "density",
+      "year": 2024,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "质量的理解",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_mass"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "density-4",
+      "moduleId": "density",
+      "year": 2024,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "密度应用",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_density"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "density-5",
+      "moduleId": "density",
+      "year": 2024,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "固体密度的测量",
+      "levels": [
+        "分析"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_density_measurement"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "density-6",
+      "moduleId": "density",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "质量估测",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_mass"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "density-7",
+      "moduleId": "density",
+      "year": 2023,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "天平读数",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_mass_measurement"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "density-8",
+      "moduleId": "density",
+      "year": 2023,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "密度公式",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_density"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "density-9",
+      "moduleId": "density",
+      "year": 2022,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        5.0
+      ],
+      "content": "固体密度的测量",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_density_measurement"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "density-10",
+      "moduleId": "density",
+      "year": 2021,
+      "types": [
+        "选择题",
+        "计算题"
+      ],
+      "scores": [
+        2.0,
+        2.0
+      ],
+      "content": "密度的含义；密度公式",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/density.png",
+      "conceptIds": [
+        "mech_density"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-1",
+      "moduleId": "motion",
+      "year": 2025,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "机械运动的相对性",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_motion_relativity"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-2",
+      "moduleId": "motion",
+      "year": 2025,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "长度的估测",
+      "levels": [
+        "分析"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_length_measure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-3",
+      "moduleId": "motion",
+      "year": 2024,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "长度的估测",
+      "levels": [
+        "分析"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_length_measure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-4",
+      "moduleId": "motion",
+      "year": 2024,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "机械运动的相对性",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_motion_relativity"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-5",
+      "moduleId": "motion",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "速度单位换算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_motion_speed",
+        "math_unit_conversion"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-6",
+      "moduleId": "motion",
+      "year": 2023,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "停表读数",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_time_measure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-7",
+      "moduleId": "motion",
+      "year": 2023,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "机械运动的相对性",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_motion_relativity"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-8",
+      "moduleId": "motion",
+      "year": 2022,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "长度的测量",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_length_measure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-9",
+      "moduleId": "motion",
+      "year": 2022,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "平均速度的计算",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_avg_speed"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-10",
+      "moduleId": "motion",
+      "year": 2021,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "测量物体运动速度",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_avg_speed",
+        "mech_motion_speed"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "motion-11",
+      "moduleId": "motion",
+      "year": 2021,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "相对性、速度估算",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/motion.png",
+      "conceptIds": [
+        "mech_motion_relativity",
+        "mech_motion_speed"
+      ],
+      "scoreStatus": "known",
+      "rawType": "开放题"
+    },
+    {
+      "id": "force-1",
+      "moduleId": "force",
+      "year": 2025,
+      "types": [
+        "作图题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "力的示意图",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_diagram"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "force-2",
+      "moduleId": "force",
+      "year": 2025,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "重力的大小",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_gravity"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "force-3",
+      "moduleId": "force",
+      "year": 2025,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "相互作用力",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_interaction"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "force-4",
+      "moduleId": "force",
+      "year": 2024,
+      "types": [
+        "作图题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "力的示意图",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_diagram"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "force-5",
+      "moduleId": "force",
+      "year": 2023,
+      "types": [
+        "作图题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "力的示意图",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_diagram"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "force-6",
+      "moduleId": "force",
+      "year": 2023,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "弹簧测力计读数",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_spring_dynamometer"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "force-7",
+      "moduleId": "force",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "力的作用效果",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_effects"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "force-8",
+      "moduleId": "force",
+      "year": 2022,
+      "types": [
+        "作图题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "力的示意图",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_diagram"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "force-9",
+      "moduleId": "force",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "相互作用力",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_interaction"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "balance-1",
+      "moduleId": "balance",
+      "year": 2025,
+      "types": [
+        "选择题",
+        "填空题"
+      ],
+      "scores": [
+        2.0,
+        1.0
+      ],
+      "content": "摩擦力、惯性",
+      "levels": [
+        "分析",
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_friction",
+        "mech_inertia",
+        "mech_balance_forces",
+        "mech_balanced_vs_interaction",
+        "mech_force_diagram"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "balance-2",
+      "moduleId": "balance",
+      "year": 2024,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "摩擦力、惯性",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_friction",
+        "mech_inertia",
+        "mech_balance_forces",
+        "mech_balanced_vs_interaction",
+        "mech_force_diagram"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "balance-3",
+      "moduleId": "balance",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0,
+        2.0
+      ],
+      "content": "平衡力、摩擦力、惯性",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_friction",
+        "mech_inertia",
+        "mech_balance_forces",
+        "mech_balanced_vs_interaction",
+        "mech_force_diagram"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "balance-4",
+      "moduleId": "balance",
+      "year": 2023,
+      "types": [
+        "作图题"
+      ],
+      "scores": [
+        2.0,
+        2.0
+      ],
+      "content": "拉力、摩擦力",
+      "levels": [
+        "分析"
+      ],
+      "tested": true,
+      "issue": "可能与力的示意图记录重叠，暂不累计",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_force_diagram",
+        "mech_friction"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "balance-5",
+      "moduleId": "balance",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0,
+        2.0
+      ],
+      "content": "二力平衡、摩擦力、惯性",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_friction",
+        "mech_inertia",
+        "mech_balance_forces",
+        "mech_balanced_vs_interaction",
+        "mech_force_diagram"
+      ],
+      "scoreStatus": "known",
+      "rawType": "单选、双选"
+    },
+    {
+      "id": "balance-6",
+      "moduleId": "balance",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0,
+        3.0
+      ],
+      "content": "摩擦力、二力平衡、相互作用力、力的作用效果",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "可能与相互作用力记录重叠，暂不累计",
+      "source": "exam-sources/force.png",
+      "conceptIds": [
+        "mech_friction",
+        "mech_inertia",
+        "mech_balance_forces",
+        "mech_balanced_vs_interaction",
+        "mech_force_diagram"
+      ],
+      "scoreStatus": "review",
+      "rawType": "单选、双选"
+    },
+    {
+      "id": "pressure-1",
+      "moduleId": "pressure",
+      "year": 2025,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "液体压力的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_liquid_pressure",
+        "mech_pressure_force"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "pressure-2",
+      "moduleId": "pressure",
+      "year": 2024,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "增大和减小压强的方法",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_pressure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "pressure-3",
+      "moduleId": "pressure",
+      "year": 2024,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "增大和减小压强的方法",
+      "levels": [
+        "分析"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_pressure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "pressure-4",
+      "moduleId": "pressure",
+      "year": 2024,
+      "types": [
+        "计算题"
+      ],
+      "scores": [],
+      "content": "液体压强的影响因素；压强的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_liquid_pressure",
+        "mech_pressure"
+      ],
+      "scoreStatus": "missing"
+    },
+    {
+      "id": "pressure-5",
+      "moduleId": "pressure",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "液体压强与哪些因素有关",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_liquid_pressure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "pressure-6",
+      "moduleId": "pressure",
+      "year": 2023,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "探究压强与受力面积的关系",
+      "levels": [
+        "分析"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_pressure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "pressure-7",
+      "moduleId": "pressure",
+      "year": 2023,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "连通器",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_communicating_vessels"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "pressure-8",
+      "moduleId": "pressure",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "液体压强与哪些因素有关",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_liquid_pressure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "pressure-9",
+      "moduleId": "pressure",
+      "year": 2022,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "压强的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_pressure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "pressure-10",
+      "moduleId": "pressure",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "液体压强的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_liquid_pressure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "pressure-11",
+      "moduleId": "pressure",
+      "year": 2021,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "压强的计算",
+      "levels": [
+        "综合"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/pressure.png",
+      "conceptIds": [
+        "mech_pressure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "atmosphere-1",
+      "moduleId": "atmosphere",
+      "year": 2025,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/atmosphere.png",
+      "conceptIds": [
+        "mech_fluid_pressure",
+        "mech_atmospheric_pressure",
+        "therm_沸点与气压"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "atmosphere-2",
+      "moduleId": "atmosphere",
+      "year": 2024,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "流体压强与流速的关系",
+      "levels": [],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/atmosphere.png",
+      "conceptIds": [
+        "mech_fluid_pressure"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "atmosphere-3",
+      "moduleId": "atmosphere",
+      "year": 2023,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "大气压强与沸点的关系",
+      "levels": [],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/atmosphere.png",
+      "conceptIds": [
+        "mech_atmospheric_pressure",
+        "therm_沸点与气压"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "atmosphere-4",
+      "moduleId": "atmosphere",
+      "year": 2022,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/atmosphere.png",
+      "conceptIds": [
+        "mech_fluid_pressure",
+        "mech_atmospheric_pressure",
+        "therm_沸点与气压"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "atmosphere-5",
+      "moduleId": "atmosphere",
+      "year": 2021,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/atmosphere.png",
+      "conceptIds": [
+        "mech_fluid_pressure",
+        "mech_atmospheric_pressure",
+        "therm_沸点与气压"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "buoyancy-1",
+      "moduleId": "buoyancy",
+      "year": 2025,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "浮力的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_buoyancy",
+        "mech_archimedes"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "buoyancy-2",
+      "moduleId": "buoyancy",
+      "year": 2024,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "浮力的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_buoyancy",
+        "mech_archimedes"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "buoyancy-3",
+      "moduleId": "buoyancy",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "阿基米德原理",
+      "levels": [
+        "综合"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_archimedes"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "buoyancy-4",
+      "moduleId": "buoyancy",
+      "year": 2022,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "阿基米德原理",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_archimedes"
+      ],
+      "scoreStatus": "known",
+      "rawType": "实验探究题"
+    },
+    {
+      "id": "buoyancy-5",
+      "moduleId": "buoyancy",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "阿基米德原理",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_archimedes"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "float-1",
+      "moduleId": "float",
+      "year": 2025,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_float_sink_condition"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "float-2",
+      "moduleId": "float",
+      "year": 2024,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_float_sink_condition"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "float-3",
+      "moduleId": "float",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "浮沉条件的应用",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_float_sink_condition"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "float-4",
+      "moduleId": "float",
+      "year": 2022,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_float_sink_condition"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "float-5",
+      "moduleId": "float",
+      "year": 2021,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/buoyancy.png",
+      "conceptIds": [
+        "mech_float_sink_condition"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "work-1",
+      "moduleId": "work",
+      "year": 2025,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "功的计算",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/work.png",
+      "conceptIds": [
+        "mech_work"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "work-2",
+      "moduleId": "work",
+      "year": 2024,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "功的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/work.png",
+      "conceptIds": [
+        "mech_work"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "work-3",
+      "moduleId": "work",
+      "year": 2023,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "功和功率的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/work.png",
+      "conceptIds": [
+        "mech_work",
+        "mech_power"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "work-4",
+      "moduleId": "work",
+      "year": 2023,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "功率的计算（P=Fv）",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/work.png",
+      "conceptIds": [
+        "mech_power"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "work-5",
+      "moduleId": "work",
+      "year": 2022,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "功的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/work.png",
+      "conceptIds": [
+        "mech_work"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "work-6",
+      "moduleId": "work",
+      "year": 2021,
+      "types": [
+        "选择题",
+        "计算题"
+      ],
+      "scores": [
+        5.0,
+        5.0
+      ],
+      "content": "做功的两个必要因素、功与功率的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "图片为5、5，与Markdown共用5分不一致，保留图片数值、暂不累计",
+      "source": "exam-sources/work.png",
+      "conceptIds": [
+        "mech_work",
+        "mech_power",
+        "mech_work_conditions"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "mechanical-1",
+      "moduleId": "mechanical",
+      "year": 2025,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "机械能的转化",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/mechanical.png",
+      "conceptIds": [
+        "mech_mechanical_energy_conversion"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "mechanical-2",
+      "moduleId": "mechanical",
+      "year": 2024,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "动能的影响因素；机械能变化的判断",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/mechanical.png",
+      "conceptIds": [
+        "mech_kinetic_energy",
+        "mech_mechanical_energy"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "mechanical-3",
+      "moduleId": "mechanical",
+      "year": 2023,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "有用功及额外功的计算",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "与机械效率模块疑似同一记录，归属及认知层次待核，暂不累计",
+      "source": "exam-sources/mechanical.png",
+      "conceptIds": [
+        "mech_useful_work",
+        "mech_extra_work"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "mechanical-4",
+      "moduleId": "mechanical",
+      "year": 2023,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "机械能的转化",
+      "levels": [
+        "综合"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/mechanical.png",
+      "conceptIds": [
+        "mech_mechanical_energy_conversion"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "mechanical-5",
+      "moduleId": "mechanical",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0,
+        2.0
+      ],
+      "content": "机械能变化的判断；机械能及其转化",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/mechanical.png",
+      "conceptIds": [
+        "mech_mechanical_energy",
+        "mech_kinetic_energy",
+        "mech_gravitational_potential_energy",
+        "mech_mechanical_energy_conversion"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "mechanical-6",
+      "moduleId": "mechanical",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "重力势能的影响因素",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/mechanical.png",
+      "conceptIds": [
+        "mech_gravitational_potential_energy"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lever-1",
+      "moduleId": "lever",
+      "year": 2025,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        6.0
+      ],
+      "content": "探究杠杆的平衡条件",
+      "levels": [
+        "应用",
+        "分析"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_lever_balance"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lever-2",
+      "moduleId": "lever",
+      "year": 2024,
+      "types": [
+        "作图题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "杠杆力臂作图",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_lever"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lever-3",
+      "moduleId": "lever",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "费力杠杆的辨识",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_lever"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lever-4",
+      "moduleId": "lever",
+      "year": 2023,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "杠杆平衡条件的运用",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_lever_balance"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lever-5",
+      "moduleId": "lever",
+      "year": 2023,
+      "types": [
+        "综合题"
+      ],
+      "scores": [],
+      "content": "定滑轮的作用",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_滑轮"
+      ],
+      "scoreStatus": "missing"
+    },
+    {
+      "id": "lever-6",
+      "moduleId": "lever",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "杠杆的定义",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_lever"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lever-7",
+      "moduleId": "lever",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "费力杠杆的辨识",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_lever"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lever-8",
+      "moduleId": "lever",
+      "year": 2021,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "滑轮组的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_滑轮组"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "lever-9",
+      "moduleId": "lever",
+      "year": 2021,
+      "types": [
+        "作图题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "杠杆力臂作图",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/lever.png",
+      "conceptIds": [
+        "mech_lever"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "efficiency-1",
+      "moduleId": "efficiency",
+      "year": 2025,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/efficiency.png",
+      "conceptIds": [
+        "mech_efficiency",
+        "mech_useful_work",
+        "mech_extra_work",
+        "mech_total_work"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "efficiency-2",
+      "moduleId": "efficiency",
+      "year": 2024,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/efficiency.png",
+      "conceptIds": [
+        "mech_efficiency",
+        "mech_useful_work",
+        "mech_extra_work",
+        "mech_total_work"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "efficiency-3",
+      "moduleId": "efficiency",
+      "year": 2023,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "有用功、额外功的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "与机械能模块疑似同一记录，暂不累计；此条未直接列效率计算",
+      "source": "exam-sources/efficiency.png",
+      "conceptIds": [
+        "mech_useful_work",
+        "mech_extra_work"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "efficiency-4",
+      "moduleId": "efficiency",
+      "year": 2022,
+      "types": [],
+      "scores": [],
+      "content": "未考",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/efficiency.png",
+      "conceptIds": [
+        "mech_efficiency",
+        "mech_useful_work",
+        "mech_extra_work",
+        "mech_total_work"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "efficiency-5",
+      "moduleId": "efficiency",
+      "year": 2021,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "有用功、总功、机械效率的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/efficiency.png",
+      "conceptIds": [
+        "mech_efficiency",
+        "mech_useful_work",
+        "mech_extra_work",
+        "mech_total_work"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "efficiency-6",
+      "moduleId": "efficiency",
+      "year": 2020,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        1.5
+      ],
+      "content": "有用功、总功、功率、机械效率的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/efficiency.png",
+      "conceptIds": [
+        "mech_efficiency",
+        "mech_useful_work",
+        "mech_extra_work",
+        "mech_total_work"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "circuit-1",
+      "moduleId": "circuit",
+      "year": 2025,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "电路连接方式的判断",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/circuit.png",
+      "conceptIds": [
+        "elec_电路",
+        "elec_导体与绝缘体",
+        "elec_series_circuit",
+        "elec_parallel_circuit"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "circuit-2",
+      "moduleId": "circuit",
+      "year": 2024,
+      "types": [
+        "选择题",
+        "填空题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "导体、电路的构成及作用",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/circuit.png",
+      "conceptIds": [
+        "elec_电路",
+        "elec_导体与绝缘体",
+        "elec_series_circuit",
+        "elec_parallel_circuit"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "circuit-3",
+      "moduleId": "circuit",
+      "year": 2023,
+      "types": [
+        "选择题",
+        "实验题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "电路的基础知识",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/circuit.png",
+      "conceptIds": [
+        "elec_电路",
+        "elec_导体与绝缘体",
+        "elec_series_circuit",
+        "elec_parallel_circuit"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "circuit-4",
+      "moduleId": "circuit",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "电学的基础知识",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/circuit.png",
+      "conceptIds": [
+        "elec_电路",
+        "elec_导体与绝缘体",
+        "elec_series_circuit",
+        "elec_parallel_circuit"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "circuit-5",
+      "moduleId": "circuit",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "电路连接的判断",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/circuit.png",
+      "conceptIds": [
+        "elec_电路",
+        "elec_导体与绝缘体",
+        "elec_series_circuit",
+        "elec_parallel_circuit"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "rules-1",
+      "moduleId": "rules",
+      "year": 2025,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "串、并联电路的电流规律",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/rules.png",
+      "conceptIds": [
+        "elec_series_current_rule",
+        "elec_parallel_current_rule"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "rules-2",
+      "moduleId": "rules",
+      "year": 2024,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "电流的方向、串并联电流规律",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/rules.png",
+      "conceptIds": [
+        "elec_current_direction",
+        "elec_series_current_rule",
+        "elec_parallel_current_rule"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "rules-3",
+      "moduleId": "rules",
+      "year": 2023,
+      "types": [
+        "计算题",
+        "综合题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "电路的基础知识",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "具体规律未注明，知识点关联为模块范围",
+      "source": "exam-sources/rules.png",
+      "conceptIds": [
+        "elec_current",
+        "elec_voltage",
+        "elec_resistance",
+        "elec_series_current_rule",
+        "elec_parallel_current_rule",
+        "elec_series_voltage_rule",
+        "elec_parallel_voltage_rule"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "rules-4",
+      "moduleId": "rules",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "动态电路串联电路电阻、电流的变化",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/rules.png",
+      "conceptIds": [
+        "elec_resistance",
+        "elec_current",
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "rules-5",
+      "moduleId": "rules",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "动态电路串联电路电阻、电压的计算",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/rules.png",
+      "conceptIds": [
+        "elec_resistance",
+        "elec_voltage",
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "rules-6",
+      "moduleId": "rules",
+      "year": 2025,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "串、并联电路电压的特点",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/rules.png",
+      "conceptIds": [
+        "elec_series_voltage_rule",
+        "elec_parallel_voltage_rule"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "rules-7",
+      "moduleId": "rules",
+      "year": 2024,
+      "types": [
+        "计算题",
+        "综合题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "串、并联电路电压的特点",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/rules.png",
+      "conceptIds": [
+        "elec_series_voltage_rule",
+        "elec_parallel_voltage_rule"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "rules-8",
+      "moduleId": "rules",
+      "year": 2023,
+      "types": [
+        "选择题",
+        "实验题"
+      ],
+      "scores": [
+        9.0
+      ],
+      "content": "电压表的使用、串并联电路电压的特点",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/rules.png",
+      "conceptIds": [
+        "elec_电压表",
+        "elec_series_voltage_rule",
+        "elec_parallel_voltage_rule"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "ohm-1",
+      "moduleId": "ohm",
+      "year": 2025,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        5.0
+      ],
+      "content": "探究电流与电压的关系",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "ohm-2",
+      "moduleId": "ohm",
+      "year": 2025,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "欧姆定律在串、并联电路中的应用",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "ohm-3",
+      "moduleId": "ohm",
+      "year": 2024,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "探究电流与电阻的关系",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "ohm-4",
+      "moduleId": "ohm",
+      "year": 2024,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "欧姆定律在串、并联电路中的应用",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "ohm-5",
+      "moduleId": "ohm",
+      "year": 2023,
+      "types": [
+        "实验题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "欧姆定律的简单计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "ohm-6",
+      "moduleId": "ohm",
+      "year": 2023,
+      "types": [
+        "选择题",
+        "计算题"
+      ],
+      "scores": [
+        9.0
+      ],
+      "content": "欧姆定律在串、并联电路中的应用",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "ohm-7",
+      "moduleId": "ohm",
+      "year": 2022,
+      "types": [
+        "计算题",
+        "实验题"
+      ],
+      "scores": [
+        8.0
+      ],
+      "content": "探究电流与电压、电阻的关系；欧姆定律应用",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "与Markdown实验2分可能存在包含关系，暂不累计",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "ohm-8",
+      "moduleId": "ohm",
+      "year": 2022,
+      "types": [
+        "选择题",
+        "计算题"
+      ],
+      "scores": [
+        7.0
+      ],
+      "content": "动态电路、欧姆定律的计算",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "可能与同模块8分记录重叠，暂不累计",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "ohm-9",
+      "moduleId": "ohm",
+      "year": 2021,
+      "types": [
+        "计算题",
+        "选择题",
+        "实验题"
+      ],
+      "scores": [
+        6.0
+      ],
+      "content": "探究电流与电压、电阻的关系",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "ohm-10",
+      "moduleId": "ohm",
+      "year": 2021,
+      "types": [
+        "选择题",
+        "计算题"
+      ],
+      "scores": [
+        4.0
+      ],
+      "content": "欧姆定律在串、并联电路中的应用",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/ohm.png",
+      "conceptIds": [
+        "elec_ohm_law"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "electric-power-1",
+      "moduleId": "electric-power",
+      "year": 2025,
+      "types": [
+        "计算题",
+        "综合题"
+      ],
+      "scores": [
+        5.0
+      ],
+      "content": "电能、电功率、焦耳定律的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/electric-power.png",
+      "conceptIds": [
+        "elec_electric_energy",
+        "elec_electric_work",
+        "elec_electric_power",
+        "elec_joule_law",
+        "elec_measure_lamp_power"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "electric-power-2",
+      "moduleId": "electric-power",
+      "year": 2024,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        6.0
+      ],
+      "content": "电能、电功率、焦耳定律的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/electric-power.png",
+      "conceptIds": [
+        "elec_electric_energy",
+        "elec_electric_work",
+        "elec_electric_power",
+        "elec_joule_law",
+        "elec_measure_lamp_power"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "electric-power-3",
+      "moduleId": "electric-power",
+      "year": 2023,
+      "types": [
+        "计算题"
+      ],
+      "scores": [
+        9.0
+      ],
+      "content": "电能、电功率、焦耳定律的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/electric-power.png",
+      "conceptIds": [
+        "elec_electric_energy",
+        "elec_electric_work",
+        "elec_electric_power",
+        "elec_joule_law",
+        "elec_measure_lamp_power"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "electric-power-4",
+      "moduleId": "electric-power",
+      "year": 2022,
+      "types": [
+        "选择题",
+        "实验题",
+        "计算题",
+        "综合题"
+      ],
+      "scores": [
+        7.0
+      ],
+      "content": "测量小灯泡额定功率；电能、电功率、焦耳定律计算",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/electric-power.png",
+      "conceptIds": [
+        "elec_electric_energy",
+        "elec_electric_work",
+        "elec_electric_power",
+        "elec_joule_law",
+        "elec_measure_lamp_power"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "electric-power-5",
+      "moduleId": "electric-power",
+      "year": 2021,
+      "types": [
+        "选择题",
+        "计算题"
+      ],
+      "scores": [
+        8.0
+      ],
+      "content": "电能、电功率、焦耳定律的计算",
+      "levels": [
+        "应用"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/electric-power.png",
+      "conceptIds": [
+        "elec_electric_energy",
+        "elec_electric_work",
+        "elec_electric_power",
+        "elec_joule_law",
+        "elec_measure_lamp_power"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "safety-1",
+      "moduleId": "safety",
+      "year": 2025,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "安全用电",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/safety.png",
+      "conceptIds": [
+        "elec_安全用电"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "safety-2",
+      "moduleId": "safety",
+      "year": 2024,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "三线插头的作用",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/safety.png",
+      "conceptIds": [
+        "elec_household_wiring"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "safety-3",
+      "moduleId": "safety",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "电路的基础知识",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "原图归入安全用电，具体考点待明确",
+      "source": "exam-sources/safety.png",
+      "conceptIds": [
+        "elec_电路",
+        "elec_安全用电"
+      ],
+      "scoreStatus": "review"
+    },
+    {
+      "id": "safety-4",
+      "moduleId": "safety",
+      "year": 2022,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "家庭电路中电流过大的原因",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/safety.png",
+      "conceptIds": [
+        "elec_家庭电路"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "safety-5",
+      "moduleId": "safety",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "安全用电",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/safety.png",
+      "conceptIds": [
+        "elec_安全用电"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "magnetism-1",
+      "moduleId": "magnetism",
+      "year": 2025,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        3.0
+      ],
+      "content": "电流磁效应、通电螺线管磁场方向",
+      "levels": [
+        "识记",
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/magnetism.png",
+      "conceptIds": [
+        "elec_电流的磁效应",
+        "elec_solenoid"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "magnetism-2",
+      "moduleId": "magnetism",
+      "year": 2024,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "电动机工作原理",
+      "levels": [
+        "理解"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/magnetism.png",
+      "conceptIds": [
+        "elec_electric_motor"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "magnetism-3",
+      "moduleId": "magnetism",
+      "year": 2023,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "磁极、电流磁效应、磁场相互作用",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/magnetism.png",
+      "conceptIds": [
+        "elec_magnetic_pole",
+        "elec_电流的磁效应",
+        "elec_magnetic_field"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "magnetism-4",
+      "moduleId": "magnetism",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "电动机工作原理",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/magnetism.png",
+      "conceptIds": [
+        "elec_electric_motor"
+      ],
+      "scoreStatus": "known",
+      "rawType": "双选题"
+    },
+    {
+      "id": "magnetism-5",
+      "moduleId": "magnetism",
+      "year": 2021,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "电磁感应",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/magnetism.png",
+      "conceptIds": [
+        "elec_electromagnetic_induction"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "magnetism-6",
+      "moduleId": "magnetism",
+      "year": 2020,
+      "types": [
+        "作图题",
+        "选择题"
+      ],
+      "scores": [
+        3.5
+      ],
+      "content": "电磁铁、电磁感应",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/magnetism.png",
+      "conceptIds": [
+        "elec_电磁铁",
+        "elec_electromagnetic_induction"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "energy-1",
+      "moduleId": "energy",
+      "year": 2025,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "能源的分类",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/energy.png",
+      "conceptIds": [
+        "energy_energy_classification"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "energy-2",
+      "moduleId": "energy",
+      "year": 2024,
+      "types": [
+        "填空题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "信息与信息传递",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/energy.png",
+      "conceptIds": [
+        "elec_电磁波"
+      ],
+      "scoreStatus": "known"
+    },
+    {
+      "id": "energy-3",
+      "moduleId": "energy",
+      "year": 2023,
+      "types": [],
+      "scores": [],
+      "content": "无",
+      "levels": [],
+      "tested": false,
+      "issue": "",
+      "source": "exam-sources/energy.png",
+      "conceptIds": [
+        "energy_energy_classification",
+        "elec_电磁波",
+        "energy_energy_environment",
+        "energy_nuclear_energy"
+      ],
+      "scoreStatus": "not-tested"
+    },
+    {
+      "id": "energy-4",
+      "moduleId": "energy",
+      "year": 2022,
+      "types": [
+        "选择题"
+      ],
+      "scores": [
+        2.0
+      ],
+      "content": "核废料处理、能源、电磁波",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/energy.png",
+      "conceptIds": [
+        "energy_energy_classification",
+        "elec_电磁波",
+        "energy_energy_environment",
+        "energy_nuclear_energy"
+      ],
+      "scoreStatus": "known",
+      "rawType": "双选题"
+    },
+    {
+      "id": "energy-5",
+      "moduleId": "energy",
+      "year": 2021,
+      "types": [
+        "综合题"
+      ],
+      "scores": [
+        1.0
+      ],
+      "content": "电磁波分类",
+      "levels": [
+        "识记"
+      ],
+      "tested": true,
+      "issue": "",
+      "source": "exam-sources/energy.png",
+      "conceptIds": [
+        "elec_电磁波"
+      ],
+      "scoreStatus": "known"
+    }
+  ],
+  "crossDisciplinary": {
+    "title": "跨学科复习关注",
+    "note": "以下为所提供Markdown资料中的复习关注与条目引用；条目编号及表述待核。原资料“2026年可能考察”属于资料判断，不计入历年考频。",
+    "text": "2.3.2　了解现代技术中声学的一些应用 , 知道噪声的危害及控制方法。\n\n5.1.1　能发现日常生活中与物理学有关的问题 , 提出解决方案。\n\n1.1.3 经历物态变化的实验探究过程 , 知道物质的熔点、凝固点和沸点 , 了解物态变化过程中的吸热和放热现象。能运用物态变化知识说明自然界和生活中的有关现象。\n\n5.2.1　能发现日常生活中与物理学有关的问题 , 提出解决方案。\n\n2.3.5　了解凸透镜成像规律的应用。\n\n5.2.2 调查物理学用于工程实践的案例 , 体会物理学对工程技术发展的促进作用。\n\n2.2.8　知道大气压强及其与人类生活的关系。\n\n5.2.2 调查物理学用于工程实践的案例 , 体会物理学对工程技术发展的促进作用。\n\n2.2.9　能运用物体的浮沉条件说明生产生活中的现象。\n\n5.1.1　能发现日常生活中与物理学有关的问题 , 提出解决方案。\n\n2.2.6　知道简单机械。探究并了解杠杆的平衡条件。\n\n3.2.4　能说出人类使用的一些机械。了解机械的使用对社会发展的作用。\n\n5.2.1　了解我国古代的技术应用案例 , 体会我国古代科技对人类文明发展的促进作用。\n\n3.3.3　了解热机的工作原理 , 知道内能的利用在人类社会发展史中的重要意义。\n\n5.3.1 结合实例 , 尝试分析能源的开发与利用对社会发展的影响。\n\n3.4.2　知道电压、电流和电阻。\n\n3.4.4　会看、会画简单的电路。会连接简单的串联电路和并联电路。能说出生产生活中采用简单串联电路或并联电路的实例。\n\n2.4.4　通过实验 , 了解通电导线在磁场中会受到力的作用 , 并知道力的方向与哪些因素有关。",
+    "items": [
+      {
+        "id": "0",
+        "name": "声学技术与噪声控制",
+        "content": "现代技术中的声学应用；发现生活问题并提出方案",
+        "conceptIds": [
+          "mech_sound_propagation",
+          "mech_noise_control"
+        ]
+      },
+      {
+        "id": "1",
+        "name": "物态变化与生活问题",
+        "content": "物态变化实验、吸放热现象与生活问题解决",
+        "conceptIds": [
+          "therm_melting_freezing",
+          "therm_汽化与液化",
+          "therm_升华与凝华"
+        ]
+      },
+      {
+        "id": "2",
+        "name": "透镜与工程实践",
+        "content": "凸透镜成像规律的应用；调查工程实践案例",
+        "conceptIds": [
+          "opt_lens_imaging",
+          "opt_透镜"
+        ]
+      },
+      {
+        "id": "3",
+        "name": "大气压与工程实践",
+        "content": "大气压强与人类生活；调查工程实践案例",
+        "conceptIds": [
+          "mech_atmospheric_pressure"
+        ]
+      },
+      {
+        "id": "4",
+        "name": "浮沉条件与问题解决",
+        "content": "运用浮沉条件说明生产生活现象，提出解决方案",
+        "conceptIds": [
+          "mech_float_sink_condition"
+        ]
+      },
+      {
+        "id": "5",
+        "name": "简单机械与古代技术",
+        "content": "杠杆平衡、机械使用与我国古代技术应用",
+        "conceptIds": [
+          "mech_lever",
+          "mech_lever_balance",
+          "mech_滑轮"
+        ]
+      },
+      {
+        "id": "6",
+        "name": "热机与能源利用",
+        "content": "热机原理、内能利用与能源开发的社会影响",
+        "conceptIds": [
+          "therm_heat_engine",
+          "energy_energy_environment"
+        ]
+      },
+      {
+        "id": "7",
+        "name": "电路与生产生活",
+        "content": "电压、电流和电阻；简单串并联电路及生活实例",
+        "conceptIds": [
+          "elec_current",
+          "elec_voltage",
+          "elec_resistance",
+          "elec_series_circuit",
+          "elec_parallel_circuit"
+        ]
+      },
+      {
+        "id": "8",
+        "name": "磁场对电流的作用",
+        "content": "实验探究通电导线受力及方向的影响因素",
+        "conceptIds": [
+          "elec_磁场对电流的作用"
+        ]
+      }
+    ]
+  }
+}
