@@ -1,0 +1,47 @@
+[
+  {
+    "file": "广东省深圳市2021年中考物理试卷.docx",
+    "questionGroups": 21,
+    "answerGroups": 21,
+    "mediaFiles": 28,
+    "mathNodes": 28,
+    "status": "source-structure-checked",
+    "note": "核对编号、答案对应、内嵌PNG可解码及数学节点存在，不表示逐题物理答案已确认。"
+  },
+  {
+    "file": "广东省深圳市2022年中考物理试卷.docx",
+    "questionGroups": 19,
+    "answerGroups": 19,
+    "mediaFiles": 26,
+    "mathNodes": 49,
+    "status": "source-structure-checked",
+    "note": "核对编号、答案对应、内嵌PNG可解码及数学节点存在，不表示逐题物理答案已确认。"
+  },
+  {
+    "file": "广东省深圳市2023年中考物理试卷.docx",
+    "questionGroups": 20,
+    "answerGroups": 20,
+    "mediaFiles": 34,
+    "mathNodes": 47,
+    "status": "source-structure-checked",
+    "note": "核对编号、答案对应、内嵌PNG可解码及数学节点存在，不表示逐题物理答案已确认。"
+  },
+  {
+    "file": "广东省深圳市2024年中考物理试卷.docx",
+    "questionGroups": 18,
+    "answerGroups": 18,
+    "mediaFiles": 25,
+    "mathNodes": 10,
+    "status": "source-structure-checked",
+    "note": "核对编号、答案对应、内嵌PNG可解码及数学节点存在，不表示逐题物理答案已确认。"
+  },
+  {
+    "file": "广东省深圳市2025年中考物理真题.docx",
+    "questionGroups": 12,
+    "answerGroups": 12,
+    "mediaFiles": 17,
+    "mathNodes": 36,
+    "status": "source-structure-checked",
+    "note": "核对编号、答案对应、内嵌PNG可解码及数学节点存在，不表示逐题物理答案已确认。"
+  }
+]
