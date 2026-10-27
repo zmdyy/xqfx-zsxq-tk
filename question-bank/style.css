@@ -368,3 +368,13 @@
 .bc-question,.bc-controls{overflow:auto;padding:16px;min-width:0;border:1px solid #d9e4ed;border-radius:10px}.bc-question{font-size:17px;line-height:1.8}.bc-question img{display:block;max-width:100%;max-height:400px;margin:14px auto}
 .bc-controls{background:#f4f8fc}.bc-controls label{display:block;margin:14px 0;line-height:1.6}.bc-controls select,.bc-controls textarea{display:block;box-sizing:border-box;width:100%;padding:9px;margin-top:6px}.bc-controls p{line-height:1.7}#bcStatus{white-space:pre-line;color:#245578}#bcFine[hidden]{display:none}
 @media(max-width:700px){.bc-dialog{padding:12px;overflow:auto}.bc-layout{display:block;height:auto}.bc-question{max-height:42dvh}.bc-controls{margin-top:12px}.bc-question{font-size:16px}}
+
+
+/* 个人错题推荐，与原有题篮共用 */
+.wrong-practice{border:1px solid #c7d2fe;background:#f8faff;border-radius:14px;padding:20px;margin:18px 0;min-width:0}
+.wrong-practice-heading,.wrong-practice-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.wrong-practice-heading h2{margin:0;color:#3730a3;font-size:19px}.wrong-practice-heading p{margin:5px 0;color:#64748b}
+.wrong-practice select{max-width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:7px;background:white}
+.wrong-practice .qcard{margin-top:14px;background:white}.wrong-practice-reason{color:#4338ca;font-weight:600}
+.wrong-practice-actions{justify-content:flex-end;margin-top:12px}.wrong-practice .hint{line-height:1.7}
+button[data-notebook-practice]:disabled{opacity:.65;cursor:default}

@@ -9744,9 +9744,10 @@ function showPersonalErrorNotebook(studentName, studentClass) {
                 }
             }
             html += '<div class="notebook-reviewed-preview" data-subject-index="' + exportPayload.subjects.length + '" data-item-index="' + exportSubject.items.length + '" style="margin-top:8px;color:#92400e;font-size:12px">正在检查原卷复核结果…</div>';
+            html += '<button type="button" class="upload-btn" data-notebook-practice data-subject-index="' + exportPayload.subjects.length + '" data-item-index="' + exportSubject.items.length + '" style="margin-top:10px;background:#4f46e5;border-radius:6px;padding:7px 12px">推荐练习</button>';
             var exportStem = qText || '';
             exportSubject.items.push({
-                itemName: e.itemName, detailItemNames: e.detailItemNames || [e.itemName], batchLabel: e.batchLabel, batchId: e.batchId,
+                itemName: e.itemName, recommendationItemNames: (e._mergedItems || [e]).map(function(x){ return x.itemName; }), detailItemNames: e.detailItemNames || [e.itemName], batchLabel: e.batchLabel, batchId: e.batchId,
                 subjectName: e.subjectName, lookupItemName: e.lookupItemName || e.itemName,
                 score: e.score, maxScore: e.maxScore, rate: e.rate,
                 studentAnswer: e.studentAnswer, correctAnswer: e.correctAnswer, stemMarkdown: exportStem,
@@ -9759,6 +9760,7 @@ function showPersonalErrorNotebook(studentName, studentClass) {
     });
     window.lastErrorNotebookExport = exportPayload;
     showErrorNotebookModal('📘 个人错题本 — ' + escapeHtml(studentName), html);
+    window.NotebookPractice?.decorate();
     document.querySelectorAll('.notebook-reviewed-preview').forEach(async function(el) {
         var subject = exportPayload.subjects[Number(el.dataset.subjectIndex)];
         var item = subject && subject.items[Number(el.dataset.itemIndex)];
@@ -18639,6 +18641,8 @@ function closeStudentListModal() {
 </script>
 <script src="paper-crop-engine.js"></script>
 <script src="notebook-crop-review.js?v=8"></script>
+<script src="wrong-question-recommendations.js?v=1"></script>
+<script src="notebook-practice.js?v=1"></script>
 <script src="full-data-backup.js?v=4"></script>
 </body>
 </html>
