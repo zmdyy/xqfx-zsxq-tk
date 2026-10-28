@@ -21,6 +21,7 @@
     "test:paper:interaction": "node tests/paper-review-interaction.test.mjs && node tests/full-data-backup.test.mjs",
     "test:recommendations": "node tests/wrong-question-recommendations.test.cjs && node tests/wrong-practice-flow.test.mjs",
     "test:score-groups": "node tests/score-unit-relations.test.cjs && node tests/score-group-workspace.test.mjs",
+    "test:ai-practice:browser": "node tests/ai-practice-browser.test.cjs",
     "test:ai-practice": "node tests/ai-practice-core.test.cjs && node tests/ai-practice-diagnostics.test.cjs && node tests/ai-practice-preview.test.mjs && node tests/ai-practice-flow.test.mjs"
   },
   "devDependencies": {
