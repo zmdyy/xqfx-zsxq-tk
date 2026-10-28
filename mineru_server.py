@@ -547,8 +547,12 @@ if SERVE_APP:
         return send_from_directory(ROOT, "index.html")
 
 
+from ai_practice_api import register_ai_practice
+register_ai_practice(app)
+
 if __name__ == "__main__":
     mode = "web + MinerU proxy" if SERVE_APP else "MinerU proxy only"
     print(f"xqksh-zxxq {mode}: http://127.0.0.1:{PORT}")
     print(f"Health check: http://127.0.0.1:{PORT}/health")
     app.run(host=os.environ.get("HOST", "127.0.0.1"), port=PORT, debug=False, threaded=True)
+

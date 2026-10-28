@@ -2053,7 +2053,8 @@ function persistBatches() {
                 questionConceptMap: b.questionConceptMap || {},
                 manualQuestionOverrides: b.manualQuestionOverrides,
                 notebookCropReviews: b.notebookCropReviews || {},
-                paperReviewStates: b.paperReviewStates || {}
+                paperReviewStates: b.paperReviewStates || {},
+                aiPracticeTasks: b.aiPracticeTasks || []
             };
         });
         var json = JSON.stringify(compact);
@@ -7424,11 +7425,13 @@ function showCollectiveHeatmapCellDetail(questionIndex, rowIndex) {
         return;
     }
 
-    html += '<div style="overflow:auto;max-height:520px;"><table class="diagnosis-detail-table"><thead><tr><th>#</th><th>姓名</th><th>班级</th><th>本题得分率</th><th>其余题均值</th><th>偏离</th></tr></thead><tbody>';
+    window.AiPracticeUI?.prepare({batchId:DataPool.currentBatchId,subject:model.subjectName,itemName:qm.q.title,scoreHeader:qm.q.scoreHeader||'',groupLabel:rowInfo.label},abnormalStudents.map(function(x){return {name:x.name,className:x.className};}));
+    html += '<div style="margin-bottom:10px"><button type="button" class="upload-btn" data-ai-start>为所选学生 AI 推荐练习</button><span style="margin-left:10px;font-size:12px">默认选中当前名单，可取消个别人</span></div>';
+    html += '<div style="overflow:auto;max-height:520px;"><table class="diagnosis-detail-table"><thead><tr><th>选择</th><th>#</th><th>姓名</th><th>班级</th><th>本题得分率</th><th>其余题均值</th><th>偏离</th></tr></thead><tbody>';
     abnormalStudents.forEach(function(x, i) {
         var personal = getCollectiveStudentBaselineExcludingItem(baselineInfo.stats, x);
         var gap = personal == null ? null : Math.max(0, personal - x.rate);
-        html += '<tr><td class="diag-num">' + (i+1) + '</td><td>' + escapeHtml(x.name || '') + '</td><td>' + escapeHtml(x.className || '') + '</td>'
+        html += '<tr><td><input type="checkbox" checked data-ai-student="'+i+'" aria-label="选择'+escapeHtml(x.name||'')+'"></td><td class="diag-num">' + (i+1) + '</td><td>' + escapeHtml(x.name || '') + '</td><td>' + escapeHtml(x.className || '') + '</td>'
             + '<td class="diag-num">' + Math.round(x.rate*100) + '%</td>'
             + '<td class="diag-num">' + (personal == null ? '-' : Math.round(personal*100) + '%') + '</td>'
             + '<td class="diag-num" style="color:#b91c1c;font-weight:700;">' + (gap == null ? '-' : '-' + Math.round(gap*100) + '个百分点') + '</td></tr>';
@@ -18666,5 +18669,10 @@ function closeStudentListModal() {
 <script src="wrong-question-recommendations.js?v=1"></script>
 <script src="notebook-practice.js?v=2"></script>
 <script src="full-data-backup.js?v=4"></script>
+<script src="question-bank/math-content.js?v=20261014export7"></script>
+<script src="question-bank/paper-layout.js?v=20261014formula8"></script>
+<script src="question-bank/word-export.js?v=20261028-ai1"></script>
+<script src="ai-practice-core.js?v=1"></script>
+<script src="ai-practice-ui.js?v=1"></script>
 </body>
 </html>

@@ -23,7 +23,7 @@ class LauncherTest(unittest.TestCase):
             second = folder / 'repo two'
             for root in (first, second):
                 root.mkdir()
-                for name in ('local_launcher.py', 'mineru_server.py'):
+                for name in ('local_launcher.py', 'mineru_server.py', 'ai_practice_api.py'):
                     shutil.copyfile(SOURCE / name, root / name)
                 (root / 'index.html').write_text('LOCAL TEST PAGE', encoding='utf-8')
             with socket.socket() as probe:
@@ -49,6 +49,7 @@ class LauncherTest(unittest.TestCase):
                 running = json.loads(get('/__local_service__/status'))
                 self.assertEqual(get('/index.html'), b'LOCAL TEST PAGE')
                 self.assertTrue(json.loads(get('/health'))['same_origin'])
+                self.assertEqual(json.loads(get('/ai/health'))['service'], 'score-ai-practice')
                 repeat = run('start')
                 self.assertEqual(repeat.returncode, 0, repeat.stderr)
                 self.assertEqual(json.loads(get('/__local_service__/status'))['pid'], running['pid'])

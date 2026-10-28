@@ -82,7 +82,7 @@ function pictureXml(relId,idx,cx,cy){
 async function createDocx(options){
  const zipLib=options.JSZip||root.JSZip;
  if(!zipLib)throw Error('JSZip 未加载，请刷新页面后重试。');
- const zip=new zipLib(),rels=[],types=new Set(),items=options.items||[];
+ const zip=new zipLib(),rels=[],types=new Set();let items=options.plans?.[0]?.items||options.items||[];
  if(!items.length)throw Error('试题篮为空');
  let imageId=0,docPr=0;
  const PL=root.PhysicsPaperLayout;
@@ -124,7 +124,24 @@ async function createDocx(options){
  async function pageItems(isAnswer){let result='';for(let i=0;i<items.length;i++)result+=await renderItem(items[i],i+1,isAnswer);return result;}
  const title=options.title||'物理精准练习';
  const date=options.date||new Date().toISOString().slice(0,10);
- let body=paragraph(title+' · '+date,{align:'center',bold:true,size:30,after:170});
+ let body='';
+ if(options.plans){
+   if(!options.plans.length)throw Error('没有可导出的学生');
+   for(let index=0;index<options.plans.length;index++){
+     const plan=options.plans[index];items=plan.items;
+     if(!items?.length||!plan.student?.name)throw Error('学生或题目为空');
+     body+=paragraph(title+' · '+date,{align:'center',bold:true,size:30,after:170});
+     body+=paragraph('班级：'+(plan.student.className||'________')+'　姓名：'+plan.student.name,{align:'center',size:19,after:190});
+     body+=await pageItems(false);
+     // First section is the student's front; subsequent students begin on an odd page.
+     body+=sectionEnd(1,index===0?'nextPage':'oddPage');
+     body+=paragraph('参考解析 · '+plan.student.name,{align:'center',bold:true,size:30,after:170});
+     body+=paragraph('答案与本人的题目页题号对应',{align:'center',size:19,after:150});
+     body+=await pageItems(true);
+     if(index<options.plans.length-1)body+=sectionEnd(1,'nextPage');
+   }
+ }else{
+ body=paragraph(title+' · '+date,{align:'center',bold:true,size:30,after:170});
  const personal=options.student;
  const nameLine=personal?('班级：'+(personal.className||'________')+'　姓名：'+personal.name):'班级：________　姓名：________';
  body+=paragraph(nameLine,{align:'center',size:19,after:190});
@@ -144,8 +161,9 @@ async function createDocx(options){
  body+=await pageItems(true);
  body+=sectionEnd(columns,'continuous');
  body+=smallTable([['核对后：□ 能独立重做　□ 看懂但有困难　□ 需要教师讲解']],fullWidth);
+ }
  const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="'+W+'" xmlns:r="'+REL+'"><w:body>'+body+
- sectionProperties(1,'continuous')+'</w:body></w:document>';
+ sectionProperties(1,options.plans?'nextPage':'continuous')+'</w:body></w:document>';
  const footer='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="'+W+'"><w:p><w:pPr><w:jc w:val="right"/></w:pPr>'+textRun('第 ',false,18)+'<w:fldSimple w:instr="PAGE">'+textRun('1',false,18)+'</w:fldSimple>'+textRun(' / ',false,18)+'<w:fldSimple w:instr="NUMPAGES">'+textRun('1',false,18)+'</w:fldSimple>'+textRun(' 页',false,18)+'</w:p></w:ftr>';
  rels.push({id:'rIdFooter',target:'footer1.xml',type:REL+'/footer'});zip.file('word/footer1.xml',footer);
  const contentTypes='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
@@ -162,3 +180,4 @@ async function createDocx(options){
 }
 root.PhysicsWordExport={createDocx,MIME};
 })(typeof window!=='undefined'?window:globalThis);
+
