@@ -1,7 +1,7 @@
 /* Small, allowlisted API diagnostics. Never retain request/response text or credentials. */
 (function(root){
 'use strict';
-const BUILD='20261028-evidence-v2',KEY='practiceAiDiagnosticsV1',LIMIT=80;let memory=[],sequence=0,loaded=false;
+const BUILD='20261028-reuse-v3',KEY='practiceAiDiagnosticsV1',LIMIT=80;let memory=[],sequence=0,loaded=false;
 const FIELDS=['goal','summary','evidence','evidenceKeys','conceptIds','assessmentIds','hypotheses','uncertainty','reason','items','diagnosis','plan','result','output','recommendation','data','task','fixedTargets','result_schema','studentEvidence','candidates','input'],WRAPPERS=['result','output','recommendation','data','diagnosis','plan'];
 const token=v=>typeof v==='string'&&/^[A-Za-z0-9_.:-]{1,100}$/.test(v)?v:undefined;
 const number=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0?v:undefined;
