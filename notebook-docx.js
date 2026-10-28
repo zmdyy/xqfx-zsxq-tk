@@ -862,7 +862,7 @@ async function exportErrorNotebookWord() {
                     sourceText
                 );
 
-                bodyXml += docxBlock(docxStyledRun('需订正：' + (it.detailItemNames || [it.itemName]).join('、'), {size:19,color:'B42318'}), {after:100});
+                bodyXml += docxBlock(docxStyledRun((it.sharedScore ? '题组存在失分，具体错题待确认：' : '需订正：') + (it.detailItemNames || [it.itemName]).join('、'), {size:19,color:'B42318'}), {after:100});
                 if (typeof window.notebookReviewStatus === 'function' && !window.notebookReviewStatus(it)) bodyXml += docxBlock(docxStyledRun('原卷未复核：以下为识别内容，请核对完整性。', {size:19,color:'B45309'}), {after:100});
                 var rawStem = resolveNotebookExportStem(it);
                 var preparedStem = rawStem ? preprocess(rawStem) : '';
@@ -981,3 +981,4 @@ async function exportErrorNotebookWord() {
         if (loadingDiv.parentNode) loadingDiv.parentNode.removeChild(loadingDiv);
     }
 }
+

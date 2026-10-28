@@ -27,7 +27,7 @@ function render(){
  const concept=id=>api.catalogById.get(id)?.name||id;
  const uncertain=targets.some(t=>['low','unknown'].includes(t.confidence));
  host.innerHTML='<div class="wrong-practice-heading"><div><h2>推荐练习 · '+esc(context.itemLabel)+'</h2><p>'+esc(context.batchLabel||'')+' · '+esc(context.subject)+'</p></div><a href="../index.html">返回成绩分析</a></div>'+
- '<p class="hint">'+(context.wholeOnly?'当前只有整题得分：以下是整题涉及的知识点，不能据此认定每个知识点都未掌握，请选择需要练习的方向。':'依据失分小问的独立得分与已有知识点标注推荐。')+(uncertain?' 部分标注的置信度较低或未知，请先核对。':'')+'</p>'+
+ '<p class="hint">'+(context.wholeOnly?(context.sharedScore?'当前为题组合并计分，无法确定组内具体错题。':'当前只有整题得分：')+ '以下是整题涉及的知识点，不能据此认定每个知识点都未掌握，请选择需要练习的方向。':'依据失分小问的独立得分与已有知识点标注推荐。')+(uncertain?' 部分标注的置信度较低或未知，请先核对。':'')+'</p>'+
  '<label>练习方向 <select data-practice-target aria-label="练习方向"><option value="">全部'+(context.wholeOnly?'涉及':'失分小问')+'知识点</option>'+context.targets.map((t,i)=>'<option value="'+i+'" '+(String(i)===selected?'selected':'')+'>'+esc(t.label+' · '+concept(t.conceptId))+'</option>').join('')+'</select></label>'+
  '<p class="hint">优先同主知识点、同考法，再考虑相关知识点；难度和审核状态沿用题库记录。可确认的原题已排除 '+result.originals+' 道。无法确认的原题可点“排除此题”。</p>'+
  '<p role="status">'+(result.rows.length?'匹配 '+result.rows.length+' 道，当前展示 '+rows.length+' 道。请人工核对后加入题篮。':api.questions().some(q=>!q.archivedAsDuplicate)?'暂无匹配题目。请核对标注，或为这些知识点补充题库。':'当前浏览器题库为空，请先添加题目或恢复题库独立备份。')+'</p>'+

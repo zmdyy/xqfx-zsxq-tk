@@ -6,6 +6,7 @@
     <title>学情可视化展板</title>
     <script src="echarts.min.js"></script>
     <script src="xlsx.full.min.js"></script>
+    <script src="score-unit-relations.js?v=1"></script>
     <script>if(typeof echarts==='undefined'){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js';document.head.appendChild(s)}if(typeof XLSX==='undefined'){var s2=document.createElement('script');s2.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';document.head.appendChild(s2)}</script>
     <link rel="stylesheet" href="katex.min.css">
     <script src="marked.min.js"></script>
@@ -15,7 +16,7 @@
     <script src="auto-render.min.js"></script>
     <script src="jszip.min.js"></script>
     <script src="mathml2omml.js"></script>
-    <script src="notebook-docx.js?v=14"></script>
+    <script src="notebook-docx.js?v=15"></script>
     <style>
         /* ── Design System ──────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -2122,6 +2123,7 @@ function restoreBatches() {
                         try {
                             var batches = JSON.parse(getReq.result.value);
                             batches.forEach(function(b) {
+                                window.ScoreUnitRelations?.upgradeBatch(b);
                                 if (!b.questionConceptMap || typeof b.questionConceptMap !== 'object' || Array.isArray(b.questionConceptMap)) b.questionConceptMap = {};
                             });
                             DataPool.batches = batches;
@@ -4485,6 +4487,13 @@ function expandItemRefs(item) {
  */
 function getCanonicalQuestionRefInfo(item) {
     var raw = String(item == null ? '' : item).trim();
+    var member = typeof ScoreUnitRelations==='undefined'?null:ScoreUnitRelations.memberHeader(raw);
+    if (member) raw = member;
+    var range = raw.normalize('NFKC').replace(/\s+/g,'').match(/(?:第)?(\d{1,3})[-~至](\d{1,3})题(?:\([\d.]+分\))?$/);
+    if (range && Number(range[2]) > Number(range[1]) && Number(range[2])-Number(range[1])<200) {
+        var majors=[];for(var n=Number(range[1]);n<=Number(range[2]);n++)majors.push(n);
+        return {raw:raw,normalized:raw,kind:'major-list',major:null,minors:[],majors:majors,sortPath:majors,compactLabel:majors.join('、')+'题',wordLabel:'第'+range[1]+'—'+range[2]+'题',isSubQuestion:false};
+    }
     var s = (typeof normalizeItemName === 'function' ? normalizeItemName(raw) : raw.replace(/\s+/g,''))
         .replace(/_c\d+$/i,'').replace(/_col\d+$/i,'').replace(/^(?:第?\s*\d+\s*卷|[一二三四五六七八九十ⅠⅡⅢ]+卷)\s*/, '').trim();
 
@@ -4807,7 +4816,7 @@ function findTextByItemFallback(lines, item) {
 // ============================================================
 function repairImportedBatchData() {
     var files=Object.values(uploadedFilesData || {});
-    var outdated=files.some(function(file){return Array.isArray(file.rawData) && file.rawData.length && file.parseVersion!==4;});
+    var outdated=files.some(function(file){return Array.isArray(file.rawData) && file.rawData.length && file.parseVersion!==5;});
     if (!outdated) return false;
     files.forEach(function(file) {
         if (!Array.isArray(file.rawData) || !file.rawData.length) return;
@@ -5013,7 +5022,7 @@ function parseDataByHeaderRows(fileEntry, rawData, overrideHeaderRows) {
     const shr = resolveHeaderRowCount(rawData, overrideHeaderRows);
     const hrArr = getImportedHeaderRows(fileEntry, rawData, shr);
     fileEntry.headerRows = shr;
-    fileEntry.parseVersion = 4;
+    fileEntry.parseVersion = 5;
     let ni = -1, ci = -1, ii = -1, cti = -1, sti = -1;
     const NK = ['姓名','名字','人名'], CK = ['班级','行政班','班名','行政班级'];
     const IK = ['序号','学号','考生号','准考证','编号','考号'];
@@ -5061,6 +5070,8 @@ function parseDataByHeaderRows(fileEntry, rawData, overrideHeaderRows) {
         if (subjectName && (ft !== 'sub' || kns.has(String(subjectName).trim()))) lsn = subjectName;
         if (!subjectName) continue;
         if (!sm[subjectName]) sm[subjectName] = { name: subjectName, scoreIndex: -1, rankIndex: -1, gradeIndex: -1, classIndex: -1, schoolIndex: -1, subScoreColumns: [], subScoreQuestionMap: {} };
+        var leafHeader=String((hrArr[hrArr.length-1]||[])[c]||'').trim();
+        if(ft==='sub' && /^(全卷|[0-9一二三]+卷)$/.test(leafHeader)){if(leafHeader==='全卷')sm[subjectName].scoreIndex=c;continue;}
         if (km[fieldType]) {
             if (ft === 'sub' && (fieldType==='校名'||fieldType==='班名'||fieldType==='级名')) continue;
             sm[subjectName][km[fieldType]] = c;
@@ -5069,7 +5080,7 @@ function parseDataByHeaderRows(fileEntry, rawData, overrideHeaderRows) {
             const isAC = /_?(学生)?答案|正确答案/.test(raw);
             const ms = getQuestionMaxScoreFromHeaderRows(hrArr, c); const ca = isAC ? eCa(raw) : '';
             // 与错题本/PDF匹配共用题号语义，并恢复Excel合并表头中的父题号。
-            let bn = getCanonicalQuestionRefFromHeaderRows(hrArr, c, subjectName, ssc);
+            let bn = window.ScoreUnitRelations?.memberHeader(String((hrArr[hrArr.length-1]||[])[c]||'')) || getCanonicalQuestionRefFromHeaderRows(hrArr, c, subjectName, ssc);
             if (!bn) {
                 bn = raw.replace(subjectName, '').trim()
                     .replace(/^(第?\s*\d+\s*卷|[0-9]+\s*卷)\s*/i,'').trim()
@@ -5109,6 +5120,7 @@ function parseDataByHeaderRows(fileEntry, rawData, overrideHeaderRows) {
             // Always store the CLEAN name (without suffix) for display
             if (finalQn === qn) sm[subjectName].subScoreQuestionMap[finalQn].name = qn;
             const q = sm[subjectName].subScoreQuestionMap[finalQn];
+            q.sourceHeader = String((hrArr[hrArr.length-1]||[])[c]||'');
             if (isAC) { q.answerIndex = c; if (ca) q.correctAnswer = ca; } else { q.scoreIndex = c; if (ms !== null) q.maxScore = ms; }
         }
     }
@@ -5118,6 +5130,7 @@ function parseDataByHeaderRows(fileEntry, rawData, overrideHeaderRows) {
         return hi || (Array.isArray(s.subScoreColumns) && s.subScoreColumns.length > 0) || hq;
     });
     if (!fileEntry.subjectHeaders.length) return;
+    fileEntry.subjectHeaders.forEach(function(h){ window.ScoreUnitRelations?.prepare(h.subScoreQuestionMap||{},rawData.slice(shr)); });
     for (let i = shr; i < rawData.length; i++) {
         const row = rawData[i]; if (!row || row.length <= Math.max(ni, ci)) continue;
         const stu = { name: row[ni] || '', class: row[ci] || '', candidateType: cti !== -1 ? (row[cti]||'') : '', schoolType: sti !== -1 ? (row[sti]||'') : '', subjects: {} };
@@ -5127,10 +5140,10 @@ function parseDataByHeaderRows(fileEntry, rawData, overrideHeaderRows) {
             if (subj.subScoreQuestionMap && typeof subj.subScoreQuestionMap === 'object') {
                 Object.entries(subj.subScoreQuestionMap).forEach(([mapKey, q]) => {
                     if (!q || !q.name) return;
-                    const sv = q.scoreIndex !== -1 ? (hasMeaningfulValue(row[q.scoreIndex]) ? row[q.scoreIndex] : 0) : '';
+                    const sv = q.scoreIndex !== -1 ? (hasMeaningfulValue(row[q.scoreIndex]) ? row[q.scoreIndex] : '') : '';
                     const av = q.answerIndex !== -1 ? (row[q.answerIndex] ?? '') : '';
                     if (!hasMeaningfulValue(sv) && !hasMeaningfulValue(av) && !hasMeaningfulValue(q.maxScore) && !hasMeaningfulValue(q.correctAnswer)) return;
-                    sd.subScores[mapKey] = { score: sv, maxScore: q.maxScore ?? '', studentAnswer: av, correctAnswer: q.correctAnswer ?? '' };
+                    sd.subScores[mapKey] = { score: sv, maxScore: q.maxScore ?? '', studentAnswer: av, correctAnswer: q.correctAnswer ?? '', summaryOf:q.summaryOf||null, sharedScore:(window.ScoreUnitRelations?.majors(mapKey)||[]).length>1 };
                 });
             }
             if (stu.name && (hasMeaningfulValue(sd.score) || hasMeaningfulValue(sd.grade) || Object.keys(sd.subScores).length > 0)) stu.subjects[subj.name] = sd;
@@ -6165,8 +6178,8 @@ function normalizeCollectiveGrade(value) {
 }
 
 function collectiveScoreNumber(value) {
-    // 所有小题视图使用相同口径：空白/占位符按 0，非法非空值仍需排除。
-    if (!hasMeaningfulValue(value)) return 0;
+    // 空白和占位符是缺失数据；数值零仍是有效得分。
+    if (!hasMeaningfulValue(value)) return null;
     var number = Number(value);
     return Number.isFinite(number) ? number : null;
 }
@@ -6194,7 +6207,7 @@ function buildCollectiveDataSnapshot(students, subjectHeaders) {
             var items = student.subjects[name].subScores || {};
             Object.keys(items).forEach(function(key) {
                 var item = items[key];
-                if (!item || typeof item !== 'object') return;
+                if (!item || typeof item !== 'object' || item.summaryOf) return;
                 var definition = map[key];
                 if (!definition) definition = map[key] = {name:key,scoreIndex:0,answerIndex:hasMeaningfulValue(item.studentAnswer)?0:-1};
                 if (!(Number(definition.maxScore)>0) && Number(item.maxScore)>0) definition.maxScore=Number(item.maxScore);
@@ -6207,7 +6220,7 @@ function buildCollectiveDataSnapshot(students, subjectHeaders) {
         var map = subjQMap[subject];
         Object.keys(map).forEach(function(key) {
             var question = map[key];
-            if (!question || !question.name) return;
+            if (!question || !question.name || question.summaryOf || /^(全卷|[0-9一二三]+卷)$/.test(question.name)) return;
             var max = Number(question.maxScore)>0 ? Number(question.maxScore) : null;
             var header = subject+'_'+key+(max ? '（'+max+'分）' : '');
             // 答案列不得凭空变成一道计分题。
@@ -6245,7 +6258,7 @@ function buildCollectiveDataSnapshot(students, subjectHeaders) {
             var item=items[definition.key] || items[definition.question.name];
             if (definition.hasScore) {
                 var value=item && typeof item==='object'?item.score:item;
-                row[definition.header]=hasMeaningfulValue(value)?value:0;
+                row[definition.header]=hasMeaningfulValue(value)?value:'';
             }
             if (definition.hasAnswer) row[definition.header+'_答案']=item && item.studentAnswer || '';
         });
@@ -8933,7 +8946,7 @@ function mergeSplitErrorItems(errors) {
     var groups = {};
     var order = [];
     (errors || []).forEach(function(e) {
-        var key = String(e.batchId) + '\0' + String(e.subjectName) + '\0' + getErrorMajorKey(e.itemName);
+        var key = String(e.batchId) + '\0' + String(e.subjectName) + '\0' + (e.sharedScore || getErrorMajorKey(e.itemName)==null ? 'unit:'+e.itemName : getErrorMajorKey(e.itemName));
         if (!groups[key]) { groups[key] = []; order.push(key); }
         groups[key].push(e);
     });
@@ -8988,6 +9001,7 @@ function collectStudentErrorsFromAllBatches(studentName, studentClass) {
     var targetClass = String(studentClass || '').trim();
 
     DataPool.batches.forEach(function(batch) {
+        window.ScoreUnitRelations?.upgradeBatch(batch);
         var students = batch.combinedStudentData;
         if (!students || !students.length) return;
 
@@ -9012,9 +9026,9 @@ function collectStudentErrorsFromAllBatches(studentName, studentClass) {
             if (!subj || !subj.subScores) return;
             Object.keys(subj.subScores).forEach(function(itemKey) {
                 var questionRef = getCanonicalQuestionRefInfo(itemKey);
-                if (questionRef.kind === 'unknown') return;
+                if (questionRef.kind === 'unknown' && !/填空|作文|书写|书面表达/.test(itemKey)) return;
                 var item = subj.subScores[itemKey];
-                if (!item || typeof item !== 'object') return;
+                if (!item || typeof item !== 'object' || item.summaryOf) return;
                 var snum = item.score == null || String(item.score).trim() === '' ? NaN : Number(item.score);
                 var mnum = item.maxScore == null || String(item.maxScore).trim() === '' ? NaN : Number(item.maxScore);
                 if (!isFinite(snum) || !isFinite(mnum) || mnum <= 0 || snum < 0 || snum >= mnum) return;
@@ -9026,6 +9040,8 @@ function collectStudentErrorsFromAllBatches(studentName, studentClass) {
                     batchId: batch.id,
                     subjectName: subjName,
                     itemName: itemKey,
+                    sharedScore:window.ScoreUnitRelations?.isGroup(batch,subjName,itemKey)||false,
+                    paperMajors:window.ScoreUnitRelations?.targets(batch,subjName,itemKey)||[],
                     score: snum,
                     maxScore: mnum,
                     rate: Math.max(0, Math.min(1, snum / mnum)),
@@ -9657,9 +9673,11 @@ async function getErrorNotebookQuestionSnapshots(item) {
 window.getErrorNotebookQuestionSnapshots = getErrorNotebookQuestionSnapshots;
 
 function showPersonalErrorNotebook(studentName, studentClass) {
+    var missingNotices=[];
+    DataPool.batches.forEach(function(b){var candidates=(b.combinedStudentData||[]).filter(function(x){return (x.name===studentName||x.displayName===studentName)&&(!studentClass||String(x.class)===String(studentClass));});if(candidates.length===1){var absent=window.ScoreUnitRelations?.missingSubjects(b,candidates[0])||[];if(absent.length)missingNotices.push(b.label+'：'+absent.join('、')+'未导入该科成绩（不计零分、不判缺考）');}});
     var crossData = collectStudentErrorsFromAllBatches(studentName, studentClass);
     if (!crossData.totalErrors) {
-        showAlert('该学生在所有批次中均无错题记录');
+        showAlert('该学生在已导入数据中无错题记录。'+missingNotices.join('；'));
         return;
     }
     // Group by subject
@@ -9677,6 +9695,7 @@ function showPersonalErrorNotebook(studentName, studentClass) {
     });
 
     var html = '<style>.notebook-full-question img{display:block;max-width:min(100%,1100px);height:auto;margin:12px auto;object-fit:contain}.notebook-full-question table{max-width:100%;overflow:auto}.notebook-full-question p{margin:7px 0}</style>';
+    if(missingNotices.length)html += '<div style="padding:12px;background:#fff7ed;color:#9a3412">'+missingNotices.map(escapeHtml).join('<br>')+'</div>';
     var mergedCount = Object.keys(subjectGroups).reduce(function(n, k) { return n + subjectGroups[k].length; }, 0);
     var exportPayload = { studentName: studentName, studentClass: studentClass || '', totalErrors: mergedCount, subjectCount: crossData.subjectCount, batchCount: crossData.batchCount, subjects: [] };
     // Summary bar
@@ -9717,18 +9736,21 @@ function showPersonalErrorNotebook(studentName, studentClass) {
             if (e.studentAnswer) html += '<span>你的答案：<b style="color:#e74c3c;">' + escapeHtml(e.studentAnswer || '未导入答案') + '</b></span>';
             if (e.correctAnswer) html += '<span>正确答案：<b style="color:#16a34a;">' + escapeHtml(e.correctAnswer || '-') + '</b></span>';
             html += '</div>';
-            html += '<div style="font-size:12px;margin:6px 0">需订正：' + escapeHtml((e.detailItemNames || [e.itemName]).join('、')) + '</div>';
+            if (e.sharedScore) html += '<p style="color:#92400e;font-size:13px">合并计分：组内存在失分，具体错题待确认；此分数不分摊到每道题。</p>';
+            html += '<div style="font-size:12px;margin:6px 0">需订正范围：' + escapeHtml((e.detailItemNames || [e.itemName]).join('、')) + '</div>';
             // Complete structured question from the best available parsed PDF.
             var batch = DataPool.batches.find(function(b) { return b.id === e.batchId; });
             var qText = '';
             var questionSource = '';
             var questionSourceFile = '';
             if (batch) {
-                var completeQuestion = extractCompleteQuestionTextFromPdf(batch, e.subjectName, e.lookupItemName || e.itemName);
+                var mappedMajors = window.ScoreUnitRelations?.targets(batch,e.subjectName,e.lookupItemName||e.itemName)||[];
+                var completeQuestion = extractCompleteQuestionTextFromPdf(batch, e.subjectName, mappedMajors.length===1?mappedMajors[0]:(e.lookupItemName || e.itemName));
                 qText = completeQuestion.text || '';
                 questionSource = completeQuestion.source || '';
                 questionSourceFile = completeQuestion.fileName || '';
                 if (!qText) qText = extractQuestionTextFromPdf(batch, e.subjectName, e.lookupItemName || e.itemName);
+                if(mappedMajors.length>1){qText=mappedMajors.map(function(n){var q=extractCompleteQuestionTextFromPdf(batch,e.subjectName,n);return q.text||'';}).filter(Boolean).join('\n\n');}
                 if (qText) {
                     var cId = 'qtext-' + e.batchId + '-' + e.subjectName.replace(/[^a-z0-9]/gi,'') + '-' + e.itemName.replace(/[^a-z0-9]/gi,'_');
                     var renderedQ = renderNotebookQuestionMarkdown(qText);
@@ -9747,7 +9769,7 @@ function showPersonalErrorNotebook(studentName, studentClass) {
             html += '<button type="button" class="upload-btn" data-notebook-practice data-subject-index="' + exportPayload.subjects.length + '" data-item-index="' + exportSubject.items.length + '" style="margin-top:10px;background:#4f46e5;border-radius:6px;padding:7px 12px">推荐练习</button>';
             var exportStem = qText || '';
             exportSubject.items.push({
-                itemName: e.itemName, recommendationItemNames: (e._mergedItems || [e]).map(function(x){ return x.itemName; }), detailItemNames: e.detailItemNames || [e.itemName], batchLabel: e.batchLabel, batchId: e.batchId,
+                itemName: e.itemName, sharedScore:e.sharedScore||false, paperMajors:e.paperMajors||[], recommendationItemNames: (e._mergedItems || [e]).map(function(x){ return x.itemName; }), detailItemNames: e.detailItemNames || [e.itemName], batchLabel: e.batchLabel, batchId: e.batchId,
                 subjectName: e.subjectName, lookupItemName: e.lookupItemName || e.itemName,
                 score: e.score, maxScore: e.maxScore, rate: e.rate,
                 studentAnswer: e.studentAnswer, correctAnswer: e.correctAnswer, stemMarkdown: exportStem,
@@ -11796,7 +11818,7 @@ function getClassItemAverageRate(subjectName, itemName) {
     combinedStudentData.forEach(function(stu) {
         var sd = stu.subjects && stu.subjects[subjectName];
         var item = sd && sd.subScores ? sd.subScores[itemName] : null;
-        if (!item || typeof item !== 'object') return;
+        if (!item || typeof item !== 'object' || item.summaryOf) return;
         var score = parseFloat(item.score);
         var maxScore = parseFloat(item.maxScore);
         if (isNaN(score) || isNaN(maxScore) || maxScore <= 0) return;
@@ -12921,7 +12943,7 @@ function getSubjectItemAverageRates(rows) {
     rows.forEach(function(r) {
         Object.keys(r.subScores || {}).forEach(function(itemName) {
             var item = r.subScores[itemName];
-            if (!item || typeof item !== 'object') return;
+            if (!item || typeof item !== 'object' || item.summaryOf) return;
             var score = parseFloat(item.score), maxScore = parseFloat(item.maxScore);
             if (isNaN(score) || isNaN(maxScore) || maxScore <= 0) return;
             if (!map[itemName]) map[itemName] = { item: itemName, score: 0, max: 0, count: 0 };
@@ -12945,7 +12967,7 @@ function getSubjectChoiceDistribution(rows) {
     rows.forEach(function(r) {
         Object.keys(r.subScores || {}).forEach(function(itemName) {
             var item = r.subScores[itemName];
-            if (!item || typeof item !== 'object') return;
+            if (!item || typeof item !== 'object' || item.summaryOf) return;
             var ans = normAns(item.studentAnswer), correct = normAns(item.correctAnswer);
             if (!isChoice(itemName, ans, correct)) return;
             if (!map[itemName]) map[itemName] = { item: itemName, correct: correct, counts: {}, total: 0, wrong: 0 };
@@ -15433,7 +15455,7 @@ function generateBatchComprehensiveReports(className, threshold) {
             if (sd && sd.subScores) {
                 Object.keys(sd.subScores).forEach(function(itemName) {
                     var item = sd.subScores[itemName];
-                    if (!item || typeof item !== 'object') return;
+                    if (!item || typeof item !== 'object' || item.summaryOf) return;
                     var snum = parseFloat(item.score), mnum = parseFloat(item.maxScore);
                     if (isNaN(snum) || isNaN(mnum) || mnum <= 0) return;
                     if (snum/mnum < threshold) {
@@ -16320,7 +16342,7 @@ function generateSingleSubjectClassReport(classNames, subjectName, threshold, ti
         if (sd && sd.subScores) {
             Object.keys(sd.subScores).forEach(function(itemName) {
                 var item = sd.subScores[itemName];
-                if (!item || typeof item !== 'object') return;
+                if (!item || typeof item !== 'object' || item.summaryOf) return;
                 var scoreNum = parseFloat(item.score);
                 var maxNum = parseFloat(item.maxScore);
                 if (isNaN(scoreNum) || isNaN(maxNum) || maxNum <= 0) return;
@@ -18640,9 +18662,9 @@ function closeStudentListModal() {
 }
 </script>
 <script src="paper-crop-engine.js"></script>
-<script src="notebook-crop-review.js?v=9"></script>
+<script src="notebook-crop-review.js?v=10"></script>
 <script src="wrong-question-recommendations.js?v=1"></script>
-<script src="notebook-practice.js?v=1"></script>
+<script src="notebook-practice.js?v=2"></script>
 <script src="full-data-backup.js?v=4"></script>
 </body>
 </html>

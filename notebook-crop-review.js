@@ -3,40 +3,31 @@
   function key(subject, major) { return JSON.stringify([subject, String(major)]); }
   function findBatch(id) { return DataPool.batches.find(function(b){return String(b.id)===String(id);}); }
   function mappingValid(rec, major) {
+    if(rec?.manualScoreBinding && rec.scoreColumns?.length)return true;
     if (!rec || !Array.isArray(rec.scoreColumns) || !rec.scoreColumns.length) return false;
     return rec.scoreColumns.every(function(name){
       if (typeof getCanonicalQuestionRefInfo !== 'function') return true;
-      var info=getCanonicalQuestionRefInfo(name);
+      if(rec.manualScoreBinding)return true;var info=getCanonicalQuestionRefInfo(name);
       return String(info.major)===String(major) || info.kind==='major-list' && info.majors.map(String).includes(String(major));
     });
   }
-  function getRecord(item) {
-    var batch=findBatch(item.batchId), major=notebookMajorFromItem(item.lookupItemName || item.itemName);
-    var rec=batch && batch.notebookCropReviews && batch.notebookCropReviews[key(item.subjectName,major)];
-    return mappingValid(rec,major) ? rec : null;
+  function getRecords(item) {
+    const batch=findBatch(item.batchId);if(!batch)return [];
+    const ids=window.ScoreUnitRelations?.targets(batch,item.subjectName,item.lookupItemName||item.itemName)||[notebookMajorFromItem(item.lookupItemName||item.itemName)].filter(Boolean);
+    return ids.map(major=>{const rec=batch.notebookCropReviews?.[key(item.subjectName,major)];
+      return mappingValid(rec,major)&&(!rec.manualScoreBinding||rec.scoreColumns.includes(item.lookupItemName||item.itemName))?rec:null;});
   }
   window.notebookReviewStatus = function(item){
-    var batch=findBatch(item.batchId),rec=getRecord(item);
-    if(!rec || !rec.confirmed || !rec.regions || !rec.regions.length) return false;
-    return !!(batch.uploadedPdfs||[]).find(function(p){return p.id===rec.fileId && p.fileName===rec.fileName && notebookPdfBytes(p);});
+    const batch=findBatch(item.batchId),records=getRecords(item);return !!records.length&&records.every(rec=>rec?.confirmed&&rec.regions?.length&&(batch.uploadedPdfs||[]).some(p=>p.id===rec.fileId&&p.fileName===rec.fileName&&notebookPdfBytes(p)));
   };
   window.notebookReviewedSnapshots = async function(item) {
-    var batch=findBatch(item.batchId), rec=getRecord(item);
-    if(!batch || !rec || !rec.confirmed || !rec.regions || !rec.regions.length) return null;
-    var pdf=(batch.uploadedPdfs||[]).find(function(p){return p.id===rec.fileId && p.fileName===rec.fileName;});
-    if(!pdf) return null;
-    var bytes=notebookPdfBytes(pdf); if(!bytes) return null;
-    var doc=await pdfjsLib.getDocument({data:bytes.slice(),disableWorker:true}).promise, output=[];
-    try {
-    for(var i=0;i<rec.regions.length;i++){
-      var r=rec.regions[i], page=await doc.getPage(r.page), vp=page.getViewport({scale:2});
-      var full=document.createElement('canvas');full.width=Math.ceil(vp.width);full.height=Math.ceil(vp.height);
-      await page.render({canvasContext:full.getContext('2d'),viewport:vp}).promise;
-      var x=Math.floor(r.x*full.width),y=Math.floor(r.y*full.height),w=Math.max(1,Math.min(full.width-x,Math.ceil(r.w*full.width))),h=Math.max(1,Math.min(full.height-y,Math.ceil(r.h*full.height)));
-      var out=document.createElement('canvas');out.width=w;out.height=h;var ctx=out.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(full,x,y,w,h,0,0,w,h);output.push(out.toDataURL('image/png'));
-    }
-    return output;
-    } finally { if (doc.destroy) await doc.destroy(); }
+    if(!window.notebookReviewStatus(item))return null;
+    const batch=findBatch(item.batchId),records=getRecords(item),output=[],seen=new Set();
+    const docs=new Map();try{for(const rec of records){let doc=docs.get(rec.fileId);if(!doc){const pdf=batch.uploadedPdfs.find(p=>p.id===rec.fileId&&p.fileName===rec.fileName);doc=await pdfjsLib.getDocument({data:notebookPdfBytes(pdf).slice(),disableWorker:true}).promise;docs.set(rec.fileId,doc);}
+      for(const r of rec.regions){const signature=JSON.stringify([rec.fileId,r.page,r.x,r.y,r.w,r.h]);if(seen.has(signature))continue;seen.add(signature);const page=await doc.getPage(r.page),vp=page.getViewport({scale:2}),full=document.createElement('canvas');full.width=Math.ceil(vp.width);full.height=Math.ceil(vp.height);await page.render({canvasContext:full.getContext('2d'),viewport:vp}).promise;
+        const x=Math.floor(r.x*full.width),y=Math.floor(r.y*full.height),w=Math.max(1,Math.min(full.width-x,Math.ceil(r.w*full.width))),h=Math.max(1,Math.min(full.height-y,Math.ceil(r.h*full.height))),out=document.createElement('canvas');out.width=w;out.height=h;const ctx=out.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(full,x,y,w,h,0,0,w,h);output.push(out.toDataURL('image/png'));
+      }
+    }return output;}finally{for(const doc of docs.values())if(doc.destroy)await doc.destroy();}
   };
   // Use all visible question anchors to set boundaries, even when a question has no score column.
   function buildTextCandidates(pages, questions) {
@@ -58,8 +49,11 @@
   }
   window.buildPaperTextCandidates=buildTextCandidates;
   function listQuestions(batch, subject){
+    window.ScoreUnitRelations?.upgradeBatch(batch);
     var groups={};
     (batch.combinedStudentData||[]).forEach(function(stu){var subj=stu.subjects && stu.subjects[subject];Object.keys(subj && subj.subScores || {}).forEach(function(name){var info=typeof getCanonicalQuestionRefInfo==='function'?getCanonicalQuestionRefInfo(name):null;if(info && info.kind==='unknown') return;var majors=info&&info.kind==='major-list'?info.majors.map(String):[notebookMajorFromItem(name)];majors.filter(Boolean).forEach(function(major){if(!groups[major])groups[major]=[];if(groups[major].indexOf(name)<0)groups[major].push(name);});});});
+    const activeNames=new Set((batch.combinedStudentData||[]).flatMap(s=>Object.entries(s.subjects?.[subject]?.subScores||{}).filter(([n,v])=>Number(v?.maxScore)>0&&!v.summaryOf).map(([n])=>n)));
+    Object.entries(batch.notebookCropReviews||{}).forEach(([k,r])=>{try{const [sn,n]=JSON.parse(k);if(sn===subject&&r.manualScoreBinding&&r.scoreColumns?.length&&r.scoreColumns.every(n=>activeNames.has(n))){groups[n]=[...new Set([...(groups[n]||[]),...r.scoreColumns])];}else if(sn===subject&&r.manualScoreBinding&&r.previousScoreColumns?.length&&r.regions?.length){groups[n]=groups[n]||[];}}catch(e){}});
     return Object.keys(groups).sort(function(a,b){return Number(a)-Number(b);}).map(function(major){return {major:major,columns:groups[major]};});
   }
   window.openPaperCropWorkspace = async function(){
@@ -72,7 +66,7 @@
     root.innerHTML=`<style>#paperCropWorkspace button,#paperCropWorkspace select{padding:7px;border:1px solid #cbd5e1;border-radius:5px;background:white;color:#0f172a;cursor:pointer}#paperCropWorkspace button:disabled{opacity:.45;cursor:default}#paperCropWorkspace [data-questions] button{display:block;text-align:left;width:100%;margin:5px 0}#paperCropWorkspace [data-preview] canvas{display:block;max-width:100%;height:auto;margin:8px 0;border:1px solid #cbd5e1}#paperCropWorkspace [data-regions]>div{padding:6px 0;border-bottom:1px solid #ddd}#paperCropWorkspace .paper-toolbar{display:flex;align-items:center;gap:8px;flex:none;min-height:40px}#paperCropWorkspace .paper-toolbar-main{display:flex;align-items:center;gap:7px;flex:1;min-width:0;white-space:nowrap;overflow-x:auto;scrollbar-width:thin;font-size:13px;min-height:40px}#paperCropWorkspace .paper-toolbar-main>button,#paperCropWorkspace .paper-toolbar-main>strong,#paperCropWorkspace .paper-toolbar-main>span,#paperCropWorkspace .paper-more{flex-shrink:0}#paperCropWorkspace .paper-toolbar button{padding:6px 8px;white-space:nowrap;font-size:13px}#paperCropWorkspace .paper-file-label{display:flex;flex:0 1 240px;min-width:70px;max-width:260px}#paperCropWorkspace .paper-file-label select{width:100%;min-width:0;font-size:13px}#paperCropWorkspace .paper-single-choice{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}#paperCropWorkspace .paper-toolbar .paper-close{background:#b91c1c;color:white;border:1px solid #991b1b;font-weight:bold;font-size:15px;min-width:80px;padding:8px 12px;flex:none}#paperCropWorkspace .paper-close:hover{background:#991b1b}#paperCropWorkspace .paper-more summary{cursor:pointer;list-style:none;padding:6px}#paperCropWorkspace .paper-more-menu{position:fixed;top:58px;right:100px;z-index:2;background:white;border:1px solid #cbd5e1;padding:12px;box-shadow:0 6px 20px #0002;white-space:normal;width:280px;line-height:1.6}#paperCropWorkspace [data-message]:not([hidden]){padding:6px 8px;margin-top:4px;background:#fff7ed;color:#9a3412;font-size:13px;flex:none}#paperCropWorkspace [data-save]{max-width:150px;overflow:hidden;text-overflow:ellipsis;color:#475569}#paperCropWorkspace [data-parser]{color:#64748b}@media(max-width:1200px){#paperCropWorkspace [data-parser]{display:none}#paperCropWorkspace .paper-file-label{flex-basis:150px}}</style>
       <div class="paper-toolbar"><div class="paper-toolbar-main"><strong>整卷切题复核</strong><label class="paper-subject-label"><select data-subject aria-label="科目"></select></label><label class="paper-file-label"><select data-pdf aria-label="原卷"></select></label><button data-a="add" aria-pressed="false" title="在已有框内或重叠位置补充区域，画一次后自动退出">＋补充区域</button><button data-a="undo" title="撤销">↶</button><button data-a="redo" title="重做">↷</button><button data-a="confirm">确认并下一题</button><button data-a="finish" title="检查整卷遗漏、确认状态及重叠，并保存完成状态">检查并完成</button><span data-parser></span><span data-progress></span><span data-save role="status">修改已保存</span><button data-a="retry" hidden>重试保存</button><span data-page></span><details class="paper-more"><summary>更多 ▾</summary><div class="paper-more-menu"><button data-a="auto">重新生成候选建议</button><p>拖框移动，拖角或边缩放，空白处拖动新增；重叠位置请用“＋补充区域”。</p><p>修改自动保存；确认题目后再进入下一题。</p></div></details></div><button data-a="close" class="paper-close" aria-label="关闭复核">× 关闭</button></div>
       <div data-message role="status" hidden></div>
-      <div style="display:flex;flex:1;min-height:0;gap:12px;margin-top:6px"><div data-scroll style="flex:1;overflow:auto;overflow-anchor:none;background:#cbd5e1;text-align:center"><div data-pages style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:12px"></div></div><aside style="width:350px;max-width:38%;overflow:auto;background:white;padding:10px"><select data-filter aria-label="题目状态"><option value="all">全部题目</option><option value="pending">未完成</option><option value="missing">未定位</option><option value="confirmed">已确认</option></select><div data-overlaps style="font-size:12px;margin:6px 0"></div><div data-questions></div><hr><strong data-title></strong><p data-columns></p><p data-source></p><label>重新绑定到 <select data-target></select></label><button data-a="rebind">移动区域</button><div data-regions></div><p>即时预览（按下面顺序导出）</p><div data-preview></div></aside></div>`;
+      <div style="display:flex;flex:1;min-height:0;gap:12px;margin-top:6px"><div data-scroll style="flex:1;overflow:auto;overflow-anchor:none;background:#cbd5e1;text-align:center"><div data-pages style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:12px"></div></div><aside style="width:350px;max-width:38%;overflow:auto;background:white;padding:10px"><select data-filter aria-label="题目状态"><option value="all">全部题目</option><option value="pending">未完成</option><option value="missing">未定位</option><option value="confirmed">已确认</option></select><div data-overlaps style="font-size:12px;margin:6px 0"></div><div data-questions></div><hr><strong data-title></strong><p data-columns></p><p data-source></p><label>重新绑定到 <select data-target></select></label><button data-a="rebind">移动区域</button><details data-binding-panel><summary>计分列对应原卷题号</summary><p style="font-size:12px">无题号的填空、作文、书写等计分列可指定题号；分数只计算一次，不分摊。</p><label>计分列 <select data-binding-column></select></label><label>原卷题号 <input data-binding-numbers placeholder="例如 9-13 或 1、4" style="width:150px"></label><button data-a="bind-score">保存题号对应</button></details><div data-regions></div><p>即时预览（按下面顺序导出）</p><div data-preview></div></aside></div>`;
     document.body.appendChild(root);
     const $=s=>root.querySelector(s), msg=t=>{const box=$('[data-message]');box.textContent=t;box.hidden=!/失败|尚未完成|重叠提醒|未识别到|无效区域|没有可对应/.test(t);$('[data-parser]').title=t;};
     const option=(label,value)=>{const o=document.createElement('option');o.textContent=label;o.value=value;return o;};
@@ -90,8 +84,9 @@
     if(prior){$('[data-subject]').value=prior[0];$('[data-pdf]').value=prior[1];}
     [[subjects,'[data-subject]'],[pdfs,'[data-pdf]']].forEach(([items,selector])=>{if(items.length===1){const input=$(selector),label=document.createElement('span');label.textContent=input.options[0].textContent;label.title=label.textContent;label.className='paper-single-choice';input.hidden=true;input.after(label);}});
     let doc=null,pdf=null,subject='',questions=[],records={},selected='',pageNo=1,active=-1,drag=null,undo=[],redo=[],baseline='',busy=false,closed=false,renderTask=null,renderVersion=0,previewVersion=0;
-    let canvas=null,draw=null,pageObserver=null,forceNew=false,saveTimer=null,savingPromise=null;const pageCache=new Map(),pagePending=new Map(),pageSlots=new Map();
-    const state=()=>JSON.stringify(records), dirty=()=>state()!==baseline;
+    let canvas=null,draw=null,pageObserver=null,forceNew=false,saveTimer=null,savingPromise=null,managedRecords=new Set();const pageCache=new Map(),pagePending=new Map(),pageSlots=new Map();
+    const state=()=>JSON.stringify({records,questions}), dirty=()=>state()!==baseline;
+    function restoreState(value){const next=JSON.parse(value);records=next.records;questions=next.questions;if(!questions.some(q=>q.major===selected))selected=questions[0]?.major||'';$('[data-target]').innerHTML='';questions.forEach(q=>$('[data-target]').add(option('第'+q.major+'题',q.major)));}
     const current=()=>records[selected]||(records[selected]={regions:[],confirmed:false,source:'人工'});
     function checkpoint(){undo.push(state());if(undo.length>60)undo.shift();redo=[];}
     function saveStatus(text,failed=false){$('[data-save]').textContent=text;$('[data-save]').title=text;$('[data-a="retry"]').hidden=!failed;}
@@ -102,8 +97,8 @@
     function status(r){return !r?.regions?.length?'未定位':r.confirmed?'已确认':'待复核';}
     function refreshList(){
       const filter=$('[data-filter]').value,box=$('[data-questions]');box.innerHTML='';let confirmed=0;
-      questions.forEach(q=>{const r=records[q.major],st=status(r);if(st==='已确认')confirmed++;if(filter==='pending'&&st==='已确认'||filter==='missing'&&st!=='未定位'||filter==='confirmed'&&st!=='已确认')return;const b=document.createElement('button');b.dataset.question=q.major;b.textContent='第'+q.major+'题 · '+st;b.style.background=selected===q.major?'#dbeafe':'';b.onclick=()=>select(q.major);box.appendChild(b);});
-      $('[data-progress]').textContent=confirmed+' / '+questions.length+' 已确认';
+      questions.forEach(q=>{const r=records[q.major],st=status(r);if(st==='已确认')confirmed++;if(filter==='pending'&&st==='已确认'||filter==='missing'&&st!=='未定位'||filter==='confirmed'&&st!=='已确认')return;const b=document.createElement('button');b.dataset.question=q.major;b.textContent='第'+q.major+'题 · '+(q.columns.length?st:'待绑定（原框保留）');b.style.background=selected===q.major?'#dbeafe':'';b.onclick=()=>select(q.major);box.appendChild(b);});
+      $('[data-progress]').textContent=confirmed+' / '+questions.length+' 已确认';$('[data-a="confirm"]').disabled=!selected;$('[data-a="finish"]').disabled=!questions.length;
       $('[data-a="undo"]').disabled=!undo.length;$('[data-a="redo"]').disabled=!redo.length;
     }
     function stroke(r,color,fill){const slot=pageSlots.get(r.page);if(!slot?.rendered)return;const c=slot.draw.getContext('2d'),d=slot.draw;c.strokeStyle=color;c.fillStyle=fill;c.lineWidth=2;c.fillRect(r.x*d.width,r.y*d.height,r.w*d.width,r.h*d.height);c.strokeRect(r.x*d.width,r.y*d.height,r.w*d.width,r.h*d.height);}
@@ -116,13 +111,13 @@
     function paint(temp){
       repaintCanvas(temp);
       const r=selected?current():{regions:[]};
-      refreshList();$('[data-title]').textContent=selected?'第'+selected+'题':'';$('[data-columns]').textContent='对应小题分列：'+(questions.find(q=>q.major===selected)?.columns||[]).join('、');$('[data-source]').textContent=(r.source?'来源：'+r.source+'；':'')+(r.warnings||[]).join('；');
+      refreshList();$('[data-title]').textContent=selected?'第'+selected+'题':'';$('[data-columns]').textContent='对应小题分列：'+(questions.find(q=>q.major===selected)?.columns||[]).join('、')+((questions.find(q=>q.major===selected)?.columns||[]).some(n=>window.ScoreUnitRelations?.isGroup(batch,subject,n))?'（合并计分：本题没有独立得分）':'');$('[data-source]').textContent=(r.source?'来源：'+r.source+'；':'')+(r.warnings||[]).join('；');
       const list=$('[data-regions]');list.innerHTML='';r.regions.forEach((b,i)=>{const row=document.createElement('div');row.textContent='片段 '+(i+1)+' · 第'+b.page+'页 ';[['定位',()=>{active=i;pageNo=b.page;return render(true,b);}],['↑',()=>{if(i){checkpoint();[r.regions[i-1],r.regions[i]]=[r.regions[i],r.regions[i-1]];changed();}}],['↓',()=>{if(i+1<r.regions.length){checkpoint();[r.regions[i+1],r.regions[i]]=[r.regions[i],r.regions[i+1]];changed();}}],['删除',()=>removeRegion(i)]].forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>{if(!busy)fn();};row.appendChild(b);});list.appendChild(row);});
       refreshOverlaps();preview();
     }
     function removeRegion(index){
       if(closed||busy||drag||!selected||index<0||index>=current().regions.length)return false;
-      checkpoint();current().regions.splice(index,1);active=-1;changed();return true;
+      checkpoint();current().regions.splice(index,1);active=-1;if(!current().regions.length&&!questions.find(q=>q.major===selected)?.columns.length){delete records[selected];questions=questions.filter(q=>q.major!==selected);selected=questions[0]?.major||'';paint();scheduleSave();}else changed();return true;
     }
     function deleteKey(e){
       if(e.key!=='Delete'||e.defaultPrevented||e.isComposing||e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
@@ -160,7 +155,7 @@
     function setAddMode(value){forceNew=value;const b=$('[data-a="add"]');b.setAttribute('aria-pressed',String(value));b.style.background=value?'#dbeafe':'';}
     function hitAt(p){
       const rect=draw.getBoundingClientRect(),tx=9/rect.width,ty=9/rect.height;
-      const keys=[selected,...Object.keys(records).filter(k=>k!==selected)];
+      const keys=[selected];
       for(const major of keys){const rs=records[major]?.regions||[];for(let i=rs.length-1;i>=0;i--){const r=rs[i];if(r.page!==pageNo)continue;
         if(major===selected){for(const [hx,hy] of [[0,0],[1,0],[0,1],[1,1],[.5,0],[.5,1],[0,.5],[1,.5]]){if(Math.abs(p.x-r.x-r.w*hx)<tx&&Math.abs(p.y-r.y-r.h*hy)<ty)return{major,i,handle:[hx,hy]};}}
         if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)return{major,i};
@@ -185,21 +180,34 @@
       if(d.action==='new'){const r=box(d.start,pos(e));setAddMode(false);if(d.moved&&r.w>.005&&r.h>.005){current().regions.push(r);active=current().regions.length-1;changed();}else{if(d.moved)undo.pop();paint();}}
       else if(d.moved)changed();else paint();draw.releasePointerCapture?.(e.pointerId);
     }
-    const cancelDrag=()=>{if(drag){if(drag.moved)records=JSON.parse(undo.pop());drag=null;setAddMode(false);paint();}};
-    function analysisIssues(){return E.validate(records,questions,doc.numPages);}
+    const cancelDrag=()=>{if(drag){if(drag.moved)restoreState(undo.pop());drag=null;setAddMode(false);paint();}};
+    function analysisIssues(){return E.validate(records,questions,doc.numPages).concat(questions.filter(q=>!q.columns.length).map(q=>'第'+q.major+'题尚未绑定计分列，请重新绑定或删除原框'));}
     async function save(confirm,finish){if(savingPromise)await savingPromise;if(!doc||busy)return false;if(drag){scheduleSave();return false;}clearTimeout(saveTimer);saveTimer=null;if(confirm&&!current().regions.length){msg('请先定位当前题。');return false;}busy=true;const previous=E.copy(batch.notebookCropReviews||{}),oldStates=E.copy(batch.paperReviewStates||{}),oldRecords=state();const savedMajor=selected;if(confirm)current().confirmed=true;saveStatus('保存中…');
-      const issues=analysisIssues();if(issues.some(x=>/区域无效/.test(x))){records=JSON.parse(oldRecords);busy=false;saveStatus('保存失败',true);msg('存在无效区域，请先修正再保存。');return false;}if(finish&&issues.length){busy=false;saveStatus(dirty()?'有修改待保存':'修改已保存');if(dirty())scheduleSave();msg('尚未完成：'+issues.join('；'));return false;}if(finish){const pending=E.overlaps(records).filter(x=>!x.approved);if(pending.length){busy=false;saveStatus(dirty()?'有修改待保存':'修改已保存');if(dirty())scheduleSave();paint();msg('存在 '+pending.length+' 处重叠提醒。请在右侧调整区域，或核对后点击「允许此处重叠」并记录原因。');return false;}}
-      batch.notebookCropReviews=batch.notebookCropReviews||{};Object.keys(records).forEach(major=>{batch.notebookCropReviews[key(subject,major)]={...E.copy(records[major]),fileId:pdf.id,fileName:pdf.fileName,scoreColumns:questions.find(q=>q.major===major)?.columns||[],updatedAt:new Date().toISOString()};});
+      const issues=analysisIssues();if(issues.some(x=>/区域无效/.test(x))){restoreState(oldRecords);busy=false;saveStatus('保存失败',true);msg('存在无效区域，请先修正再保存。');return false;}if(finish&&issues.length){busy=false;saveStatus(dirty()?'有修改待保存':'修改已保存');if(dirty())scheduleSave();msg('尚未完成：'+issues.join('；'));return false;}if(finish){const pending=E.overlaps(records).filter(x=>!x.approved);if(pending.length){busy=false;saveStatus(dirty()?'有修改待保存':'修改已保存');if(dirty())scheduleSave();paint();msg('存在 '+pending.length+' 处重叠提醒。请在右侧调整区域，或核对后点击「允许此处重叠」并记录原因。');return false;}}
+      batch.notebookCropReviews=batch.notebookCropReviews||{};for(const major of managedRecords){if(!records[major]){const old=batch.notebookCropReviews[key(subject,major)];if(old?.fileId===pdf.id&&old.fileName===pdf.fileName)delete batch.notebookCropReviews[key(subject,major)];}}Object.keys(records).forEach(major=>{managedRecords.add(major);batch.notebookCropReviews[key(subject,major)]={...E.copy(records[major]),fileId:pdf.id,fileName:pdf.fileName,scoreColumns:questions.find(q=>q.major===major)?.columns||[],scoreUnitVersion:1,updatedAt:new Date().toISOString()};});
       batch.paperReviewStates=batch.paperReviewStates||{};batch.paperReviewStates[key(subject,pdf.id)]={completed:!!finish,updatedAt:new Date().toISOString()};
       const snapshot=state();let ok=false;try{savingPromise=Promise.resolve().then(()=>persistBatches()).catch(e=>{msg('保存失败：'+e.message);return false;});ok=await savingPromise;}catch(e){msg('保存失败：'+e.message);}if(ok && DataPool.currentBatchId===batch.id && typeof uploadedPdfs!=='undefined'){var loaded=uploadedPdfs.find(p=>p.id===pdf.id);if(loaded && pdf.mineruLayout)loaded.mineruLayout=E.copy(pdf.mineruLayout);}
-      if(!ok){batch.notebookCropReviews=previous;batch.paperReviewStates=oldStates;if(confirm)records[savedMajor].confirmed=JSON.parse(oldRecords)[savedMajor].confirmed;saveStatus('保存失败，修改仍在本窗口',true);msg('保存失败，修改仍保留在当前窗口，请重试。');}else{baseline=snapshot;saveStatus('修改已保存');msg(finish?'整卷复核完成，学生错题本将自动应用。':confirm?'已确认并保存。':'修改已保存；未确认的题目不会作为已复核结果使用。');}busy=false;savingPromise=null;paint();return ok;}
+      if(!ok){batch.notebookCropReviews=previous;batch.paperReviewStates=oldStates;if(confirm)records[savedMajor].confirmed=JSON.parse(oldRecords).records[savedMajor].confirmed;saveStatus('保存失败，修改仍在本窗口',true);msg('保存失败，修改仍保留在当前窗口，请重试。');}else{baseline=snapshot;saveStatus('修改已保存');msg(finish?'整卷复核完成，学生错题本将自动应用。':confirm?'已确认并保存。':'修改已保存；未确认的题目不会作为已复核结果使用。');}busy=false;savingPromise=null;paint();return ok;}
     async function generate(){if(!doc||busy)return;busy=true;try{let normalized=E.normalize(pdf.mineruLayout),analysis;if(normalized.blocks.length){analysis=E.candidates(normalized.blocks,questions,'MinerU 版面');}else{const bs=[];for(let n=1;n<=doc.numPages;n++){const p=await doc.getPage(n),v=p.getViewport({scale:1}),tc=await p.getTextContent();(tc.items||[]).forEach(it=>{if(!String(it.str||'').trim())return;const [x,y]=v.convertToViewportPoint(it.transform[4],it.transform[5]);const h=Math.abs(it.height||it.transform[3]||10);bs.push({page:n,x:Math.max(0,x/v.width),y:Math.max(0,(y-h)/v.height),w:Math.max(.001,Math.min(1-x/v.width,(it.width||10)/v.width)),h:h/v.height,text:it.str,type:'text'});});}analysis=E.candidates(E.groupNativeBlocks(bs),questions,'PDF 文字层');}
         $('[data-parser]').textContent=normalized.blocks.length?'MinerU 解析':'本地轻量解析';const count=Object.keys(analysis.records).length;let added=0;const additions=Object.entries(analysis.records).filter(([major])=>!records[major]?.regions?.length);if(additions.length)checkpoint();Object.entries(analysis.records).forEach(([major,r])=>{if(!records[major]?.regions?.length){records[major]=r;added++;}});msg('自动识别 '+count+' 题，补入 '+added+' 题；已有区域均保留。'+(normalized.blocks.length?'已使用 MinerU 坐标。':normalized.warnings.join('；')+' 已尝试文字层。')+(analysis.warnings||[]).join('；')+(!count&&!normalized.blocks.length?' 未识别到可用题号；扫描件可使用 MinerU API，或在当前页面人工补框。':''));paint();
       }catch(e){msg('生成候选失败：'+e.message);}finally{busy=false;if(dirty())scheduleSave();}}
-    async function load(){const desiredPdf=$('[data-pdf]').value,desiredSubject=$('[data-subject]').value;if(busy){if(pdf){$('[data-pdf]').value=pdf.id;$('[data-subject]').value=subject;}return;}if(doc&&!(await flush())){$('[data-pdf]').value=pdf.id;$('[data-subject]').value=subject;return;}busy=true;try{const next=pdfs.find(p=>p.id===desiredPdf),sub=desiredSubject,qs=listQuestions(batch,sub);if(!next)throw Error('找不到当前原卷');if(!qs.length)throw Error('没有可对应的题号');const nextDoc=await pdfjsLib.getDocument({data:notebookPdfBytes(next).slice(),disableWorker:true}).promise;doc=nextDoc;pdf=next;subject=sub;questions=qs;$('[data-pdf]').value=pdf.id;$('[data-subject]').value=subject;$('[data-filter]').value='all';root.dataset.reviewSubject=subject;root.dataset.pdfId=pdf.id;records={};questions.forEach(q=>{const r=batch.notebookCropReviews?.[key(subject,q.major)];if(r&&r.fileId===pdf.id&&r.fileName===pdf.fileName){if(mappingValid(r,q.major)){records[q.major]=E.copy(r);}else{records[q.major]={regions:[],confirmed:false,source:'旧映射已失效',warnings:['旧结果的分数列与当前题号不一致，已停止复用旧框，请重新定位']};}}});undo=[];redo=[];baseline=state();selected=questions[0].major;active=-1;pageNo=1;setAddMode(false);saveStatus('修改已保存');pageCache.clear();pagePending.clear();await mountPages();$('[data-target]').innerHTML='';questions.forEach(q=>$('[data-target]').add(option('第'+q.major+'题',q.major)));await render();msg('已打开 '+batch.label+' · '+subject+'，共有 '+questions.length+' 道大题。');}catch(e){if(pdf){$('[data-pdf]').value=pdf.id;$('[data-subject]').value=subject;}msg('打开失败：'+e.message);return;}finally{busy=false;}if(doc)await generate();}
-    const actions={auto:generate,add:()=>{setAddMode(!forceNew);msg(forceNew?'请拖动新增一个区域，可与已有框重叠。':'已返回自动判断操作。');},
-      undo:()=>{if(!undo.length)return;redo.push(state());records=JSON.parse(undo.pop());active=-1;paint();scheduleSave();},
-      redo:()=>{if(!redo.length)return;undo.push(state());records=JSON.parse(redo.pop());active=-1;paint();scheduleSave();},
+    async function load(){const desiredPdf=$('[data-pdf]').value,desiredSubject=$('[data-subject]').value;if(busy){if(pdf){$('[data-pdf]').value=pdf.id;$('[data-subject]').value=subject;}return;}if(doc&&!(await flush())){$('[data-pdf]').value=pdf.id;$('[data-subject]').value=subject;return;}busy=true;try{const next=pdfs.find(p=>p.id===desiredPdf),sub=desiredSubject,qs=listQuestions(batch,sub);if(!next)throw Error('找不到当前原卷');const nextDoc=await pdfjsLib.getDocument({data:notebookPdfBytes(next).slice(),disableWorker:true}).promise;doc=nextDoc;pdf=next;subject=sub;questions=qs;$('[data-pdf]').value=pdf.id;$('[data-subject]').value=subject;$('[data-filter]').value='all';root.dataset.reviewSubject=subject;root.dataset.pdfId=pdf.id;records={};questions.forEach(q=>{const r=batch.notebookCropReviews?.[key(subject,q.major)];if(r&&r.fileId===pdf.id&&r.fileName===pdf.fileName){if(mappingValid(r,q.major)&&(!r.manualScoreBinding||r.scoreColumns.every(n=>q.columns.includes(n)))){records[q.major]=E.copy(r);if(!r.scoreUnitVersion&&q.columns.some(n=>/^.*\d+[-~至]\d+题/.test(n))){records[q.major].confirmed=false;records[q.major].warnings=['题号范围规则已修正，旧框已保留，请重新确认'];}}else{records[q.major]={...E.copy(r),confirmed:false,source:'旧映射已失效',warnings:['旧结果的分数列与当前题号不一致，已停止复用旧框，请重新定位']};}}});managedRecords=new Set(Object.keys(records));undo=[];redo=[];baseline=state();selected=questions[0]?.major||'';active=-1;pageNo=1;setAddMode(false);saveStatus('修改已保存');pageCache.clear();pagePending.clear();await mountPages();$('[data-target]').innerHTML='';questions.forEach(q=>$('[data-target]').add(option('第'+q.major+'题',q.major)));refreshBindingColumns();await render();msg('已打开 '+batch.label+' · '+subject+'，共有 '+questions.length+' 道大题。');}catch(e){if(pdf){$('[data-pdf]').value=pdf.id;$('[data-subject]').value=subject;}msg('打开失败：'+e.message);return;}finally{busy=false;}if(doc)await generate();}
+    function refreshBindingColumns(){const el=$('[data-binding-column]'),names=[...new Set((batch.combinedStudentData||[]).flatMap(s=>Object.entries(s.subjects?.[subject]?.subScores||{}).filter(([n,v])=>Number(v?.maxScore)>0&&!v.summaryOf).map(([n])=>n)))];el.innerHTML='';names.filter(n=>!window.ScoreUnitRelations?.majors(n).length).forEach(n=>el.add(option(n,n)));$('[data-a="bind-score"]').disabled=!el.options.length;}
+    async function bindScore(){
+      if(!(await flush()))return;const column=$('[data-binding-column]').value;let ids;try{ids=ScoreUnitRelations.bindings($('[data-binding-numbers]').value);}catch(e){msg('绑定失败：'+e.message);return;}
+      if(!column){msg('绑定失败：请选择计分列');return;}
+      const existing=questions.filter(q=>ids.includes(q.major)&&q.columns.some(n=>n!==column));
+      if(existing.length&&!window.confirm('部分题号已有其他计分列。确定这些列属于同一道题的不同计分项吗？合计列不应重复绑定。'))return;
+      // Persist source identity and explicit manual evidence with the existing crop records.
+      checkpoint();
+      for(const q of questions){const r=records[q.major];if(ids.includes(q.major)||!r?.manualScoreBinding||!q.columns.includes(column))continue;q.columns=q.columns.filter(n=>n!==column);r.previousScoreColumns=[...new Set([...(r.previousScoreColumns||[]),column])];r.confirmed=false;}
+      questions=questions.filter(q=>{if(q.columns.length||records[q.major]?.regions?.length)return true;delete records[q.major];return false;});
+      for(const n of ids){const q=questions.find(q=>q.major===n);if(q){q.columns=[...new Set([...q.columns,column])];}else questions.push({major:n,columns:[column]});records[n]=records[n]||{regions:[],confirmed:false,source:'人工绑定'};records[n].manualScoreBinding=true;records[n].confirmed=false;}
+      questions.sort((a,b)=>Number(a.major)-Number(b.major));$('[data-target]').innerHTML='';questions.forEach(q=>$('[data-target]').add(option('第'+q.major+'题',q.major)));if(!(await save(false,false)))return;await select(ids[0]);msg('已设置题号对应；共享分数不会分摊，请逐题复核原卷框。');
+    }
+    const actions={'bind-score':bindScore,auto:generate,add:()=>{setAddMode(!forceNew);msg(forceNew?'请拖动新增一个区域，可与已有框重叠。':'已返回自动判断操作。');},
+      undo:()=>{if(!undo.length)return;redo.push(state());restoreState(undo.pop());active=-1;paint();scheduleSave();},
+      redo:()=>{if(!redo.length)return;undo.push(state());restoreState(redo.pop());active=-1;paint();scheduleSave();},
       retry:()=>save(false,false),confirm:async()=>{if(await save(true,false)){const next=questions.find(q=>q.major!==selected&&!records[q.major]?.confirmed);if(next)await select(next.major);}},finish:()=>save(false,true),
       rebind:()=>{if(!doc)return;const target=$('[data-target]').value;if(target===selected)return;if(records[target]?.regions?.length&&!window.confirm('目标题已有区域，是否合并当前题区域到目标题？'))return;checkpoint();records[target]=records[target]||{regions:[],confirmed:false,source:'人工绑定'};records[target].regions.push(...E.copy(current().regions));records[target].confirmed=false;current().regions=[];current().confirmed=false;select(target);scheduleSave();},
       close:async()=>{if(!(await flush()))return;closed=true;clearTimeout(saveTimer);if(pageObserver)pageObserver.disconnect();window.removeEventListener('beforeunload',unload);window.removeEventListener('keydown',deleteKey);window.flushPaperCropDraft=null;root.remove();if(doc.destroy)await doc.destroy();}};

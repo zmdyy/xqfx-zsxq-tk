@@ -4,20 +4,20 @@
 function contextFor(item){
  const batch=DataPool.batches.find(b=>b.id===item.batchId);
  if(!batch)return {targets:[]};
- const subject=item.subjectName,major=getErrorMajorKey(item.lookupItemName||item.itemName);
+ const subject=item.subjectName,majors=window.ScoreUnitRelations?.targets(batch,subject,item.lookupItemName||item.itemName)||[],major=(majors.length===1?majors[0]:getErrorMajorKey(item.lookupItemName||item.itemName)),shared=item.sharedScore||majors.length>1;
  function ref(value){const r=getCanonicalQuestionRefInfo(value);return r.kind==='unknown'?null:JSON.stringify([r.major,r.minors||[]]);}
  const wrong=item.recommendationItemNames||item.detailItemNames||[item.itemName];
- const wrongRefs=wrong.map(ref).filter(Boolean),whole=wrong.some(n=>!getCanonicalQuestionRefInfo(n).isSubQuestion);
+ const wrongRefs=wrong.map(ref).filter(Boolean),whole=(item.sharedScore||majors.length>1)||wrong.some(n=>!getCanonicalQuestionRefInfo(n).isSubQuestion);
  const entries=[];
  for(const [key,mapping] of Object.entries(batch.questionConceptMap||{})){
   if(!key.startsWith(subject+'/'))continue;
   const title=key.slice(subject.length+1);
-  if(String(getErrorMajorKey(title))!==String(major))continue;
+  if(shared?!majors.includes(String(getErrorMajorKey(title))):String(getErrorMajorKey(title))!==String(major))continue;
   const parts=qkNormalizeMappingParts(mapping,key,batch.id);
   if(parts.length)entries.push({ref:ref(title),parts});
  }
  const targets=WrongQuestionRecommendations.targetParts(entries,wrongRefs,whole,ref);
- return {subject,itemLabel:item.itemName,batchLabel:item.batchLabel,questionNo:major,sourceFile:item.sourceFileName||'',stem:(item.stemMarkdown||'').slice(0,60000),targets,wholeOnly:whole};
+ return {subject,itemLabel:item.itemName,batchLabel:item.batchLabel,questionNo:major,sourceFile:item.sourceFileName||'',stem:(item.stemMarkdown||'').slice(0,60000),targets,wholeOnly:whole,sharedScore:shared};
 }
 function decorate(){
  document.querySelectorAll('[data-notebook-practice]').forEach(button=>{
