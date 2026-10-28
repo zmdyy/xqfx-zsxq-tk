@@ -4936,6 +4936,7 @@ function mergeImportedSubScores(existing, incoming) {
             score:pickDataValue(next.score, previous.score, ''),
             maxScore:Number(next.maxScore) > 0 ? next.maxScore : (Number(previous.maxScore) > 0 ? previous.maxScore : ''),
             studentAnswer:pickDataValue(next.studentAnswer, previous.studentAnswer, ''),
+            answerColumnPresent:next.answerColumnPresent===true||previous.answerColumnPresent===true?true:next.answerColumnPresent===false||previous.answerColumnPresent===false?false:undefined,
             correctAnswer:pickDataValue(next.correctAnswer, previous.correctAnswer, '')
         });
     });
@@ -5149,9 +5150,9 @@ function parseDataByHeaderRows(fileEntry, rawData, overrideHeaderRows) {
                 Object.entries(subj.subScoreQuestionMap).forEach(([mapKey, q]) => {
                     if (!q || !q.name) return;
                     const sv = q.scoreIndex !== -1 ? (hasMeaningfulValue(row[q.scoreIndex]) ? row[q.scoreIndex] : '') : '';
-                    const av = q.answerIndex !== -1 ? (row[q.answerIndex] ?? '') : '';
+                    const av = Number.isInteger(q.answerIndex) && q.answerIndex >= 0 ? (row[q.answerIndex] ?? '') : '';
                     if (!hasMeaningfulValue(sv) && !hasMeaningfulValue(av) && !hasMeaningfulValue(q.maxScore) && !hasMeaningfulValue(q.correctAnswer)) return;
-                    sd.subScores[mapKey] = { score: sv, maxScore: q.maxScore ?? '', studentAnswer: av, correctAnswer: q.correctAnswer ?? '', summaryOf:q.summaryOf||null, sharedScore:(window.ScoreUnitRelations?.majors(mapKey)||[]).length>1 };
+                    sd.subScores[mapKey] = { score: sv, maxScore: q.maxScore ?? '', studentAnswer: av, answerColumnPresent:Number.isInteger(q.answerIndex) && q.answerIndex >= 0, correctAnswer: q.correctAnswer ?? '', summaryOf:q.summaryOf||null, sharedScore:(window.ScoreUnitRelations?.majors(mapKey)||[]).length>1 };
                 });
             }
             if (stu.name && (hasMeaningfulValue(sd.score) || hasMeaningfulValue(sd.grade) || Object.keys(sd.subScores).length > 0)) stu.subjects[subj.name] = sd;
@@ -18687,9 +18688,10 @@ function closeStudentListModal() {
 <script src="question-bank/math-content.js?v=20261014export7"></script>
 <script src="question-bank/paper-layout.js?v=20261028feedback1"></script>
 <script src="question-bank/word-export.js?v=20261028feedback1"></script>
-<script src="ai-practice-diagnostics.js?v=4"></script>
-<script src="ai-practice-core.js?v=6"></script>
+<script src="ai-practice-diagnostics.js?v=5"></script>
+<script src="ai-practice-core.js?v=7"></script>
 <script src="ai-practice-preview.js?v=2"></script>
-<script src="ai-practice-ui.js?v=9"></script>
+<script src="ai-practice-audit.js?v=1"></script>
+<script src="ai-practice-ui.js?v=10"></script>
 </body>
 </html>
