@@ -18,7 +18,7 @@ class Provider(BaseHTTPRequestHandler):
         self.requests.append((self.path,self.headers.get('Authorization'),body))
         if body['model']=='reject':
             self.send_response(401);self.end_headers();self.wfile.write(b'SECRET-SHOULD-NOT-ECHO');return
-        result={'choices':[{'message':{'content':'{"ok":true}'}}]}
+        result={'choices':[{'finish_reason':'stop','message':{'content':'{"ok":true}'}}], 'usage':{'prompt_tokens':100,'completion_tokens':20,'total_tokens':120,'completion_tokens_details':{'reasoning_tokens':0},'secret':'SECRET-SHOULD-NOT-ECHO'}}
         if body['model']=='truncated': result={'choices':[{'finish_reason':'length','message':{'content':'{"bad"'}}]}
         if body['model']=='thinking-only': result={'choices':[{'message':{'content':None,'reasoning_content':'PRIVATE-REASONING'}}]}
         if body['model']=='empty': result={'choices':[{'message':{'content':''}}]}
@@ -35,7 +35,7 @@ class TestApi(unittest.TestCase):
         self.app=Flask(__name__);self.app.testing=True;module.register_ai_practice(self.app);self.client=self.app.test_client();self.config={'baseUrl':f'http://127.0.0.1:{self.server.server_port}/v1','model':'mock','apiKey':'SECRET-SHOULD-NOT-ECHO'}
     def payload(self): return {'config':self.config,'messages':[{'role':'user','content':[{'type':'text','text':'test'},{'type':'image_url','image_url':{'url':'data:image/png;base64,AA'}}]}]}
     def test_actual_http_relay(self):
-        self.assertTrue(self.client.get('/ai/health').json['ok']);r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.status_code,200);self.assertEqual(r.json['content'],'{"ok":true}');path,auth,body=Provider.requests[-1];self.assertEqual(path,'/v1/chat/completions');self.assertEqual(auth,'Bearer SECRET-SHOULD-NOT-ECHO');self.assertEqual(body['messages'][0]['content'][1]['type'],'image_url')
+        self.assertTrue(self.client.get('/ai/health').json['ok']);r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.status_code,200);self.assertEqual(r.json['content'],'{"ok":true}');path,auth,body=Provider.requests[-1];self.assertEqual(path,'/v1/chat/completions');self.assertEqual(auth,'Bearer SECRET-SHOULD-NOT-ECHO');self.assertEqual(body['messages'][0]['content'][1]['type'],'image_url');self.assertEqual(r.json['diagnostics']['usage']['total_tokens'],120);self.assertNotIn('secret',r.json['diagnostics']['usage']);self.assertEqual(r.json['diagnostics']['finishReason'],'stop');self.assertTrue(r.json['diagnostics']['requestId'])
     def test_origin_and_lan_rejected(self):
         self.assertEqual(self.client.post('/ai/chat',json=self.payload(),headers={'Origin':'https://evil.example'}).status_code,403)
         self.assertEqual(self.client.post('/ai/chat',json=self.payload(),environ_base={'REMOTE_ADDR':'192.168.1.7'}).status_code,403)
@@ -46,7 +46,7 @@ class TestApi(unittest.TestCase):
     def test_invalid_messages(self):
         p=self.payload();p['messages']=[{'role':'tool'}];self.assertEqual(self.client.post('/ai/chat',json=p).status_code,400)
     def test_specific_output_failures(self):
-        for model,expected in [('truncated','截断'),('thinking-only','思考内容'),('empty','空内容'),('wrong-format','格式不兼容'),('non-json','非 JSON')]:
+        for model,expected in [('truncated','长度限制'),('thinking-only','思考内容'),('empty','空内容'),('wrong-format','格式不兼容'),('non-json','非 JSON')]:
             with self.subTest(model=model):
                 self.config['model']=model;r=self.client.post('/ai/chat',json=self.payload())
                 self.assertEqual(r.status_code,502);self.assertIn(expected,r.json['error']);self.assertNotIn('SECRET',r.get_data(as_text=True));self.assertNotIn('PRIVATE',r.get_data(as_text=True))
@@ -60,5 +60,12 @@ class TestApi(unittest.TestCase):
         for payload in [[],{'config':[]},None]:
             r=self.client.post('/ai/chat',json=payload);self.assertEqual(r.status_code,400);self.assertIn('配置格式',r.json['error'])
         self.config['baseUrl']='https://api.example:SECRET-SHOULD-NOT-ECHO';r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.status_code,400);self.assertNotIn('SECRET',r.get_data(as_text=True))
+    def test_network_diagnostics_separate_causes_without_exception_text(self):
+        for exc,code in [(module.requests.exceptions.SSLError('SECRET-SHOULD-NOT-ECHO'),'tls_error'),(module.requests.exceptions.ProxyError('SECRET-SHOULD-NOT-ECHO'),'proxy_error'),(module.requests.exceptions.ConnectionError('SECRET-SHOULD-NOT-ECHO'),'connection_error'),(module.requests.exceptions.ConnectTimeout('SECRET-SHOULD-NOT-ECHO'),'connect_timeout'),(module.requests.exceptions.ReadTimeout('SECRET-SHOULD-NOT-ECHO'),'read_timeout')]:
+            with self.subTest(code=code),patch.object(module.requests,'post',side_effect=exc):
+                r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.json['diagnostics']['errorType'],code);self.assertIn('elapsedMs',r.json['diagnostics']);self.assertNotIn('SECRET',r.get_data(as_text=True))
+        self.config['baseUrl']='https://api.deepseek.com'
+        with patch.object(module.socket,'getaddrinfo',side_effect=module.socket.gaierror('SECRET-SHOULD-NOT-ECHO')):
+            r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.json['diagnostics']['errorType'],'dns_error');self.assertEqual(r.json['diagnostics']['phase'],'dns');self.assertNotIn('SECRET',r.get_data(as_text=True))
 
 if __name__=='__main__': unittest.main()
