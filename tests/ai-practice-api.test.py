@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import threading
 import unittest
+from unittest.mock import patch, Mock
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from flask import Flask
 
@@ -17,7 +18,12 @@ class Provider(BaseHTTPRequestHandler):
         self.requests.append((self.path,self.headers.get('Authorization'),body))
         if body['model']=='reject':
             self.send_response(401);self.end_headers();self.wfile.write(b'SECRET-SHOULD-NOT-ECHO');return
-        self.send_response(200);self.send_header('Content-Type','application/json');self.end_headers();self.wfile.write(json.dumps({'choices':[{'message':{'content':'{"ok":true}'}}]}).encode())
+        result={'choices':[{'message':{'content':'{"ok":true}'}}]}
+        if body['model']=='truncated': result={'choices':[{'finish_reason':'length','message':{'content':'{"bad"'}}]}
+        if body['model']=='thinking-only': result={'choices':[{'message':{'content':None,'reasoning_content':'PRIVATE-REASONING'}}]}
+        if body['model']=='empty': result={'choices':[{'message':{'content':''}}]}
+        if body['model']=='wrong-format': result={'result':'SECRET-SHOULD-NOT-ECHO'}
+        self.send_response(200);self.send_header('Content-Type','application/json');self.end_headers();self.wfile.write(b'not json' if body['model']=='non-json' else json.dumps(result).encode())
 
 class TestApi(unittest.TestCase):
     @classmethod
@@ -39,5 +45,20 @@ class TestApi(unittest.TestCase):
         self.config['model']='reject';r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.status_code,502);self.assertNotIn('SECRET',r.get_data(as_text=True))
     def test_invalid_messages(self):
         p=self.payload();p['messages']=[{'role':'tool'}];self.assertEqual(self.client.post('/ai/chat',json=p).status_code,400)
+    def test_specific_output_failures(self):
+        for model,expected in [('truncated','截断'),('thinking-only','思考内容'),('empty','空内容'),('wrong-format','格式不兼容'),('non-json','非 JSON')]:
+            with self.subTest(model=model):
+                self.config['model']=model;r=self.client.post('/ai/chat',json=self.payload())
+                self.assertEqual(r.status_code,502);self.assertIn(expected,r.json['error']);self.assertNotIn('SECRET',r.get_data(as_text=True));self.assertNotIn('PRIVATE',r.get_data(as_text=True))
+    def test_deepseek_json_and_thinking_configuration(self):
+        self.config.update(baseUrl='https://api.deepseek.com',model='deepseek-flas')
+        response=Mock(ok=True,status_code=200);response.json.return_value={'choices':[{'finish_reason':'stop','message':{'content':'{"ok":true}'}}]}
+        with patch.object(module.socket,'getaddrinfo',return_value=[(2,1,6,'',('8.8.8.8',443))]),patch.object(module.requests,'post',return_value=response) as post:
+            r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.status_code,200)
+            payload=post.call_args.kwargs['json'];self.assertEqual(payload['model'],'deepseek-flash');self.assertEqual(payload['response_format'],{'type':'json_object'});self.assertEqual(payload['thinking'],{'type':'disabled'});self.assertEqual(payload['max_tokens'],8192)
+    def test_bad_input_is_actionable_and_safe(self):
+        for payload in [[],{'config':[]},None]:
+            r=self.client.post('/ai/chat',json=payload);self.assertEqual(r.status_code,400);self.assertIn('配置格式',r.json['error'])
+        self.config['baseUrl']='https://api.example:SECRET-SHOULD-NOT-ECHO';r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.status_code,400);self.assertNotIn('SECRET',r.get_data(as_text=True))
 
 if __name__=='__main__': unittest.main()
