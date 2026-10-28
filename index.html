@@ -6,7 +6,7 @@
     <title>学情可视化展板</title>
     <script src="echarts.min.js"></script>
     <script src="xlsx.full.min.js"></script>
-    <script src="score-unit-relations.js?v=1"></script>
+    <script src="score-unit-relations.js?v=2"></script>
     <script>if(typeof echarts==='undefined'){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js';document.head.appendChild(s)}if(typeof XLSX==='undefined'){var s2=document.createElement('script');s2.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';document.head.appendChild(s2)}</script>
     <link rel="stylesheet" href="katex.min.css">
     <script src="marked.min.js"></script>
@@ -9674,7 +9674,7 @@ window.getErrorNotebookQuestionSnapshots = getErrorNotebookQuestionSnapshots;
 
 function showPersonalErrorNotebook(studentName, studentClass) {
     var missingNotices=[];
-    DataPool.batches.forEach(function(b){var candidates=(b.combinedStudentData||[]).filter(function(x){return (x.name===studentName||x.displayName===studentName)&&(!studentClass||String(x.class)===String(studentClass));});if(candidates.length===1){var absent=window.ScoreUnitRelations?.missingSubjects(b,candidates[0])||[];if(absent.length)missingNotices.push(b.label+'：'+absent.join('、')+'未导入该科成绩（不计零分、不判缺考）');}});
+    DataPool.batches.forEach(function(b){var candidates=(b.combinedStudentData||[]).filter(function(x){return (x.name===studentName||x.displayName===studentName)&&(!studentClass||String(x.class)===String(studentClass));});if(candidates.length===1){var absent=window.ScoreUnitRelations?.missingSubjects(b,candidates[0])||[];if(absent.length)missingNotices.push(b.label+'：'+absent.join('、')+'数据缺失（不计零分、不判缺考）');}});
     var crossData = collectStudentErrorsFromAllBatches(studentName, studentClass);
     if (!crossData.totalErrors) {
         showAlert('该学生在已导入数据中无错题记录。'+missingNotices.join('；'));

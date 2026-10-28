@@ -41,7 +41,7 @@ function upgradeBatch(batch){
 }
 function targets(batch,subject,name){const ids=majors(name);if(ids.length)return ids;return Object.entries(batch.notebookCropReviews||{}).flatMap(([key,r])=>{try{const [s,n]=JSON.parse(key);return s===subject&&r.manualScoreBinding&&r.scoreColumns?.includes(name)?[String(n)]:[];}catch{return [];}}).sort((a,b)=>Number(a)-Number(b));}
 function isGroup(batch,subject,name){return targets(batch,subject,name).length>1;}
-function missingSubjects(batch,student){const all=[...new Set((batch.combinedStudentData||[]).flatMap(s=>Object.keys(s.subjects||{})))];return all.filter(n=>!student.subjects?.[n]);}
+function missingSubjects(batch,student){const students=batch.combinedStudentData||[],all=[...new Set(students.flatMap(s=>Object.keys(s.subjects||{})))];return all.flatMap(n=>{const own=student.subjects?.[n];if(!own)return [n];const hasUnits=students.some(s=>Object.values(s.subjects?.[n]?.subScores||{}).some(x=>Number(x?.maxScore)>0&&!x.summaryOf));const hasScores=Object.values(own.subScores||{}).some(x=>Number(x?.maxScore)>0&&!x.summaryOf&&x.score!==''&&x.score!=null&&Number.isFinite(Number(x.score)));return hasUnits&&!hasScores?[n+'小题分']:[];});}
 root.ScoreUnitRelations={memberHeader,majors,bindings,prepare,upgradeItems,upgradeBatch,targets,isGroup,missingSubjects};
 if(typeof module!=='undefined')module.exports=root.ScoreUnitRelations;
 })(typeof window!=='undefined'?window:globalThis);
