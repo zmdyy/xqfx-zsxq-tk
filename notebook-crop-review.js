@@ -117,9 +117,20 @@
       repaintCanvas(temp);
       const r=selected?current():{regions:[]};
       refreshList();$('[data-title]').textContent=selected?'第'+selected+'题':'';$('[data-columns]').textContent='对应小题分列：'+(questions.find(q=>q.major===selected)?.columns||[]).join('、');$('[data-source]').textContent=(r.source?'来源：'+r.source+'；':'')+(r.warnings||[]).join('；');
-      const list=$('[data-regions]');list.innerHTML='';r.regions.forEach((b,i)=>{const row=document.createElement('div');row.textContent='片段 '+(i+1)+' · 第'+b.page+'页 ';[['定位',()=>{active=i;pageNo=b.page;return render(true,b);}],['↑',()=>{if(i){checkpoint();[r.regions[i-1],r.regions[i]]=[r.regions[i],r.regions[i-1]];changed();}}],['↓',()=>{if(i+1<r.regions.length){checkpoint();[r.regions[i+1],r.regions[i]]=[r.regions[i],r.regions[i+1]];changed();}}],['删除',()=>{checkpoint();r.regions.splice(i,1);active=-1;changed();}]].forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>{if(!busy)fn();};row.appendChild(b);});list.appendChild(row);});
+      const list=$('[data-regions]');list.innerHTML='';r.regions.forEach((b,i)=>{const row=document.createElement('div');row.textContent='片段 '+(i+1)+' · 第'+b.page+'页 ';[['定位',()=>{active=i;pageNo=b.page;return render(true,b);}],['↑',()=>{if(i){checkpoint();[r.regions[i-1],r.regions[i]]=[r.regions[i],r.regions[i-1]];changed();}}],['↓',()=>{if(i+1<r.regions.length){checkpoint();[r.regions[i+1],r.regions[i]]=[r.regions[i],r.regions[i+1]];changed();}}],['删除',()=>removeRegion(i)]].forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>{if(!busy)fn();};row.appendChild(b);});list.appendChild(row);});
       refreshOverlaps();preview();
     }
+    function removeRegion(index){
+      if(closed||busy||drag||!selected||index<0||index>=current().regions.length)return false;
+      checkpoint();current().regions.splice(index,1);active=-1;changed();return true;
+    }
+    function deleteKey(e){
+      if(e.key!=='Delete'||e.defaultPrevented||e.isComposing||e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
+      const focused=document.activeElement;
+      if(!root.contains(focused)||focused?.closest('input,textarea,select,[contenteditable],[role="textbox"],[role="combobox"]'))return;
+      if(removeRegion(active))e.preventDefault();
+    }
+    window.addEventListener('keydown',deleteKey);
     function refreshOverlaps(){
       const list=$('[data-overlaps]');list.innerHTML='';const found=E.overlaps(records);if(!found.length)return;
       const heading=document.createElement('p');heading.textContent='重叠提醒：可调整为多个独立区域；共享材料可人工确认。';list.appendChild(heading);
@@ -156,6 +167,7 @@
       }}return null;
     }
     const pointerDown=e=>{if(!doc||busy||!selected||e.button>0)return;const p=pos(e),hit=forceNew?null:hitAt(p);active=-1;
+      root.tabIndex=-1;root.focus({preventScroll:true});
       if(hit){selected=hit.major;active=hit.i;paint();}
       drag={start:p,action:hit?(hit.handle?'resize':'move'):'new',handle:hit?.handle,original:hit?E.copy(current().regions[active]):null,moved:false};draw.setPointerCapture?.(e.pointerId);
     };
@@ -190,7 +202,7 @@
       redo:()=>{if(!redo.length)return;undo.push(state());records=JSON.parse(redo.pop());active=-1;paint();scheduleSave();},
       retry:()=>save(false,false),confirm:async()=>{if(await save(true,false)){const next=questions.find(q=>q.major!==selected&&!records[q.major]?.confirmed);if(next)await select(next.major);}},finish:()=>save(false,true),
       rebind:()=>{if(!doc)return;const target=$('[data-target]').value;if(target===selected)return;if(records[target]?.regions?.length&&!window.confirm('目标题已有区域，是否合并当前题区域到目标题？'))return;checkpoint();records[target]=records[target]||{regions:[],confirmed:false,source:'人工绑定'};records[target].regions.push(...E.copy(current().regions));records[target].confirmed=false;current().regions=[];current().confirmed=false;select(target);scheduleSave();},
-      close:async()=>{if(!(await flush()))return;closed=true;clearTimeout(saveTimer);if(pageObserver)pageObserver.disconnect();window.removeEventListener('beforeunload',unload);window.flushPaperCropDraft=null;root.remove();if(doc.destroy)await doc.destroy();}};
+      close:async()=>{if(!(await flush()))return;closed=true;clearTimeout(saveTimer);if(pageObserver)pageObserver.disconnect();window.removeEventListener('beforeunload',unload);window.removeEventListener('keydown',deleteKey);window.flushPaperCropDraft=null;root.remove();if(doc.destroy)await doc.destroy();}};
     Object.entries(actions).forEach(([name,fn])=>$('[data-a="'+name+'"]').onclick=()=>{if(!busy)return fn();});
     $('[data-filter]').onchange=refreshList;
     let scrollFrame=false;$('[data-scroll]').onscroll=()=>{if(scrollFrame||drag)return;scrollFrame=true;requestAnimationFrame(()=>{scrollFrame=false;if(!doc||drag)return;const top=$('[data-scroll]').getBoundingClientRect().top;let best=null,distance=Infinity;pageSlots.forEach(slot=>{const r=slot.surface.getBoundingClientRect();if(r.bottom>top){const d=Math.abs(r.top-top);if(d<distance){distance=d;best=slot;}}});if(best){pageNo=best.page;canvas=best.canvas;draw=best.draw;root.dataset.currentPage=pageNo;$('[data-page]').textContent=pageNo+' / '+doc.numPages;}});};

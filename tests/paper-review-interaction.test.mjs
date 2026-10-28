@@ -18,6 +18,19 @@ drag([200,150],[230,170]);await w.flushPaperCropDraft();assert.ok(Math.abs(batch
 drag([130,120],[100,100]);await w.flushPaperCropDraft();assert.ok(Math.abs(batch.notebookCropReviews['["物理","15"]'].regions[0].x-.1)<.001);
 // Forced new overlaps existing; resets after one region.
 $('[data-a="add"]').click();drag([150,140],[220,190]);await w.flushPaperCropDraft();assert.equal(batch.notebookCropReviews['["物理","15"]'].regions.length,3);assert.equal($('[data-a="add"]').getAttribute('aria-pressed'),'false');
+// Delete selected frame, preserve text editing, avoid repeat deletes, support undo and persistence.
+function del(options={}){const e=new w.KeyboardEvent('keydown',{key:'Delete',bubbles:true,cancelable:true,...options});(w.document.activeElement||w.document.body).dispatchEvent(e);return e;}
+const regions15=()=>batch.notebookCropReviews['["物理","15"]'].regions.length;
+assert.equal(del().defaultPrevented,true);await w.flushPaperCropDraft();assert.equal(regions15(),2);
+assert.equal(del({repeat:true}).defaultPrevented,false);assert.equal(del().defaultPrevented,false);
+$('[data-a="undo"]').click();await w.flushPaperCropDraft();assert.equal(regions15(),3);
+drag([180,160],[180,160]);
+for(const tag of ['input','textarea','select','div']){const input=w.document.createElement(tag);if(tag==='div')input.contentEditable='true';input.tabIndex=0;$('#paperCropWorkspace').appendChild(input);input.focus();assert.equal(del().defaultPrevented,false,tag+' retains Delete');input.remove();}
+// Dragging and modifier keys do not delete a frame.
+drag([180,160],[180,160]);assert.equal(del({ctrlKey:true}).defaultPrevented,false);
+el.onpointerdown({clientX:180,clientY:160,button:0,pointerId:1});assert.equal(del().defaultPrevented,false);el.onpointerup({clientX:180,clientY:160,pointerId:1});
+assert.equal(del().defaultPrevented,true);await w.flushPaperCropDraft();assert.equal(regions15(),2);
+$('[data-a="undo"]').click();await w.flushPaperCropDraft();assert.equal(regions15(),3);
 // Rebind entire set to 16 and undo/redo preserves it across persistence.
 $('[data-target]').value='16';w.confirm=()=>true;await $('[data-a="rebind"]').onclick();await w.flushPaperCropDraft();assert.equal(batch.notebookCropReviews['["物理","15"]'].regions.length,0);assert.equal(batch.notebookCropReviews['["物理","16"]'].regions.length,4);
 $('[data-a="undo"]').click();await w.flushPaperCropDraft();assert.equal(batch.notebookCropReviews['["物理","15"]'].regions.length,3);
