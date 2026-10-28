@@ -138,11 +138,13 @@ async function createDocx(options){
      body+=paragraph(title+' · '+date,{align:'center',bold:true,size:30,after:170});
      body+=paragraph('班级：'+(plan.student.className||'________')+'　姓名：'+plan.student.name,{align:'center',size:19,after:190});
      body+=await pageItems(false);
+     if(options.feedback!==false)body+='<w:p><w:pPr><w:keepNext/><w:spacing w:before="80" w:after="0" w:line="20" w:lineRule="exact"/></w:pPr></w:p>'+smallTable(PL.feedbackRows(false),fullWidth);
      // First section is the student's front; subsequent students begin on an odd page.
      body+=sectionEnd(1,index===0?'nextPage':'oddPage');
      body+=paragraph('参考解析 · '+plan.student.name,{align:'center',bold:true,size:30,after:170});
      body+=paragraph('答案与本人的题目页题号对应',{align:'center',size:19,after:150});
      body+=await pageItems(true);
+     if(options.feedback!==false)body+='<w:p><w:pPr><w:keepNext/><w:spacing w:before="80" w:after="0" w:line="20" w:lineRule="exact"/></w:pPr></w:p>'+smallTable(PL.feedbackRows(true),fullWidth);
      if(index<options.plans.length-1)body+=sectionEnd(1,'nextPage');
    }
  }else{
