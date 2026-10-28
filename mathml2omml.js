@@ -694,10 +694,19 @@ function parse(html, options = {}) {
   return result
 }
 
+// XML serializers must escape decoded MathML text and attributes again.
+function escapeXmlValue(value) {
+  const text = Array.from(String(value ?? '')).filter((c) => {
+    const n = c.codePointAt(0);
+    return n === 9 || n === 10 || n === 13 || (n >= 0x20 && n <= 0xD7FF) || (n >= 0xE000 && n <= 0xFFFD) || (n >= 0x10000 && n <= 0x10FFFF);
+  }).join('');
+  return text.replace(/[&<>"']/g, (c) => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&apos;'}[c]));
+}
+
 function attrString(attribs) {
   const buff = [];
   for (const key in attribs) {
-    buff.push(`${key}="${attribs[key]}"`);
+    buff.push(`${key}="${escapeXmlValue(attribs[key])}"`);
   }
   if (!buff.length) {
     return ''
@@ -708,7 +717,7 @@ function attrString(attribs) {
 function stringify(buff, doc) {
   switch (doc.type) {
     case 'text':
-      return buff + doc.data
+      return buff + escapeXmlValue(doc.data)
     case 'tag': {
       const voidElement =
         doc.voidElement || (!doc.children.length && doc.attribs['xml:space'] !== 'preserve');
@@ -2347,4 +2356,5 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { mml2omml: mml2omml, MML2OMML: MML2OMML };
 }
+
 

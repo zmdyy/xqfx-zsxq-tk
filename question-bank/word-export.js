@@ -79,6 +79,11 @@ function pictureXml(relId,idx,cx,cy){
  const xfrm='<a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm>';
  return '<w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+idx+'" name="题图 '+idx+'"/><a:graphic xmlns:a="'+DRAW+'"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="题图"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+relId+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr>'+xfrm+'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
 }
+function assertXml(text,part){
+ if(typeof DOMParser==='undefined')return; // Node regression tests validate with a strict XML parser separately.
+ const doc=new DOMParser().parseFromString(text,'application/xml');
+ if(doc.documentElement?.localName==='parsererror'||doc.getElementsByTagNameNS('*','parsererror').length){const e=Error('Word 文档结构校验失败（'+part+'），请检查公式转换组件或更新完整版本后重新导出');e.code='docx_xml';throw e;}
+}
 async function createDocx(options){
  const zipLib=options.JSZip||root.JSZip;
  if(!zipLib)throw Error('JSZip 未加载，请刷新页面后重试。');
@@ -174,6 +179,7 @@ async function createDocx(options){
  zip.file('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="'+REL+'/officeDocument" Target="word/document.xml"/></Relationships>');
  zip.file('word/document.xml',doc);
  zip.file('word/_rels/document.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+rels.map(r=>'<Relationship Id="'+r.id+'" Type="'+r.type+'" Target="'+r.target+'"/>').join('')+'</Relationships>');
+ for(const part of Object.keys(zip.files).filter(name=>/\.(xml|rels)$/.test(name)))assertXml(await zip.file(part).async('string'),part);
  const result=await zip.generateAsync({type:'blob',mimeType:MIME,compression:'DEFLATE',compressionOptions:{level:6}});
  if(!result || result.size<500)throw Error('Word 文件生成结果异常');
  return result;
