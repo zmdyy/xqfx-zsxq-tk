@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 import requests
 from flask import jsonify, request
 
-BUILD = '20261028-unified-v1'
+BUILD = '20261028-glm-v2'
 
 
 class ApiConfigError(ValueError):
@@ -112,6 +112,9 @@ def register_ai_practice(app):
                     payload['model'] = 'deepseek-flash'
                 payload.update(response_format={'type': 'json_object'}, thinking={'type': 'disabled'})
                 meta.update(thinking='disabled', jsonMode=True)
+            if url.hostname == 'open.bigmodel.cn' and model.lower() in ('glm-5.3-flash', 'glm-5.3-flashx'):
+                payload.update(model=model.lower(), max_tokens=16384, thinking={'type': 'enabled'}, reasoning_effort='low', stream=False)
+                meta.update(maxTokens=16384, thinking='enabled', reasoningEffort='low')
             meta['phase'] = 'upstream'
             response = requests.post(endpoint, headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'},
                                      json=payload, timeout=(10, 180), allow_redirects=False)
@@ -143,7 +146,7 @@ def register_ai_practice(app):
             if reason == 'content_filter':
                 return reply(502, '模型服务拦截了本次内容，请检查题图后重试', error_type='content_filter')
             if not isinstance(content, str) or not content.strip():
-                error = '模型只返回思考内容，未给出最终结果；DeepSeek 请使用内置默认配置后重试' if meta['reasoningCharacters'] else '模型返回空内容，请重试失败项或更换模型'
+                error = '模型只返回思考内容，未给出最终结果；请导出调用诊断，检查输出额度或更换模型' if meta['reasoningCharacters'] else '模型返回空内容，请重试失败项或更换模型'
                 return reply(502, error, error_type='reasoning_only' if meta['reasoningCharacters'] else 'empty_content')
             meta['phase'] = 'response'
             return reply(200, content=content)

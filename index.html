@@ -2595,7 +2595,7 @@ const VISION_PROVIDERS = {
     glm: {
         name: '智谱 GLM',
         baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
-        models: ['glm-4.5v', 'glm-4.6v', 'glm-4.1v-thinking-flashx'],
+        models: ['glm-5.3-flashx', 'glm-5.3-flash', 'glm-4.5v', 'glm-4.6v', 'glm-4.1v-thinking-flashx'],
         defaultModel: 'glm-4.5v',
         free: false,
         registerUrl: 'https://open.bigmodel.cn',
@@ -3884,6 +3884,13 @@ async function callVisionAPI(base64Image, apiConfig) {
         max_tokens: 8192,
         temperature: 0.1
     };
+    if (apiConfig.provider === 'glm' && /^glm-5\.3-flashx?$/i.test(apiConfig.model)) {
+        payload.model = apiConfig.model.toLowerCase();
+        payload.thinking = { type: 'enabled' };
+        payload.reasoning_effort = 'low';
+        payload.max_tokens = 16384;
+        payload.temperature = 1;
+    }
     // Kimi K2 系列需禁用思考模式，且使用固定 temperature（不能传入自定义值）
     if (apiConfig.provider === 'kimi' && /^kimi-k2/.test(apiConfig.model)) {
         payload.thinking = { type: 'disabled' };
@@ -10718,6 +10725,14 @@ document.getElementById('visionTestBtn').addEventListener('click', async functio
                     messages: [{ role: 'user', content: '请回复"连接成功"四个字，不要其他内容。' }],
                     max_tokens: 20
                 };
+                if (cfg.provider === 'glm' && /^glm-5\.3-flashx?$/i.test(cfg.model)) {
+                    b.model = cfg.model.toLowerCase();
+                    b.thinking = { type: 'enabled' };
+                    b.reasoning_effort = 'low';
+                    b.max_tokens = 4096;
+                    b.temperature = 1;
+                    return b;
+                }
                 // Kimi K2 使用固定 temperature，不能传此字段
                 if (cfg.provider === 'kimi' && /^kimi-k2/.test(cfg.model)) {
                     b.thinking = { type: 'disabled' };
@@ -18672,9 +18687,9 @@ function closeStudentListModal() {
 <script src="question-bank/math-content.js?v=20261014export7"></script>
 <script src="question-bank/paper-layout.js?v=20261014formula8"></script>
 <script src="question-bank/word-export.js?v=20261028-xml1"></script>
-<script src="ai-practice-diagnostics.js?v=3"></script>
-<script src="ai-practice-core.js?v=4"></script>
+<script src="ai-practice-diagnostics.js?v=4"></script>
+<script src="ai-practice-core.js?v=5"></script>
 <script src="ai-practice-preview.js?v=1"></script>
-<script src="ai-practice-ui.js?v=7"></script>
+<script src="ai-practice-ui.js?v=8"></script>
 </body>
 </html>

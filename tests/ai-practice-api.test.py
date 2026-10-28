@@ -60,6 +60,16 @@ class TestApi(unittest.TestCase):
         for payload in [[],{'config':[]},None]:
             r=self.client.post('/ai/chat',json=payload);self.assertEqual(r.status_code,400);self.assertIn('配置格式',r.json['error'])
         self.config['baseUrl']='https://api.example:SECRET-SHOULD-NOT-ECHO';r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.status_code,400);self.assertNotIn('SECRET',r.get_data(as_text=True))
+    def test_glm_flash_presets_keep_images_and_use_enabled_thinking(self):
+        for model in ('glm-5.3-flash', 'GLM-5.3-FlashX'):
+            self.config.update(baseUrl='https://open.bigmodel.cn/api/paas/v4',model=model)
+            response=Mock(ok=True,status_code=200);response.json.return_value={'choices':[{'finish_reason':'stop','message':{'content':'{"ok":true}', 'reasoning_content':'PRIVATE-REASONING'}}]}
+            with self.subTest(model=model),patch.object(module.socket,'getaddrinfo',return_value=[(2,1,6,'',('8.8.8.8',443))]),patch.object(module.requests,'post',return_value=response) as post:
+                r=self.client.post('/ai/chat',json=self.payload());self.assertEqual(r.status_code,200)
+                self.assertEqual(post.call_args.args[0],'https://open.bigmodel.cn/api/paas/v4/chat/completions')
+                payload=post.call_args.kwargs['json'];self.assertEqual(payload['model'],model.lower());self.assertEqual(payload['thinking'],{'type':'enabled'});self.assertEqual(payload['reasoning_effort'],'low');self.assertEqual(payload['max_tokens'],16384);self.assertFalse(payload['stream']);self.assertNotIn('response_format',payload)
+                self.assertEqual(payload['messages'][0]['content'][1]['image_url']['url'],'data:image/png;base64,AA')
+                self.assertEqual(r.json['diagnostics']['thinking'],'enabled');self.assertEqual(r.json['diagnostics']['reasoningEffort'],'low');self.assertEqual(r.json['diagnostics']['maxTokens'],16384);self.assertNotIn('PRIVATE',r.get_data(as_text=True))
     def test_network_diagnostics_separate_causes_without_exception_text(self):
         for exc,code in [(module.requests.exceptions.SSLError('SECRET-SHOULD-NOT-ECHO'),'tls_error'),(module.requests.exceptions.ProxyError('SECRET-SHOULD-NOT-ECHO'),'proxy_error'),(module.requests.exceptions.ConnectionError('SECRET-SHOULD-NOT-ECHO'),'connection_error'),(module.requests.exceptions.ConnectTimeout('SECRET-SHOULD-NOT-ECHO'),'connect_timeout'),(module.requests.exceptions.ReadTimeout('SECRET-SHOULD-NOT-ECHO'),'read_timeout')]:
             with self.subTest(code=code),patch.object(module.requests,'post',side_effect=exc):
