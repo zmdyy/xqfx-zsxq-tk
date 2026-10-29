@@ -105,9 +105,10 @@ async function createDocx(options){
      if(hi>limitHeight){hi=limitHeight;inches=hi*w/h}
      return pictureXml(rid,++docPr,Math.round(inches*914400),Math.round(hi*914400));
  }
- async function renderItem(item,num,isAnswer){
+ async function renderBlocks(blocks,num){
    let xml='';
-   for(const block of PL.itemBlocks(item,num,isAnswer,options)){
+   for(const block of blocks){
+     num=block.questionNumber||num;
      const prefix=block.first?num+'. ':'';
      const images=block.images||[],gallery=block.kind==='option-group',after=block.last?150:100;
      if(block.kind==='table'){
@@ -126,7 +127,18 @@ async function createDocx(options){
    }
    return xml;
  }
+ async function renderItem(item,num,isAnswer){return renderBlocks(PL.itemBlocks(item,num,isAnswer,options),num);}
  async function pageItems(isAnswer){let result='';for(let i=0;i<items.length;i++)result+=await renderItem(items[i],i+1,isAnswer);return result;}
+ // Conservative page budgets for paired AI sheets. Preserve formulas while splitting long text blocks.
+ function splitBlock(block){if(block.kind==='table'||!block.text||block.text.length<650)return [block];const out=[];let remaining=block.text;while(remaining.length>650){let end=600;const open=remaining.lastIndexOf('\\(',end),closed=remaining.lastIndexOf('\\)',end);if(open>closed)end=open>0?open:(remaining.indexOf('\\)',end)+2||remaining.length);if(end<=0||end>=remaining.length)break;out.push({...block,text:remaining.slice(0,end),images:[],last:false,first:out.length?false:block.first});remaining=remaining.slice(end);}out.push({...block,text:remaining,first:out.length?false:block.first});return out;}
+ async function facePages(answer){const blocks=items.flatMap((it,i)=>PL.itemBlocks(it,i+1,answer,options).flatMap(splitBlock).map(b=>({...b,questionNumber:i+1}))),pages=[[]];let used=0;
+  for(const block of blocks){let height=0;if(block.kind==='table'){height=block.rows.reduce((sum,row)=>sum+Math.max(...row.map(t=>Math.ceil([...String(t)].reduce((n,c)=>n+(c.charCodeAt(0)>255?11:6),0)/(510/Math.max(1,row.length)-12))),1)*17.4+9,0);}else if(block.text!==undefined){height=String(block.text).split('\n').reduce((sum,line)=>sum+Math.max(1,Math.ceil([...line].reduce((n,c)=>n+(c.charCodeAt(0)>255?11:6),0)/490))*18,0)+9;}
+   const images=block.images||[],rowSize=block.kind==='option-group'?2:1;for(let n=0;n<images.length;n+=rowSize){let max=0;for(const image of images.slice(n,n+rowSize)){const d=await dimensions(image.src);max=Math.max(max,Math.min(190,Math.min(510/rowSize,d.w*.75)*d.h/d.w)+12);}height+=max;}
+   if(used+height>550&&pages.at(-1).length){pages.push([]);used=0;}pages.at(-1).push(block);used+=height;
+  }return pages;
+ }
+ function compactFeedback(answer){const rows=answer?PL.feedbackRows(true):[['学生反馈表　完成：□独立　□需提示　□未完成'],['难度：□偏易　□合适　□偏难　用时：____分钟'],['卡点／希望帮助：____________________________']];return smallTable(rows,fullWidth);}
+
  const title=options.title||'物理精准练习';
  const date=options.date||new Date().toISOString().slice(0,10);
  let body='';
@@ -135,6 +147,22 @@ async function createDocx(options){
    for(let index=0;index<options.plans.length;index++){
      const plan=options.plans[index];items=plan.items;
      if(!items?.length||!plan.student?.name)throw Error('学生或题目为空');
+     if(options.pairedPages){
+       const front=await facePages(false),back=await facePages(true),pairs=Math.max(front.length,back.length);
+       for(let pair=0;pair<pairs;pair++){
+         body+=paragraph(title+' · '+date+(pairs>1?' · '+(pair+1)+'/'+pairs:''),{align:'center',bold:true,size:28,after:110});
+         body+=paragraph('班级：'+(plan.student.className||'________')+'　姓名：'+plan.student.name,{align:'center',size:19,after:120});
+         body+=front[pair]?.length?await renderBlocks(front[pair]):paragraph('本页无新增题目，可用于演算。');
+         if(pair===front.length-1&&options.feedback!==false)body+=compactFeedback(false);
+         body+=sectionEnd(1,index===0&&pair===0?'nextPage':'oddPage');
+         body+=paragraph('参考解析 · '+plan.student.name+(pairs>1?' · '+(pair+1)+'/'+pairs:''),{align:'center',bold:true,size:28,after:110});
+         body+=paragraph('与本人题目编号对应'+(options.exportId?' · '+options.exportId:''),{align:'center',size:16,after:100});
+         body+=back[pair]?.length?await renderBlocks(back[pair]):paragraph('本页无新增解析。');
+         if(pair===back.length-1&&options.feedback!==false)body+=compactFeedback(true);
+         if(pair<pairs-1||index<options.plans.length-1)body+=sectionEnd(1,'nextPage');
+       }
+       continue;
+     }
      body+=paragraph(title+' · '+date,{align:'center',bold:true,size:30,after:170});
      body+=paragraph('班级：'+(plan.student.className||'________')+'　姓名：'+plan.student.name,{align:'center',size:19,after:190});
      body+=await pageItems(false);
