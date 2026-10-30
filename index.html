@@ -1904,7 +1904,7 @@ const DataPool = {
     trendParsedSheets: null,
     getCurrentBatch() { return this.batches.find(b => b.id === this.currentBatchId) || null; },
     addBatch(label, data) {
-        const batch = { id: 'b' + Date.now(), label: label || ('批次' + (this.batches.length + 1)), combinedStudentData: data.combinedStudentData || [], allSubjectHeaders: data.allSubjectHeaders || [], uploadedPdfs: data.uploadedPdfs || [], uploadedFilesData: data.uploadedFilesData || {}, questionConceptMap: data.questionConceptMap || {}, createdAt: new Date().toISOString() };
+        const batch = { id: 'b' + Date.now(), label: label || ('批次' + (this.batches.length + 1)), combinedStudentData: data.combinedStudentData || [], allSubjectHeaders: data.allSubjectHeaders || [], uploadedPdfs: data.uploadedPdfs || [], uploadedFilesData: data.uploadedFilesData || {}, questionConceptMap: data.questionConceptMap || {}, questionAnnotationImports:data.questionAnnotationImports||[], createdAt: new Date().toISOString() };
         this.batches.push(batch); this.currentBatchId = batch.id; return batch;
     },
     deleteBatch(id) {
@@ -2051,6 +2051,7 @@ function persistBatches() {
                 uploadedPdfs: pdfs,
                 uploadedFilesData: ufd,
                 questionConceptMap: b.questionConceptMap || {},
+                questionAnnotationImports: b.questionAnnotationImports || [],
                 manualQuestionOverrides: b.manualQuestionOverrides,
                 notebookCropReviews: b.notebookCropReviews || {},
                 paperReviewStates: b.paperReviewStates || {},
@@ -8284,12 +8285,19 @@ async function qkImportAiAnnotationText(text) {
         throw new Error('导入已停止，发现 ' + errors.length + ' 个问题：\n' + errors.slice(0,12).join('\n') + (errors.length > 12 ? '\n……' : ''));
     }
 
+    var previousImports=b.questionAnnotationImports, imports=Array.isArray(previousImports)?previousImports.slice():[];
+    var rawImport=JSON.parse(JSON.stringify(data)), rawText=JSON.stringify(rawImport);
+    var sourceImport=imports.find(function(x){return JSON.stringify(x.payload)===rawText;});
+    if(!sourceImport){sourceImport={id:'annotation-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),imported_at:new Date().toISOString(),subject:getSelectedSubject()||'',payload:rawImport};imports.push(sourceImport);}
+    staged.forEach(function(x){x.mapping.annotation_source_id=sourceImport.id;});
     var previousMappings = staged.map(function(x){ return {key:x.question_no,exists:Object.prototype.hasOwnProperty.call(map,x.question_no),value:map[x.question_no]}; });
     staged.forEach(function(x){ map[x.question_no] = x.mapping; });
+    b.questionAnnotationImports=imports;
     var ok = false;
     try { ok = await persistBatches(); } catch(e) { ok = false; }
     if (!ok) {
         previousMappings.forEach(function(x){ if(x.exists) map[x.key]=x.value; else delete map[x.key]; });
+        if(previousImports===undefined) delete b.questionAnnotationImports; else b.questionAnnotationImports=previousImports;
         throw new Error('标注已解析，但保存失败，已保留原标注，请检查浏览器存储空间');
     }
     qkConceptScoreCache.clear();
