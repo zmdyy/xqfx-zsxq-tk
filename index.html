@@ -7653,7 +7653,8 @@ function qkNormalizeMappingParts(mapping, qno, examId) {
                 confidence:String(p.confidence || 'unknown').toLowerCase(),
                 score_header:p.score_header ? String(p.score_header) : '',
                 score_eligible:p.score_eligible === true,
-                source:p.source || mapping.source || ''
+                source:p.source || mapping.source || '',
+                ...(window.AiPracticeRules?.taskContext(p.task_context)?{task_context:window.AiPracticeRules.taskContext(p.task_context)}:{})
             };
         }).filter(Boolean);
     }
@@ -8016,7 +8017,7 @@ function qkBuildAiAnnotationPack() {
     var questions = qkCurrentQuestionTemplates();
     return {
         schema:'physics-exam-concept-annotation-pack',
-        schema_version:'1.0',
+        schema_version:'1.1',
         knowledge_db_version:(window.KNOWLEDGE_DB && window.KNOWLEDGE_DB.version) || '2.5',
         exam_context:{
             exam_id:b.id,
@@ -8029,6 +8030,9 @@ function qkBuildAiAnnotationPack() {
             '只能逐字复制 concept_catalog 中已经存在的 concept_id，禁止根据知识点中文名称自行拼接、翻译、缩写或改写 ID。例如“电阻”必须复制 elec_resistance，绝不能写成 elec_电阻；“串联电路”必须复制 elec_series_circuit，绝不能写成 elec_串联电路。',
             'question_no 必须优先原样使用 exam_context.questions 中对应的 question_no，不要自行改题号。',
             '一道题含多个小问、多个空或多个独立评分步骤时，拆成多个 parts；每个独立评分单元只选一个 primary_concept_id。',
+            '每个part必须填写内部task_context：task用一句话准确说明学生实际要完成的操作；task_types从内部任务类型复制；evidence摘录支持判断的试卷原句；shared_conditions记录依赖的公共条件；image_required标明是否依赖图片；uncertainties说明无法确定之处。该字段供程序保存和推荐核验，不在日常页面或学生材料中展示。',
+            '先识别任务再选择知识点，核心知识与辅助知识分开；使用某种器材不等于考查其读数或操作，以提问动作和评分要求为准。目录未覆盖的方法保存在task_context，不生成新的concept_id。',
+            '原文不可读或缺图时记录不确定性，不编造题干依据；不得把多个小问合并为一个含糊任务。',
             '考法保存为 assessment_ids，只能复制 assessment_catalog 中现有ID；考法不替代知识点，不参与重复计分。',
             '辅助涉及的知识点放入 related_concept_ids，不参与重复计分。concept_catalog 已只保留适合考试标注的核心知识点，知识星球中的解释节点和实验/应用节点不会出现在本词表中。',
             '如果一个题号在成绩数据中只有一个整题 score_header，但试卷内需要拆成多个 parts，各 part 的 score_header 必须留空；不要把同一个整题分重复分配给多个知识点。',
@@ -8039,7 +8043,7 @@ function qkBuildAiAnnotationPack() {
         ],
         output_schema:{
             schema:'physics-exam-concept-mapping',
-            schema_version:'1.0',
+            schema_version:'1.1',
             exam_id:b.id,
             knowledge_db_version:(window.KNOWLEDGE_DB && window.KNOWLEDGE_DB.version) || '2.5',
             questions:[{
@@ -8052,10 +8056,12 @@ function qkBuildAiAnnotationPack() {
                     assessment_ids:[],
                     candidate_concept_ids:[],
                     confidence:'high | medium | low',
-                    score_header:'只有该part对应独立成绩列时才复制精确score_header，否则留空'
+                    score_header:'只有该part对应独立成绩列时才复制精确score_header，否则留空',
+                    task_context:{version:1,task:'一句话描述本小问实际要求学生完成的任务',task_types:[],evidence:['支持任务判断的原文短句'],shared_conditions:[],image_required:null,uncertainties:[]}
                 }]
             }]
         },
+        internal_task_types:window.AiPracticeRules?.taskTypes||[],
         concept_catalog:catalog,
         assessment_catalog:window.PhysicsConceptAssessment?.getCatalog().methods||[]
     };
@@ -8125,7 +8131,7 @@ async function qkImportAiAnnotationText(text) {
     catch(e) { throw new Error('JSON无法解析：' + e.message); }
 
     if (!data || data.schema !== 'physics-exam-concept-mapping' || !Array.isArray(data.questions)) {
-        throw new Error('文件格式不符合 physics-exam-concept-mapping 1.0');
+        throw new Error('文件格式不符合 physics-exam-concept-mapping（兼容1.0和1.1）');
     }
     if (data.exam_id && data.exam_id !== b.id) {
         throw new Error('该标注文件属于其他考试批次（exam_id 不一致）');
@@ -8187,6 +8193,13 @@ async function qkImportAiAnnotationText(text) {
             if (requestedHeader && !knownHeaders.has(requestedHeader)) {
                 errors.push(target.question_no + '/' + (p.part_id || (pi+1)) + ' 的 score_header 不存在于当前成绩数据：' + requestedHeader);
             }
+            if (requestedHeader && knownHeaders.has(requestedHeader) && typeof getCanonicalQuestionRefInfo === 'function') {
+                var targetRef=getCanonicalQuestionRefInfo(target.question_title||target.score_header), headerRef=getCanonicalQuestionRefInfo(requestedHeader);
+                var targetMajors=(targetRef.majors&&targetRef.majors.length?targetRef.majors:[targetRef.major]).filter(function(x){return x!=null;}).map(String);
+                var headerMajors=(headerRef.majors&&headerRef.majors.length?headerRef.majors:[headerRef.major]).filter(function(x){return x!=null;}).map(String);
+                var headerOwners=templates.filter(function(t){return t.score_header===requestedHeader;});
+                if (targetMajors.length && headerMajors.some(function(x){return !targetMajors.includes(x);}) || target.subject && headerOwners.some(function(t){return t.subject&&t.subject!==target.subject;})) errors.push(target.question_no+'/'+(p.part_id||(pi+1))+' 的 score_header 属于其他题目或科目：'+requestedHeader);
+            }
             var partId = String(p.part_id || (target.question_no + '/p' + (pi+1)));
             if (seenPartIds.has(partId)) errors.push(target.question_no + ' 存在重复 part_id：' + partId);
             seenPartIds.add(partId);
@@ -8198,7 +8211,8 @@ async function qkImportAiAnnotationText(text) {
                 related_concept_ids:Array.from(new Set(related.filter(function(id){ return id !== primary; }))),
                 candidate_concept_ids:Array.from(new Set(candidates.filter(function(id){ return id !== primary; }))).slice(0,3),
                 confidence:confidence,
-                requested_score_header:requestedHeader
+                requested_score_header:requestedHeader,
+                task_context:window.AiPracticeRules?.taskContext(p.task_context)||null
             };
         });
 
@@ -8222,7 +8236,8 @@ async function qkImportAiAnnotationText(text) {
                 confidence:p.confidence,
                 score_header:scoreHeader,
                 score_eligible:eligible,
-                source:'ai_import'
+                source:'ai_import',
+                ...(p.task_context?{task_context:p.task_context}:{})
             };
         });
         staged.push({
@@ -8233,6 +8248,8 @@ async function qkImportAiAnnotationText(text) {
                 schema_version:'2.0',
                 source:'ai_import',
                 annotated_at:new Date().toISOString(),
+                annotation_original:JSON.parse(JSON.stringify(q)),
+                annotation_schema:data.schema_version||'1.0',
                 parts:parts
             }
         });
@@ -8267,9 +8284,14 @@ async function qkImportAiAnnotationText(text) {
         throw new Error('导入已停止，发现 ' + errors.length + ' 个问题：\n' + errors.slice(0,12).join('\n') + (errors.length > 12 ? '\n……' : ''));
     }
 
+    var previousMappings = staged.map(function(x){ return {key:x.question_no,exists:Object.prototype.hasOwnProperty.call(map,x.question_no),value:map[x.question_no]}; });
     staged.forEach(function(x){ map[x.question_no] = x.mapping; });
-    var ok = await persistBatches();
-    if (!ok) throw new Error('标注已解析，但保存失败，请检查浏览器存储空间');
+    var ok = false;
+    try { ok = await persistBatches(); } catch(e) { ok = false; }
+    if (!ok) {
+        previousMappings.forEach(function(x){ if(x.exists) map[x.key]=x.value; else delete map[x.key]; });
+        throw new Error('标注已解析，但保存失败，已保留原标注，请检查浏览器存储空间');
+    }
     qkConceptScoreCache.clear();
 
     var partCount = 0, eligibleCount = 0, tagOnlyCount = 0, lowCount = 0, unresolvedCount = 0;
@@ -18689,10 +18711,10 @@ function closeStudentListModal() {
 <script src="question-bank/paper-layout.js?v=20261028feedback1"></script>
 <script src="question-bank/word-export.js?v=20261029paired1"></script>
 <script src="ai-practice-diagnostics.js?v=6"></script>
-<script src="ai-practice-rules.js?v=20261030feedback4"></script>
-<script src="ai-practice-core.js?v=20261030feedback11"></script>
+<script src="ai-practice-rules.js?v=20261030tasks5"></script>
+<script src="ai-practice-core.js?v=20261030tasks12"></script>
 <script src="ai-practice-preview.js?v=3"></script>
-<script src="ai-practice-audit.js?v=20261030feedback5"></script>
-<script src="ai-practice-ui.js?v=20261030feedback14"></script>
+<script src="ai-practice-audit.js?v=20261030tasks6"></script>
+<script src="ai-practice-ui.js?v=20261030tasks15"></script>
 </body>
 </html>
