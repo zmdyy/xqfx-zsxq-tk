@@ -1,6 +1,6 @@
 # AI 短练习推荐规则
 
-规则版本：`20261029-practice-v1`。实现入口为 `ai-practice-rules.js`，由核心模块、页面和选题依据共同使用。
+规则版本：`20261030-evidence-v2`。实现入口为 `ai-practice-rules.js`，由核心模块、页面和选题依据共同使用。
 
 ## 请求与检查
 
@@ -35,3 +35,5 @@ AI 练习导出采用保守版面预算，将题目页和解析页成对交替�
 - `npm run test:score-groups`、`node tests/report-title-import.test.cjs`、`node tests/full-data-backup.test.mjs`：计分关系、导入和备份兼容。
 
 测试不使用真实密钥或付费模型调用。模型对真实题目的教学判断继续通过不同知识点、题型与学生样本迭代，不能仅以格式校验通过认定推荐正确。
+
+分析步骤只引用证据编号，程序在每条引用的 evidenceContext 中附上考试关系和计分范围。兼容旧模型多填的范围字段，记录差异而不触发付费重试；未知证据编号仍拒绝。更新失败恢复旧结果时保留 lastUpgradeAttempt，导出依据（包括旧 Word 快照）同时包含失败请求，明确区分成功结果与失败尝试。
