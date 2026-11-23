@@ -1,0 +1,22 @@
+name: Question bank workspace regression
+on:
+  push:
+    branches:
+      - feat/grade-year-question-bank-isolation
+  pull_request:
+    branches:
+      - main
+jobs:
+  workspace-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Grade workspace browser regression
+        run: npm run test:workspace
+      - name: Existing question bank regression
+        run: npm run test:package && npm run test:backup
