@@ -41,7 +41,7 @@ async function refreshHistory(){
 async function execute(){
  if(busy||!prepared.length)return;
  const mode=$('bmPreview').querySelector('[data-backup-mode]')?.value||'merge';
- if(mode==='restore'&&!confirm('恢复备份会覆盖同ID的题目、草稿和记录，当前其他题目仍保留。确定按所选备份恢复？'))return;
+ if(mode==='restore'){const source=prepared.find(p=>p.kind==='backup')?.data?.workspaceInfo,target=api.workspaceInfo;const from=source?.name||[source?.academicYear,source?.grade].filter(Boolean).join(' · ')||'未标注来源',to=target?.name||[target?.academicYear,target?.grade].filter(Boolean).join(' · ')||'当前工作区';const mismatch=source&&(source.academicYear!==target?.academicYear||source.grade!==target?.grade);const warning=mismatch?'\n\n注意：备份来源为「'+from+'」，当前恢复目标为「'+to+'」。这会把备份内容恢复到当前工作区，不会自动切换或覆盖来源工作区。':'';if(!confirm('恢复备份会覆盖同ID的题目、草稿和记录，当前其他题目仍保留。'+warning+'\n确定继续？'))return;}
  lock(true);message('正在导入，请等待处理结果…');let records=[],last=null;
  try{
   for(const p of prepared){
