@@ -1,7 +1,7 @@
 /* 题库明细独立页：只读同源 IndexedDB，不重新导入，不修改题库。 */
 (function(root){
 'use strict';
-const DB_NAME='PhysicsTrainingBankV1';
+let DB_NAME='';
 const STORE='questions';
 const $=id=>document.getElementById(id);
 const normalizeName=name=>String(name||'').trim().toLowerCase().replace(/[\s/]+/g,'');
