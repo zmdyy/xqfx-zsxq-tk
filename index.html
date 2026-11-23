@@ -2027,7 +2027,7 @@ function showAlert(msg) {
 
 
 function persistBatches() {
-    return new Promise(function(resolve) {
+    try {
         var compact = DataPool.batches.map(function(b) {
             var ufd = {};
             Object.keys(b.uploadedFilesData || {}).forEach(function(k) {
@@ -2058,117 +2058,45 @@ function persistBatches() {
                 aiPracticeTasks: b.aiPracticeTasks || []
             };
         });
-        var json = JSON.stringify(compact);
-        var sizeMB = json.length / 1024 / 1024;
-        var request = indexedDB.open('ScoreAnalysisDB', 1);
-        request.onupgradeneeded = function(e) {
-            var db = e.target.result;
-            if (!db.objectStoreNames.contains('batches')) {
-                db.createObjectStore('batches', { keyPath: 'key' });
-            }
-        };
-        request.onsuccess = function(e) {
-            var db = e.target.result;
-            try {
-                var tx = db.transaction('batches', 'readwrite');
-                var store = tx.objectStore('batches');
-                store.put({ key: 'scoreBatches', value: json });
-                tx.oncomplete = function() {
-                    db.close();
-                    console.log('数据已持久化 (' + sizeMB.toFixed(1) + 'MB)');
-                    resolve(true);
-                };
-                tx.onerror = function() {
-                    console.warn('IndexedDB写入失败: ' + (tx.error && tx.error.message));
-                    var st = document.getElementById('batchStatus');
-                    if (st) st.textContent = '⚠ 保存失败！存储空间不足，请清理旧批次后重试';
-                    resolve(false);
-                };
-            } catch(e) {
-                console.warn('持久化失败 (' + sizeMB.toFixed(1) + 'MB): ' + e.message);
-                var st = document.getElementById('batchStatus');
-                if (st) st.textContent = '⚠ 保存失败！数据量(' + sizeMB.toFixed(1) + 'MB)超过浏览器存储配额，请清理旧批次或减少数据后重试';
-                resolve(false);
-            }
-        };
-        request.onerror = function() {
-            console.warn('IndexedDB无法打开');
+        var json = JSON.stringify(compact), sizeMB = json.length / 1024 / 1024;
+        return AppCore.storage.write('scoreBatches', json).then(function() {
+            console.log('数据已持久化 (' + sizeMB.toFixed(1) + 'MB)');
+            return true;
+        }).catch(function(error) {
+            console.warn('IndexedDB写入失败: ' + (error && error.message));
             var st = document.getElementById('batchStatus');
-            if (st) st.textContent = '⚠ 保存失败！无法访问浏览器存储';
-            resolve(false);
-        };
-        request.onblocked = function() {
-            console.warn('IndexedDB被阻塞');
-            resolve(false);
-        };
-    });
+            if (st) st.textContent = '⚠ 保存失败：' + (error && error.message || '无法访问当前年级工作区');
+            return false;
+        });
+    } catch(e) {
+        console.warn('持久化失败: ' + e.message);
+        var st = document.getElementById('batchStatus');
+        if (st) st.textContent = '⚠ 保存失败！数据量或浏览器存储异常：' + e.message;
+        return Promise.resolve(false);
+    }
 }
 
-function restoreBatches() {
-    return new Promise(function(resolve) {
-        var request = indexedDB.open('ScoreAnalysisDB', 1);
-        request.onupgradeneeded = function(e) {
-            var db = e.target.result;
-            if (!db.objectStoreNames.contains('batches')) {
-                db.createObjectStore('batches', { keyPath: 'key' });
-            }
-        };
-        request.onsuccess = function(e) {
-            var db = e.target.result;
-            try {
-                var tx = db.transaction('batches', 'readonly');
-                var store = tx.objectStore('batches');
-                var getReq = store.get('scoreBatches');
-                getReq.onsuccess = function() {
-                    db.close();
-                    if (getReq.result && getReq.result.value) {
-                        try {
-                            var batches = JSON.parse(getReq.result.value);
-                            batches.forEach(function(b) {
-                                window.ScoreUnitRelations?.upgradeBatch(b);
-                                if (!b.questionConceptMap || typeof b.questionConceptMap !== 'object' || Array.isArray(b.questionConceptMap)) b.questionConceptMap = {};
-                            });
-                            DataPool.batches = batches;
-                            if (batches.length) DataPool.currentBatchId = batches[batches.length - 1].id;
-                            console.log('数据已恢复 (' + batches.length + '个批次)');
-                        } catch(e) { console.warn('恢复数据解析失败', e); }
-                    }
-                    resolve();
-                };
-                getReq.onerror = function() {
-                    db.close();
-                    console.warn('IndexedDB读取失败');
-                    resolve();
-                };
-            } catch(e) {
-                console.warn('恢复数据失败', e);
-                resolve();
-            }
-        };
-        request.onerror = function() {
-            console.warn('IndexedDB无法打开');
-            resolve();
-        };
-        request.onblocked = function() {
-            console.warn('IndexedDB恢复被阻塞');
-            resolve();
-        };
-    });
+async function restoreBatches() {
+    try {
+        var raw = await AppCore.storage.read('scoreBatches');
+        var batches = AppCore.storage.decode(raw, []);
+        if (batches && !Array.isArray(batches) && Array.isArray(batches.batches)) batches = batches.batches;
+        if (!Array.isArray(batches)) throw new Error('批次数据格式异常');
+        batches.forEach(function(b) {
+            window.ScoreUnitRelations?.upgradeBatch(b);
+            if (!b.questionConceptMap || typeof b.questionConceptMap !== 'object' || Array.isArray(b.questionConceptMap)) b.questionConceptMap = {};
+        });
+        DataPool.batches = batches;
+        if (batches.length) DataPool.currentBatchId = batches[batches.length - 1].id;
+        console.log('数据已恢复 (' + batches.length + '个批次)');
+        return true;
+    } catch(e) {
+        console.warn('恢复数据失败', e);
+        var st = document.getElementById('batchStatus');
+        if (st) st.textContent = '恢复数据失败：' + e.message;
+        return false;
+    }
 }
-
-// ============================================================
-//  局部状态变量
-// ============================================================
-let uploadedFilesData = {};
-let combinedStudentData = [];
-let allSubjectHeaders = [];
-let uploadedPdfs = [];
-let trendEchartsInst = {};
-let trendRowIdx = 0;
-let trendDisplayMode = 'ranking';
-let collectiveThreshold = 60;
-let studentSearchIndex = [];
-let studentSearchBindingsInitialized = false;
 
 function normalizeSearchKeyword(text) {
     return String(text || '').trim().toLowerCase().replace(/\s+/g, '');
@@ -7701,11 +7629,14 @@ function qkGetMapping(questionTitle, scoreHeader, subject) {
     };
 }
 function qkKnowledgeUrl(mapping) {
-    if (!mapping || !mapping.concept_id) return 'knowledge/index.html';
+    var workspaceId = new URLSearchParams(location.search).get('workspace');
+    var suffix = workspaceId ? (mapping && mapping.concept_id ? '&' : '?') + 'workspace=' + encodeURIComponent(workspaceId) : '';
+    if (!mapping || !mapping.concept_id) return 'knowledge/index.html' + suffix;
     return 'knowledge/index.html?concept_id=' + encodeURIComponent(mapping.concept_id)
         + '&exam_id=' + encodeURIComponent(mapping.exam_id || '')
         + '&question_no=' + encodeURIComponent(mapping.question_no || '')
-        + '&part_id=' + encodeURIComponent(mapping.part_id || '');
+        + '&part_id=' + encodeURIComponent(mapping.part_id || '')
+        + suffix;
 }
 function qkRenderCell(questionTitle, scoreHeader, subject) {
     var b = qkCurrentBatch();
@@ -8470,7 +8401,7 @@ function qkInit() {
     var knowledgeBtn=document.getElementById('qkKnowledgePlanetBtn');
     if(downloadPack) downloadPack.onclick=qkDownloadAiAnnotationPack;
     if(pasteBtn) pasteBtn.onclick=qkOpenPasteAiMapping;
-    if(knowledgeBtn) knowledgeBtn.onclick=function(){ window.open('knowledge/index.html','_blank','noopener'); };
+    if(knowledgeBtn) knowledgeBtn.onclick=function(){ var ws=new URLSearchParams(location.search).get('workspace'); window.open('knowledge/index.html'+(ws?'?workspace='+encodeURIComponent(ws):''),'_blank','noopener'); };
 
     var pasteCancel=document.getElementById('qkPasteCancelBtn');
     var pasteImport=document.getElementById('qkPasteImportBtn');
@@ -18610,20 +18541,30 @@ document.getElementById('classDiffBoxSubject').addEventListener('change', functi
 // Try to load PDF.js
 try { var s2 = document.createElement('script'); s2.src = './pdf.min.js'; document.head.appendChild(s2); } catch(e) {}
 
-// Initial refresh (delayed restore for smooth startup)
-document.getElementById('batchStatus').textContent = '⏳ 正在恢复上次数据…';
-setTimeout(async function() {
-    await restoreBatches();
-    refreshBatchList();
-    if (DataPool.currentBatchId) {
-        loadBatch(DataPool.currentBatchId);
-    }
-    // Re-render the currently active tab so it's not stuck on "no data" placeholder
-    var activeTabBtn = document.querySelector('.tab-nav button.active');
-    if (activeTabBtn && combinedStudentData.length) {
-        switchTab(activeTabBtn.dataset.tab);
-    }
-}, 60);
+// Resolve an isolated year/grade workspace before reading or writing score data.
+var dataStartupPromise = new Promise(function(resolveStartup) {
+    setTimeout(async function() {
+        var status = document.getElementById('batchStatus');
+        if (status) status.textContent = '⏳ 正在选择学年与年级工作区…';
+        try {
+            var workspace = await WorkspaceUI.resolve();
+            if (!workspace) return;
+            await AppCore.storage.setWorkspace(workspace.id);
+            if (status) status.textContent = '⏳ 正在恢复当前工作区数据…';
+            await restoreBatches();
+            refreshBatchList();
+            if (DataPool.currentBatchId) loadBatch(DataPool.currentBatchId);
+            else if (status) status.textContent = '当前工作区暂无考试批次，请上传数据后保存批次';
+            var activeTabBtn = document.querySelector('.tab-nav button.active');
+            if (activeTabBtn && combinedStudentData.length) switchTab(activeTabBtn.dataset.tab);
+        } catch(error) {
+            console.error('工作区初始化失败', error);
+            if (status) status.textContent = '工作区初始化失败：' + error.message;
+        } finally {
+            resolveStartup();
+        }
+    }, 60);
+});
 
 // Initialize Vision AI UI
 (function initVisionUI() {
@@ -18647,6 +18588,7 @@ setTimeout(async function() {
 // 座位逻辑见 seating.js；其余功能保留源仓库实现。
 </script>
 <script src="app-core.js"></script>
+<script src="workspace-manager.js"></script>
 <script src="seating-data.js"></script>
 <script src="seating-engine.js"></script>
 <script src="seating.js"></script>
