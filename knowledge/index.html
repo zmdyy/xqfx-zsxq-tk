@@ -3335,8 +3335,10 @@ function renderDiagnosticIntro(star) {
     return;
   }
   panelDiagnosticWrap.style.display = 'block';
-  const bankLink = '<a href="../question-bank/index.html?concept_id=' + encodeURIComponent(star.id) + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:10px;padding:11px;border-radius:10px;background:#155e75;color:white;font-weight:800">▣ 此知识点的精准训练题库 ↗</a>';
-  const methods=window.PhysicsConceptAssessment?.catalogForConcept(star.id).filter(m=>m.concept_ids?.length)||[];const methodLinks=methods.length?'<div class="diag-intro"><b>具体考法</b><br>'+methods.map(m=>'<a style="color:#c8f4ff;display:inline-block;margin:5px" href="../question-bank/index.html?concept_id='+encodeURIComponent(star.id)+'&assessment_id='+encodeURIComponent(m.id)+'" target="_blank" rel="noopener">'+m.name+'</a>').join('')+'</div>':'';
+  const workspaceId = new URLSearchParams(location.search).get('workspace');
+  const workspaceSuffix = workspaceId ? '&workspace=' + encodeURIComponent(workspaceId) : '';
+  const bankLink = '<a href="../question-bank/index.html?concept_id=' + encodeURIComponent(star.id) + workspaceSuffix + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:10px;padding:11px;border-radius:10px;background:#155e75;color:white;font-weight:800">▣ 此知识点的精准训练题库 ↗</a>';
+  const methods=window.PhysicsConceptAssessment?.catalogForConcept(star.id).filter(m=>m.concept_ids?.length)||[];const methodLinks=methods.length?'<div class="diag-intro"><b>具体考法</b><br>'+methods.map(m=>'<a style="color:#c8f4ff;display:inline-block;margin:5px" href="../question-bank/index.html?concept_id='+encodeURIComponent(star.id)+'&assessment_id='+encodeURIComponent(m.id)+workspaceSuffix+'" target="_blank" rel="noopener">'+m.name+'</a>').join('')+'</div>':'';
   if (!group) {
     panelDiagnostic.innerHTML = '<div class="diag-intro">该知识点暂无独立迷思诊断题，可进入训练题库筛选巩固题。</div>' + bankLink + methodLinks;
     return;

@@ -1,5 +1,5 @@
-/* 按学生导出：仅在点“导出 Word”时显示姓名弹窗。
- * 学生名单读取当前浏览器 ScoreAnalysisDB，使用全站同一套拼音检索。
+/* 按学生导出：只读取当前学年与年级工作区中的学生名单。
+ * 题库本身仍共享；导出记录按工作区标记。
  */
 (function(root){
 'use strict';
@@ -8,28 +8,14 @@ let students=[],selected=null,mode='student',eventsReader=()=>[],onSelectionChan
 let activeResolve=null,currentCandidate=null,loaded=false;
 const clean=x=>String(x||'').trim();
 const keyOf=e=>[root.StudentNameSearch?.normalizeClassName(e.className)||e.className,e.displayName].join('\u001f');
-function readBatches(){
- return new Promise((resolve,reject)=>{
-   if(!root.indexedDB)return reject(new Error('当前浏览器不支持本地学生名单'));
-   const req=root.indexedDB.open('ScoreAnalysisDB');
-   req.onerror=()=>reject(req.error||new Error('读取成绩数据库失败'));
-   req.onupgradeneeded=()=>{}; // 只读取学生，不写入任何成绩数据
-   req.onsuccess=()=>{
-     const db=req.result;
-     if(!db.objectStoreNames.contains('batches')){db.close();resolve([]);return}
-     const tx=db.transaction('batches','readonly'),request=tx.objectStore('batches').get('scoreBatches');
-     request.onsuccess=()=>{
-       try{
-         const raw=request.result?.value;
-         const batches=raw?(typeof raw==='string'?JSON.parse(raw):raw):[];
-         resolve(Array.isArray(batches)?batches:[]);
-       }catch(e){reject(new Error('学生名单解析失败：'+e.message))}
-     };
-     request.onerror=()=>reject(request.error||new Error('学生名单读取失败'));
-     tx.oncomplete=()=>db.close();tx.onerror=()=>db.close();
-   };
- });
+async function readBatches(){
+ if(!root.AppCore?.storage)throw new Error('当前题库页面尚未关联学年与年级工作区');
+ const raw=await root.AppCore.storage.read('scoreBatches');
+ const stored=root.AppCore.storage.decode(raw,[]);
+ if(Array.isArray(stored))return stored;
+ return Array.isArray(stored?.batches)?stored.batches:[];
 }
+
 async function reloadRoster(){
  const tip=$('exportStudentHint');
  if(tip)tip.textContent='正在读取已有成绩批次中的学生姓名…';
