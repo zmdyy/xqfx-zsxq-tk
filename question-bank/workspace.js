@@ -62,6 +62,6 @@ async function resolve(){
  return chooser();
 }
 function current(){if(!active)throw Error('尚未选择题库工作区');return{id:active.id,dbName:dbName(active.id),meta:active}}
-function decorateLinks(){document.querySelectorAll('a[href]').forEach(a=>{try{const u=new URL(a.href,location.href);if(u.origin===location.origin&&/dashboard\.html|index\.html/.test(u.pathname)&&!u.searchParams.has('workspace'))u.searchParams.set('workspace',active?.id||'');if(u.searchParams.get('workspace')==='')u.searchParams.delete('workspace');a.href=u.href}catch(_){}})}
+function decorateLinks(){document.querySelectorAll('a[href]').forEach(a=>{try{const u=new URL(a.href,location.href);if(u.origin===location.origin&&u.pathname.includes('/question-bank/')&&/dashboard\.html|index\.html/.test(u.pathname)&&!u.searchParams.has('workspace'))u.searchParams.set('workspace',active?.id||'');if(u.searchParams.get('workspace')==='')u.searchParams.delete('workspace');a.href=u.href}catch(_){}})}
 root.PhysicsBankWorkspace={resolve,current,list,get,dbName,decorateLinks};
 })(window);
