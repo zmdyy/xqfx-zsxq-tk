@@ -6,7 +6,7 @@ const server=http.createServer((req,res)=>{const u=decodeURIComponent(req.url.sp
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({executablePath:process.env.CHROME_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
  try{
  const page=await browser.newPage({viewport:{width:1440,height:960},timezoneId:'Asia/Shanghai'}),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:'+server.address().port+'/question-bank/');await page.waitForSelector('#backupZipBtn',{state:'attached'});
+ await page.goto('http://127.0.0.1:'+server.address().port+'/question-bank/');await page.waitForSelector('.bank-ws-panel');await page.getByRole('button',{name:'新建学年／年级题库'}).click();await page.fill('#bwy','2026—2027');await page.selectOption('#bwg','八年级');await page.getByRole('button',{name:'创建并进入'}).click();await page.waitForSelector('#backupZipBtn',{state:'attached'});
  const mutate=fn=>page.evaluate(fn);
  await mutate(()=>new Promise((resolve,reject)=>{const r=indexedDB.open('PhysicsTrainingBankV1');r.onsuccess=()=>{const tx=r.result.transaction(['questions','settings'],'readwrite'),store=tx.objectStore('questions');for(let i=0;i<3500;i++)store.put({id:'Q'+i,stem:'物理大题库测试 '+i+'。'+('质量速度电学光学热学 '.repeat(400)),answer:'答案'+i,images:[],revision:1});tx.objectStore('settings').put({id:'teacher-draft:Q0',value:{content:{stem:'草稿'},baseFingerprint:JSON.stringify({stem:'物理原题',answer:'1'})}});tx.oncomplete=()=>{r.result.close();resolve()};tx.onabort=()=>reject(tx.error)}}));
  await page.click('#bankManageBtn');await page.waitForFunction(()=>document.querySelector('#bmStorageData').textContent.includes('3500 道题'));
