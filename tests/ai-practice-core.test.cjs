@@ -1,8 +1,33 @@
 const assert=require('node:assert/strict');global.WrongQuestionRecommendations=require('../wrong-question-recommendations.js');const C=require('../ai-practice-core.js');
 const student=(score,sub)=>({name:'匿名甲',class:'01',subjects:{物理:{score,grade:'B',subScores:sub}}});const batches=[{id:'older',label:'旧考',combinedStudentData:[student(50,{'22':{score:0,maxScore:3}})]},{id:'current',label:'本次',combinedStudentData:[student(65,{'22':{score:1,maxScore:3},'23、24题':{score:2,maxScore:5},'25':{score:'',maxScore:2}})]},{id:'future',label:'后考',combinedStudentData:[student(70,{})]}];
+const grade8={academicYear:'2026—2027',grade:'八年级'};
+for(const batch of batches)batch.practiceBankScope=grade8;
 const trigger={batchId:'current',subject:'物理',itemName:'22'},person={name:'匿名甲',className:'1'},helpers={majors:(b,s,n)=>n.includes('、')?['23','24']:[n],tags:()=>[{conceptId:'lever',assessmentIds:['draw'],scoreEligible:true}],same:(a,b)=>a===b};
 const p=C.evidence(batches,['older','current','future'],trigger,person,70,helpers);assert.equal(p.exams.length,2);assert.equal(p.focus.answerRecord.studentStatus,'unknown');assert.equal(C.answerEvidence({score:0,maxScore:2,studentAnswer:'B',correctAnswer:'C',answerColumnPresent:true}).answerRecord.comparison,'different');assert.equal(C.answerEvidence({score:0,maxScore:2,studentAnswer:'B',correctAnswer:'B'}).answerRecord.scoreAnswerConflict,true);assert.equal(C.answerEvidence({score:0,maxScore:2,studentAnswer:'',correctAnswer:'B',answerColumnPresent:true}).answerRecord.studentStatus,'recorded_empty');assert.equal(C.answerEvidence({answerColumnPresent:false}).answerRecord.studentStatus,'not_imported');assert.equal(p.exams[0].units[0].score,0);assert.equal(p.exams[1].units.find(x=>x.itemName==='25').score,null);assert.equal(p.exams[1].units.find(x=>x.itemName.includes('、')).shared,true);assert(!JSON.stringify(p).includes('匿名甲'));assert.throws(()=>C.evidence(batches,['current'],trigger,person,70,helpers));
 assert.throws(()=>C.match({label:'重名',combinedStudentData:[student(1,{}),student(2,{})]},person));
+const mixed=[
+ {...batches[0],id:'other-grade',practiceBankScope:{...grade8,grade:'九年级'}},
+ {...batches[0],id:'other-year',practiceBankScope:{...grade8,academicYear:'2025—2026'}},
+ {...batches[0],id:'unbound',practiceBankScope:undefined},
+ {...batches[0],id:'different-class',combinedStudentData:[{...student(99,{}),class:'02'}]},
+ {...batches[0],id:'duplicate',combinedStudentData:[student(11,{}),student(22,{})]},
+ ...batches
+];
+const scopedOrder=['different-class','duplicate','older','current','future'];
+const mixedPacket=C.evidence(mixed,scopedOrder,trigger,person,70,helpers);
+assert.deepEqual(mixedPacket.exams.map(e=>e.batchId),['different-class','duplicate','older','current']);
+assert(mixedPacket.exams.slice(0,2).every(e=>e.missing&&e.score===null&&e.units.length===0));
+assert.throws(()=>C.evidence(mixed,['unbound',...scopedOrder],trigger,person,70,helpers),/考试顺序/);
+assert.equal(C.match(mixed[3],person),null,'a unique same name in a different class is excluded');
+const unboundPacket=C.evidence(mixed.map(b=>b.id==='current'?{...b,practiceBankScope:null}:b),['current'],trigger,person,70,helpers);
+assert.deepEqual(unboundPacket.exams.map(e=>e.batchId),['current']);
+const repeatedNames=batches.map(b=>b.id==='current'?{...b,combinedStudentData:[
+ {...student(65,{'22':{score:1,maxScore:3}}),displayName:'匿名甲(a)'},
+ {...student(61,{'22':{score:2,maxScore:3}}),displayName:'匿名甲(b)'}
+]}:b);
+const ambiguousPacket=C.evidence(repeatedNames,['older','current','future'],trigger,{...person,name:'匿名甲(a)'},70,helpers);
+assert.equal(ambiguousPacket.focus.score,1);
+assert.equal(ambiguousPacket.exams[0].score,null,'per-exam display suffix cannot identify a historical student');
 const d={goal:'规范力臂作图',summary:'旧考0分，本次1分',evidence:['older|22','current|22'],conceptIds:['lever'],assessmentIds:['draw'],hypotheses:['可能需要检查作用线'],uncertainty:'没有具体作答，不能确定错因'};assert.equal(C.diagnosis(d,p,[{concept_id:'lever'}]).goal,d.goal);assert.throws(()=>C.diagnosis({...d,evidence:['fake']},p,[{concept_id:'lever'}]));assert.throws(()=>C.diagnosis({...d,conceptIds:['fake']},p,[{concept_id:'lever'}]));
 const q=id=>({id,stem:'规范力臂练习'+id,answer:'作垂线',review:'approved',difficulty:'容易',concept_ids:['lever'],primary_concept_id:'lever',assessment_ids:['draw'],revision:1});const candidates=[q('a'),q('b'),q('c')];const plan={reason:'先巩固再变化',items:[{id:'a',reason:'辨认',minutes:3},{id:'b',reason:'应用',minutes:4}]};assert.equal(C.validatePlan(plan,candidates).minutes,7);for(const bad of [{items:[{id:'fake',minutes:1},{id:'b',minutes:1}]},{items:[{id:'a',minutes:1},{id:'a',minutes:1}]},{items:[{id:'a',minutes:9},{id:'b',minutes:9}]}])assert.throws(()=>C.validatePlan(bad,candidates));assert.throws(()=>C.validatePlan({items:[]},[]));assert(C.validatePlan(plan,candidates).items[0].contentHash);
 assert.equal(C.selectCandidates([...candidates,{...q('pending'),review:'pending'},{...q('unknown'),difficulty:''}],p,d,null,[{status:'assigned',date:new Date().toISOString(),className:'01',items:[{id:'a'}]}],person).length,3);

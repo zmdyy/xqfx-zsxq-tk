@@ -63,6 +63,20 @@ async function resolve(){
  return chooser();
 }
 function current(){if(!active)throw Error('尚未选择题库工作区');return{id:active.id,dbName:dbName(active.id),meta:active}}
+async function readPracticeData(id){
+ const meta=await get(id);
+ if(!meta||meta.legacyArchive)throw Error('当前考试绑定的年级题库不可用，请重新选择');
+ const db=await open(dbName(meta.id));
+ try{
+  return await new Promise((resolve,reject)=>{
+   const tx=db.transaction(['questions','events'],'readonly');
+   const questions=tx.objectStore('questions').getAll();
+   const events=tx.objectStore('events').getAll();
+   tx.oncomplete=()=>resolve({questions:questions.result,events:events.result});
+   tx.onabort=tx.onerror=()=>reject(tx.error||Error('读取年级题库失败'));
+  });
+ }finally{db.close()}
+}
 function decorateLinks(){document.querySelectorAll('a[href]').forEach(a=>{try{const u=new URL(a.href,location.href);if(u.origin===location.origin&&u.pathname.includes('/question-bank/')&&/dashboard\.html|index\.html/.test(u.pathname)&&!u.searchParams.has('workspace'))u.searchParams.set('workspace',active?.id||'');if(u.searchParams.get('workspace')==='')u.searchParams.delete('workspace');a.href=u.href}catch(_){}})}
-root.PhysicsBankWorkspace={resolve,current,list,get,dbName,decorateLinks};
+root.PhysicsBankWorkspace={resolve,current,list,get,dbName,decorateLinks,readPracticeData};
 })(window);

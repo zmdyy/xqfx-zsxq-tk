@@ -13,13 +13,40 @@ function requestBody(config,messages){return {model:config.model,messages,max_to
 function completion(j){const choice=j?.choices?.[0];if(!choice?.message)throw Error('模型服务返回格式不兼容：缺少 choices[0].message，请检查是否使用 chat/completions 接口');if(choice.finish_reason==='length')throw Error('模型因长度限制中止（输出额度或上下文限制），请导出调用诊断后排查');if(choice.finish_reason==='content_filter')throw Error('模型服务拦截了本次内容，请检查题图后重试');let content=choice.message.content;if(Array.isArray(content))content=content.filter(x=>x&&typeof x.text==='string').map(x=>x.text).join('\n');if(typeof content!=='string'||!content.trim())throw Error(choice.message.reasoning_content?'模型只返回思考内容，未给出最终结果；请导出调用诊断，检查输出额度或更换模型':'模型返回空内容，请重试失败项或更换模型');return content;}
 const num=v=>v==null||norm(v)===''||!Number.isFinite(Number(v))?null:Number(v);
 const hash=v=>{let h=2166136261;for(const x of JSON.stringify(v)){h^=x.codePointAt(0);h=Math.imul(h,16777619);}return(h>>>0).toString(36);};
-function match(batch,person){const rows=batch.combinedStudentData||[],byClass=rows.filter(s=>(norm(s.name)===norm(person.name)||norm(s.displayName)===norm(person.name))&&cls(s.class)===cls(person.className));if(byClass.length===1)return byClass[0];if(byClass.length>1)throw Error(batch.label+'存在同名同班学生，需确认后推荐');const same=rows.filter(s=>norm(s.name)===norm(person.name)||norm(s.displayName)===norm(person.name));if(same.length===1)return same[0];if(same.length>1)throw Error(batch.label+'的学生姓名无法唯一匹配');return null;}
+function match(batch,person){
+ const name=norm(person.name),className=cls(person.className);
+ const rows=(batch.combinedStudentData||[]).filter(s=>cls(s.class)===className);
+ const found=rows.filter(s=>norm(s.name)===name||norm(s.displayName)===name);
+ if(found.length>1)throw Error(batch.label+'存在同名同班学生，需确认后推荐');
+ return found[0]||null;
+}
+function historicalMatch(batch,name,className){
+ if(!name||!className)return null;
+ const found=(batch.combinedStudentData||[]).filter(s=>norm(s.name)===name&&cls(s.class)===className);
+ return found.length===1?found[0]:null;
+}
+function scopeKey(scope){
+ const year=scope?.academicYear,grade=scope?.grade;
+ if(typeof year!=='string'||typeof grade!=='string')return '';
+ return year&&grade?JSON.stringify([year,grade]):'';
+}
+function scopedBatches(batches,batchId){
+ const current=batches.find(b=>b.id===batchId),key=scopeKey(current?.practiceBankScope);
+ return batches.filter(b=>b===current||key&&scopeKey(b.practiceBankScope)===key);
+}
 function validOrder(order,batches){return Array.isArray(order)&&order.length===batches.length&&new Set(order).size===order.length&&batches.every(b=>order.includes(b.id));}
 function answerEvidence(item){const studentAnswer=String(item.studentAnswer??'').trim(),correctAnswer=String(item.correctAnswer??'').trim(),column=item.answerColumnPresent;const choice=v=>{const n=norm(v).toUpperCase().replace(/[\s、,，;；]/g,'');return /^[A-H]{1,8}$/.test(n)?[...new Set(n)].sort().join(''):null;},selected=choice(studentAnswer),correct=choice(correctAnswer),comparison=selected&&correct?(selected===correct?'same':'different'):'unavailable',score=num(item.score),full=num(item.maxScore);return {studentAnswer,correctAnswer,answerRecord:{studentStatus:studentAnswer?(/^(未作答|未答|未填写|空白)$/.test(studentAnswer)?'explicitly_reported_blank':'provided'):column===true?'recorded_empty':column===false?'not_imported':'unknown',correctStatus:correctAnswer?'provided':'unavailable',comparison,scoreAnswerConflict:comparison==='same'&&score!=null&&full!=null&&score<full||comparison==='different'&&score!=null&&full!=null&&score===full}};}
 function evidence(batches,order,trigger,person,fullMark,helpers){
- if(!validOrder(order,batches))throw Error('请先确认考试顺序');const at=order.indexOf(trigger.batchId);if(at<0)throw Error('当前考试已不存在');
- const selected=order.slice(0,at+1).map(id=>batches.find(b=>b.id===id));
- const exams=selected.map(batch=>{const student=match(batch,person),subject=student?.subjects?.[trigger.subject],units=[];
+ const currentBatch=batches.find(b=>b.id===trigger.batchId);
+ if(!currentBatch)throw Error('当前考试已不存在');
+ const scoped=scopedBatches(batches,trigger.batchId);
+ if(!validOrder(order,scoped))throw Error('请先确认考试顺序');
+ const selected=order.slice(0,order.indexOf(trigger.batchId)+1).map(id=>scoped.find(b=>b.id===id));
+ const currentStudent=match(currentBatch,person);
+ const name=norm(currentStudent?.name),className=cls(currentStudent?.class);
+ // Display-name suffixes distinguish rows within one exam and can change between exams.
+ const canMatchHistory=historicalMatch(currentBatch,name,className)===currentStudent&&!!currentStudent;
+ const exams=selected.map(batch=>{const student=batch===currentBatch?currentStudent:canMatchHistory?historicalMatch(batch,name,className):null,subject=student?.subjects?.[trigger.subject],units=[];
   for(const [name,item]of Object.entries(subject?.subScores||{})){if(!item||typeof item!=='object'||item.summaryOf||!(num(item.maxScore)>0))continue;
    const ids=helpers.majors?.(batch,trigger.subject,name)||[];const tags=helpers.tags(batch,trigger.subject,name);
    units.push({sourceId:batch.id+'|'+name,itemName:name,score:num(item.score),full:Number(item.maxScore),paperMajors:ids,shared:ids.length>1,tags,...answerEvidence(item)});
@@ -85,7 +112,7 @@ async function chat(config,msgs,signal){config=settings(config);const requestOpt
  }catch(e){const diagnosticId=trace({...stats,httpStatus,server,elapsedMs:Date.now()-start,outcome:'error',errorCode:e.code||e.name||'transport_error'},config);let message=e.message;if(e.name==='AbortError')message=signal?.aborted?'已取消后续生成；正在处理的远端请求可能仍会计费':'模型请求超时，请重试失败项';else if(!local&&e instanceof TypeError)message='线上 API 无法联通，请下载本地版本启动后调用';const error=Error((config.apiKey?String(message).split(config.apiKey).join('[密钥已隐藏]'):String(message)).slice(0,800));error.code=e.code||e.name;error.diagnosticId=diagnosticId;throw error;
  }finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}}
 async function validatedCall(config,msgs,validate,signal,call=chat){for(let i=0;i<2;i++){if(signal?.aborted)throw Error('已取消');const cfg={...config,trace:{...config.trace,attempt:i+1}},content=await call(cfg,msgs,signal);try{const result=validate(parse(content));trace({outcome:'validated',evidenceStatus:result.diagnosis?.evidenceStatus,evidenceStats:result.diagnosis?.evidenceStats,responseShape:root.AiPracticeDiagnostics?.shape(content)},cfg);return result;}catch(e){const id=trace({outcome:'schema_error',errorCode:e.code||'schema_validation',responseShape:root.AiPracticeDiagnostics?.shape(content)},cfg);if(i===0&&!signal?.aborted){const instruction=(config.trace?.stage==='preparation'?'上一训练起点JSON未通过校验：'+e.message+'。只按输入result_schema重新填写，引用E1；不选题、不生成知识点，不返回items。':'上一结果未通过校验（'+(e.code||'schema_validation')+'）：'+e.message+'。重新作答，只输出 result_schema 描述的字段对象本身：顶层 goal、summary、evidenceKeys、hypotheses、uncertainty、reason、taskReview、analysisSteps、alternatives、unmetNeeds、foundationAssessment、items。不要把 schema、task、studentEvidence 或候选题清单复制到回复。goal/summary必须填实际分析，items填候选ID、role、targetTask、whole_question范围、简短理由和分钟数；缺题时items=[]并填写unmetNeeds。evidenceKeys包含E1。保留system和teachingContract的全部约束。');msgs=[...msgs,{role:'user',content:instruction}];config.onRepair?.({attempt:i+2,instruction});}else{const error=Error('模型结果校验失败（已自动修正一次）：'+e.message);error.diagnosticId=id;throw error;}}}}
-root.AiPracticeCore={rules:R,preparationMessages,preparation,answerEvidence,defaults,presets,presetId,settings,requestBody,completion,num,hash,parse,signature,match,validOrder,evidence,diagnosis,mappedTargets,modelEvidence,resultPayload,evidenceIndex,recommendation,candidateReport,candidateSummary,selectCandidates,validatePlan,messages,chat,validatedCall};
+root.AiPracticeCore={rules:R,preparationMessages,preparation,answerEvidence,defaults,presets,presetId,settings,requestBody,completion,num,hash,parse,signature,match,scopeKey,scopedBatches,validOrder,evidence,diagnosis,mappedTargets,modelEvidence,resultPayload,evidenceIndex,recommendation,candidateReport,candidateSummary,selectCandidates,validatePlan,messages,chat,validatedCall};
 if(typeof module!=='undefined')module.exports=root.AiPracticeCore;
 })(typeof window!=='undefined'?window:globalThis);
 
