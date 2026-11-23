@@ -27,7 +27,17 @@ function sameOriginal(q,c){
  const source=fileKey(c.sourceFile);
  return Boolean(source&&c.questionNo&&(q.sourceRefs||[]).concat([{file:q.source,no:q.sourceNo}]).some(r=>fileKey(r.file)===source&&String(r.no)===String(c.questionNo)));
 }
-function rank(questions,context,units){
+function deduplicate(rows){
+ const stems=new Set(),ids=new Set();
+ return rows.filter(({q})=>{
+  const key=cleanStem(q.stem),textOnly=!(q.images||[]).length&&!/!\[|<img\b/i.test(q.stem||'');
+  if(ids.has(q.id)||(textOnly&&key.length>=30&&stems.has(key)))return false;
+  ids.add(q.id);
+  if(textOnly&&key.length>=30)stems.add(key);
+  return true;
+ });
+}
+function rank(questions,context,units,{dedupe=true}={}){
  const targets=context.targets||[],primary=new Set(targets.map(t=>cid(t.conceptId))),related=new Set(targets.flatMap(t=>t.relatedIds||[]).map(cid));
  const rows=[];let originals=0;
  for(const q of questions){
@@ -43,7 +53,7 @@ function rank(questions,context,units){
   rows.push({q,tier,conceptIds:hit.length?hit:secondary,reason:primaryHit?(method?'同主知识点、同考法':'同主知识点'):hit.length?'包含目标知识点（请核对考查重点）':'相关知识点（补充候选）',score:tier*100+(q.review==='approved'?10:0)+(q.primary_concept_id&&primary.has(cid(q.primary_concept_id))?5:0)});
  }
  rows.sort((a,b)=>b.score-a.score||String(a.q.id).localeCompare(String(b.q.id)));
- const stems=new Set(),ids=new Set();const dedup=rows.filter(r=>{const key=cleanStem(r.q.stem),textOnly=!(r.q.images||[]).length&&!/!\[|<img\b/i.test(r.q.stem||'');if(ids.has(r.q.id)||(textOnly&&key.length>=30&&stems.has(key)))return false;ids.add(r.q.id);if(textOnly&&key.length>=30)stems.add(key);return true});
+ const dedup=dedupe?deduplicate(rows):rows;
  // 三个建议保留真实难度；未知难度不冒充基础题。仍以知识点/考法匹配优先。
  const best=dedup[0]?.tier,top=dedup.filter(r=>r.tier===best),chosen=[];
  for(const difficulty of ['容易','普通','困难']){const r=top.find(r=>r.q.difficulty===difficulty&&!chosen.includes(r));if(r)chosen.push(r);}
@@ -55,6 +65,6 @@ function saveContext(storage,context,token){
  storage.setItem(PREFIX+token,JSON.stringify({...context,version:1,createdAt:now}));return token;
 }
 function readContext(storage,token){if(!/^[a-zA-Z0-9-]{8,100}$/.test(token||''))return null;const value=storage.getItem(PREFIX+token);if(!value)return null;const c=JSON.parse(value);if(c.version!==1||!Number.isFinite(c.createdAt)||Date.now()-c.createdAt>TTL||!Array.isArray(c.targets))return null;return c;}
-root.WrongQuestionRecommendations={targetParts,rank,saveContext,readContext,sameOriginal};
+root.WrongQuestionRecommendations={targetParts,rank,deduplicate,saveContext,readContext,sameOriginal};
 if(typeof module!=='undefined')module.exports=root.WrongQuestionRecommendations;
 })(typeof window!=='undefined'?window:globalThis);

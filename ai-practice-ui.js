@@ -171,10 +171,37 @@ function render(){if(!dialog||!job)return;activeIndex=Math.max(0,Math.min(active
 async function testApi(){const cfg=readConfig();tell('正在测试接口'+(cfg.vision?'及图片识别':'')+'…');let code='';const content=[{type:'text',text:cfg.vision?'请读取图片中的三位数字，只回复JSON：{"ok":true,"code":"图片中的数字"}。':'只回复JSON：{"ok":true}。'}];if(cfg.vision){code=String(Math.floor(Math.random()*900)+100);const canvas=document.createElement('canvas');canvas.width=200;canvas.height=90;const ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,200,90);ctx.fillStyle='black';ctx.font='bold 58px monospace';ctx.fillText(code,35,65);content.push({type:'image_url',image_url:{url:canvas.toDataURL('image/png')}});}const result=C.parse(await C.chat({...cfg,trace:{stage:'connection_test',taskId:job.id}},[{role:'user',content}]));if(!result.ok||cfg.vision&&String(result.code)!==code)throw Error('接口已返回，但未通过'+(cfg.vision?'测试图数字识别，请检查模型的视觉能力':'JSON格式测试'));tell('接口初测通过'+(cfg.vision?'，已读出测试图片；正式题图的理解质量仍需核对。':'。含图题需选择支持图片的模型。'));}
 
 async function reviewedImages(ref){const owner=DataPool.batches.find(b=>b.id===ref.batchId),key=C.hash([ref,owner?.notebookCropReviews]);if(!imageCache.has(key)){const pending=root.notebookReviewedSnapshots(ref).catch(e=>{imageCache.delete(key);throw e;});imageCache.set(key,pending);}return imageCache.get(key);}
-async function originalImages(p){const b=batch(),item={batchId:b.id,subjectName:job.trigger.subject,itemName:job.trigger.itemName};if(!root.notebookReviewStatus(item))throw Error('当前原题尚未完整确认，请先完成切题复核');const images=(await reviewedImages(item)||[]).map((data,i)=>({label:'当前原题区域 '+(i+1),data}));
- const targetIds=new Set(p.focus.tags.map(t=>t.conceptId));for(const exam of p.exams.slice(0,-1).reverse()){const relevant=exam.units.find(u=>u.tags.some(t=>targetIds.has(t.conceptId)));if(!relevant)continue;const ref={batchId:exam.batchId,subjectName:job.trigger.subject,itemName:relevant.itemName};if(root.notebookReviewStatus(ref)){const shots=await reviewedImages(ref);for(const [i,data]of (shots||[]).entries())images.push({label:'历史原题 '+relevant.sourceId+' 区域 '+(i+1),data});}if(images.filter(x=>x.label.startsWith('历史')).length>=4)break;}
- return images;}
-async function questionImages(candidates){const images=[],answers=[];for(const q of candidates)for(const [kind,list]of [['配图',q.images||[]],['解析图',q.answerImages||[]]])for(const [i,image]of list.entries()){const data=image.useRedraw&&image.redrawPng?image.redrawPng:image.data||image.src||'';if(!/^data:image\//.test(data))throw Error('候选题 '+q.id+' 的'+kind+'不是内嵌数据，请先在题库修复图片');(kind==='配图'?images:answers).push({label:'候选题 '+q.id+' '+kind+' '+(i+1),data,required:kind==='解析图'&&!String(q.answer||'').trim()});}const required=answers.filter(x=>x.required),optional=answers.filter(x=>!x.required);if(images.length+required.length>24)throw Error('候选题的必要题图与解析图过多，本次无法完整核验；请缩小范围后重试');return [...images,...required,...optional.slice(0,Math.max(0,24-images.length-required.length))].map(({label,data})=>({label,data}));}
+async function originalImages(p){
+ const b=batch(),item={batchId:b.id,subjectName:job.trigger.subject,itemName:job.trigger.itemName};
+ if(!root.notebookReviewStatus(item))throw Error('当前原题尚未完整确认，请先完成切题复核');
+ const images=(await reviewedImages(item)||[]).map((data,i)=>({label:'当前原题区域 '+(i+1),data}));
+ const historicalLimit=Math.max(0,Math.min(4,R.candidateImageLimit-images.length));
+ const targetIds=new Set(p.focus.tags.map(t=>t.conceptId));
+ let historicalCount=0;
+ for(const exam of p.exams.slice(0,-1).reverse()){
+  if(historicalCount>=historicalLimit)break;
+  const relevant=exam.units.find(u=>u.tags.some(t=>targetIds.has(t.conceptId)));
+  if(!relevant)continue;
+  const ref={batchId:exam.batchId,subjectName:job.trigger.subject,itemName:relevant.itemName};
+  if(!root.notebookReviewStatus(ref))continue;
+  const shots=await reviewedImages(ref);
+  if(!shots?.length||shots.length>historicalLimit-historicalCount)continue;
+  shots.forEach((data,i)=>images.push({label:'历史原题 '+relevant.sourceId+' 区域 '+(i+1),data}));
+  historicalCount+=shots.length;
+ }
+ return images;
+}
+async function questionImages(candidates,budget=R.candidateImageLimit){
+ const required=[],optional=[];
+ for(const q of candidates){
+  const media=R.candidateMedia(q);
+  if(media.missingRequired)throw Error('候选题 '+q.id+' 缺少可读取的必要图片');
+  required.push(...media.required);
+  optional.push(...media.optional);
+ }
+ if(required.length>budget)throw Error('本批候选题的必要题图与解析图过多');
+ return [...required,...optional.slice(0,budget-required.length)];
+}
 async function run(only=null){
  if(running||scopeBusy)return;
  if(!C.scopeKey(scope()))throw Error('请先为本次考试选择练习题库');
@@ -198,18 +225,60 @@ async function run(only=null){
   processing=true;$('[data-settings]').open=false;
   for(const [index,r]of job.students.entries()){if(controller.signal.aborted)break;if(only&&r!==only)continue;const trace={stage:'preflight',taskId:job.id,alias:'S'+(index+1)};try{const p=packet(r.person),fingerprint=C.hash(p),providerFingerprint=C.hash([cfg.baseUrl,cfg.model,cfg.vision]);
  if(!staleReason(r)){if(r.status!=='ready'){r.status='ready';r.error='';await save();}continue;}
- r.requestedEvidenceUpgrade=false;r.packet=p;r.inputVersion=4;r.bankScope={...scope()};r.fingerprint=fingerprint;r.staleReason='';r.status='running';r.error='';r.errorCode='';r.diagnosticId='';r.plan=null;r.diagnosis=null;r.aiInput=null;r.candidateAudit=null;r.searchAttempts=[];delete r.lastModelResult;render();
+ r.requestedEvidenceUpgrade=false;r.packet=p;r.inputVersion=4;r.bankScope={...scope()};r.fingerprint=fingerprint;r.staleReason='';r.status='running';r.error='';r.errorCode='';r.diagnosticId='';r.plan=null;r.diagnosis=null;r.aiInput=null;r.candidateAudit=null;r.selectionPreflight=null;r.searchAttempts=[];delete r.lastModelResult;render();
  root.AiPracticeDiagnostics?.record({...trace,outcome:'mapping_check',examCount:p.exams.length,mappingTagCount:p.focus.tags.length},cfg);
- const originals=await originalImages(p);A.captureOriginal(job,r,p,originals);const selectionPacket={...p,original:{...p.original}};if(!selectionPacket.original.stem){const files=(batch().uploadedPdfs||[]).filter(f=>f.markdown&&(!p.original.sourceFile||f.fileName===p.original.sourceFile)&&(!f.detectedSubject||(typeof pdfSubjectMatches==='function'?pdfSubjectMatches(f.detectedSubject,p.subject):f.detectedSubject===p.subject)));for(const file of files){const recovered=R.recovery(file.markdown,p.original.questionNo);if(recovered){selectionPacket.original.stem=recovered;selectionPacket.original.sourceFile=file.fileName;selectionPacket.original.textRecovery='whitespace-tolerant-markdown';break;}}}r.packet=JSON.parse(JSON.stringify(selectionPacket));A.captureOriginal(job,r,selectionPacket,originals);
+ const originals=await originalImages(p);
+ if(originals.length>R.candidateImageLimit)throw Error('当前原题截图过多，请重新确认原题所需区域');
+ A.captureOriginal(job,r,p,originals);const selectionPacket={...p,original:{...p.original}};if(!selectionPacket.original.stem){const files=(batch().uploadedPdfs||[]).filter(f=>f.markdown&&(!p.original.sourceFile||f.fileName===p.original.sourceFile)&&(!f.detectedSubject||(typeof pdfSubjectMatches==='function'?pdfSubjectMatches(f.detectedSubject,p.subject):f.detectedSubject===p.subject)));for(const file of files){const recovered=R.recovery(file.markdown,p.original.questionNo);if(recovered){selectionPacket.original.stem=recovered;selectionPacket.original.sourceFile=file.fileName;selectionPacket.original.textRecovery='whitespace-tolerant-markdown';break;}}}r.packet=JSON.parse(JSON.stringify(selectionPacket));A.captureOriginal(job,r,selectionPacket,originals);
  r.targets=C.mappedTargets(p,catalog,id=>typeof qkNormalizeConceptId==='function'?qkNormalizeConceptId(id):root.PhysicsConceptAssessment?.resolve?.(id));
- if(!bank.some(q=>!q.archivedAsDuplicate&&String(q.stem||'').trim()&&(String(q.answer||'').trim()||q.answerImages?.length)&&['容易','普通','困难','简单','中等','难'].includes(q.difficulty))){const empty=C.candidateReport(bank,selectionPacket,r.targets,q=>root.PhysicsConceptAssessment?.units(q)||[],events,r.person);r.candidateAudit=empty.counts;throw Error('没有可推荐题目。'+C.candidateSummary(empty.counts));}
+ const imageBudget=R.candidateImageLimit-originals.length;
+ const questionUnits=q=>root.PhysicsConceptAssessment?.units(q)||[];
+ if(!bank.some(q=>!q.archivedAsDuplicate&&!R.candidateQuality(q,imageBudget).reason)){
+  const empty=C.candidateReport(bank,{...selectionPacket,candidateImageBudget:imageBudget},r.targets,questionUnits,events,r.person);
+  r.candidateAudit=empty.counts;
+  const error=Error('没有可推荐题目。'+C.candidateSummary(empty.counts));
+  error.code='no_candidates';throw error;
+ }
  const preparationKey=C.hash([R.VERSION,r.bankScope,selectionPacket,r.targets,cfg.baseUrl,cfg.model,cfg.vision]);if(r.learningPreparation?.key!==preparationKey||r.learningPreparation?.status!=='ready'||!r.learningPreparation?.value){tell('正在为 '+r.person.name+' 核对原题和历次证据，判断本次训练起点…');const msgs=C.preparationMessages(selectionPacket,r.targets,originals),input=JSON.parse(msgs[1].content[0].text);r.learningPreparation={key:preparationKey,status:'running',rulesVersion:R.VERSION,systemPolicy:msgs[0].content,input,model:cfg.model,repairs:[]};A.capturePreparation(job,r,originals,msgs);await save();try{const value=await C.validatedCall({...cfg,trace:{...trace,stage:'preparation'},onRepair:repair=>r.learningPreparation.repairs.push(repair)},msgs,j=>C.preparation(j,selectionPacket,r.targets),controller.signal);Object.assign(r.learningPreparation,{status:'ready',value,completedAt:new Date().toISOString()});await save();}catch(e){r.learningPreparation.status='error';delete r.learningPreparation.key;throw e;}}const {evidenceSources,...intent}=r.learningPreparation.value;r.targets={...r.targets,practiceIntent:intent,preparationSourceIds:evidenceSources||[]};const selectionIndex=C.evidenceIndex(selectionPacket,r.targets);selectionPacket.practiceIntent={...intent,evidenceKeys:(evidenceSources||[]).map(id=>selectionIndex.bySource.get(id)).filter(Boolean)};r.targets.practiceIntent=selectionPacket.practiceIntent;
- let result,candidates,report;r.searchAttempts=[];for(let pass=1;pass<=2;pass++){selectionPacket.searchPass=pass;report=C.candidateReport(bank,selectionPacket,r.targets,q=>root.PhysicsConceptAssessment?.units(q)||[],events,r.person);candidates=report.questions;r.candidateAudit=report.counts;r.candidateIds=candidates.map(q=>q.id);r.teachingContract=report.contract;
- root.AiPracticeDiagnostics?.record({...trace,outcome:'filtered',counts:report.counts,examCount:p.exams.length,targetCount:r.targets.conceptIds.length,candidateCount:candidates.length,searchPass:pass},cfg);
- if(!candidates.length){if(result)break;const e=Error('没有可推荐题目。'+C.candidateSummary(report.counts)+'请到题库检查标注、题干、难度和答案后回来重试；题库审核状态不影响选用。');e.code='no_candidates';throw e;}
- r.selectionPreflight={contract:report.contract,counts:report.counts,retrieval:report.retrieval,targets:r.targets,evidence:C.modelEvidence(selectionPacket,r.targets),candidates:candidates.map(q=>({id:q.id,stem:q.stem,answer:q.answer,difficulty:q.difficulty,profile:R.profile(q)}))};
- tell('正在为 '+r.person.name+' 比较题干、解析与个人训练目标，选择练习'+(pass>1?'（扩大候选比较）':'')+'…');const images=[...originals,...await questionImages(candidates)];r.imageSources=images.map(x=>x.label);const msgs=C.messages('recommendation',selectionPacket,catalog,r.targets,candidates,images);A.captureInput(job,r,selectionPacket,r.targets,candidates,images,msgs,cfg);result=await C.validatedCall({...cfg,trace:{...trace,stage:'recommendation'},onRepair:repair=>{r.aiInput.repairs.push(repair);r.aiInput.attemptCount=repair.attempt;}},msgs,j=>C.recommendation(j,selectionPacket,catalog,candidates,r.targets),controller.signal);r.searchAttempts.push({pass,counts:report.counts,retrieval:report.retrieval,actualModelInput:JSON.parse(JSON.stringify(r.aiInput)),result});await save();if(result.plan.items.length)break;selectionPacket.excludeCandidateIds=[...(selectionPacket.excludeCandidateIds||[]),...candidates.map(q=>q.id)];selectionPacket.previousUnmetNeeds=result.plan.unmetNeeds;}
- if(!result?.plan.items.length){const e=Error('本次已比较 '+r.searchAttempts.reduce((n,a)=>n+a.actualModelInput.candidates.length,0)+' 道候选，未生成合适练习：'+(result?.plan.unmetNeeds||[]).join('；')+'。这不代表整个题库没有适合题，具体缺口已保存在选题依据中。');e.code='unmet_practice_needs';r.lastModelResult=result;throw e;}delete job.lastWordExport;r.diagnosis=result.diagnosis;r.plan=result.plan;A.captureSelection(job,r,bank,true);r.status='ready';delete r.lastUpgradeError;delete r.lastUpgradeAttempt;r.model=cfg.model;r.providerFingerprint=providerFingerprint;r.generatedAt=new Date().toISOString();await save();
+ selectionPacket.candidateImageBudget=imageBudget;
+ let result;
+ for(let pass=1;pass<=2;pass++){
+  selectionPacket.searchPass=pass;
+  const report=C.candidateReport(bank,selectionPacket,r.targets,questionUnits,events,r.person);
+  const candidates=report.questions;
+  r.candidateAudit=report.counts;r.candidateIds=candidates.map(q=>q.id);r.teachingContract=report.contract;
+  root.AiPracticeDiagnostics?.record({...trace,outcome:'filtered',counts:report.counts,examCount:p.exams.length,targetCount:r.targets.conceptIds.length,candidateCount:candidates.length,searchPass:pass},cfg);
+  r.selectionPreflight={contract:report.contract,counts:report.counts,retrieval:report.retrieval,targets:r.targets,evidence:C.modelEvidence(selectionPacket,r.targets),candidates:candidates.map(q=>({id:q.id,stem:q.stem,answer:q.answer,difficulty:q.difficulty,profile:R.profile(q)}))};
+  if(!candidates.length){
+   if(r.searchAttempts.length)break;
+   const error=Error('没有可推荐题目。'+C.candidateSummary(report.counts)+'请检查知识点标注、题干、难度、答案和必要图片。');
+   error.code='no_candidates';throw error;
+  }
+  tell('正在为 '+r.person.name+' 比较题干、解析与个人训练目标，选择练习'+(pass>1?'（扩大候选比较）':'')+'…');
+  const images=[...originals,...await questionImages(candidates,imageBudget)];
+  r.imageSources=images.map(x=>x.label);
+  const msgs=C.messages('recommendation',selectionPacket,catalog,r.targets,candidates,images);
+  A.captureInput(job,r,selectionPacket,r.targets,candidates,images,msgs,cfg);
+  let failed;
+  try{
+   result=await C.validatedCall({...cfg,trace:{...trace,stage:'recommendation'},onRepair:repair=>{r.aiInput.repairs.push(repair);r.aiInput.attemptCount=repair.attempt;}},msgs,j=>C.recommendation(j,selectionPacket,catalog,candidates,r.targets),controller.signal);
+  }catch(error){
+   if(error.code!=='teaching_rules'||controller.signal.aborted)throw error;
+   result=null;failed={errorCode:error.code,error:error.message};
+  }
+  r.searchAttempts.push({pass,counts:report.counts,retrieval:report.retrieval,actualModelInput:JSON.parse(JSON.stringify(r.aiInput)),result,...failed});
+  await save();
+  if(result?.plan.items.length)break;
+  selectionPacket.excludeCandidateIds=[...(selectionPacket.excludeCandidateIds||[]),...candidates.map(q=>q.id)];
+  selectionPacket.previousUnmetNeeds=result?.plan.unmetNeeds||(failed?[failed.error]:[]);
+ }
+ if(!result?.plan.items.length){
+  const checked=r.searchAttempts.reduce((n,a)=>n+a.actualModelInput.candidates.length,0);
+  const gaps=selectionPacket.previousUnmetNeeds||[];
+  const error=Error('本次已比较 '+checked+' 道候选，未找到能确认适合的练习。'+(gaps.length?gaps.join('；')+'。':'')+'选题依据中保留了这几批的比较记录。');
+  error.code='unmet_practice_needs';r.lastModelResult=result;throw error;
+ }
+ delete job.lastWordExport;r.diagnosis=result.diagnosis;r.plan=result.plan;A.captureSelection(job,r,bank,true);r.status='ready';delete r.lastUpgradeError;delete r.lastUpgradeAttempt;r.model=cfg.model;r.providerFingerprint=providerFingerprint;r.generatedAt=new Date().toISOString();await save();
  }catch(e){r.status='error';r.error=e.message;r.errorCode=e.code||'generation_error';r.diagnosticId=e.diagnosticId||root.AiPracticeDiagnostics?.record({...trace,outcome:'error',errorCode:e.code||'preflight_error'},cfg);try{await save();}catch(storageError){r.error+='；'+storageError.message;controller.abort();}}render();}
  }finally{running=false;job.students.filter(r=>r.status==='running').forEach(r=>{r.status='error';r.error='已中断，可重试';});render();if(processing)tell('已生成 '+job.students.filter(r=>r.status==='ready').length+' / '+job.students.length+' 人。可直接导出已生成练习；需要调整时可换题或移除，失败时可导出调用诊断。');}}
 function printable(q){const media=a=>(a||[]).map(m=>({src:m.useRedraw&&m.redrawPng?m.redrawPng:m.data||m.src,optionLabel:m.optionLabel,displayWidth:m.displayWidth})).filter(m=>m.src);const images=media(q.images),answers=media(q.answerImages);return{id:q.id,q,stem:q.stem,answer:R.compactAnswer(q.answer),images:images.map(m=>m.src),imageDetails:images,answerImages:answers.map(m=>m.src),answerImageDetails:answers,optionImageIndexes:q.optionImageIndexes};}

@@ -25,4 +25,34 @@ const output=A.report(job,all);assert.equal(output.searchAttempts.length,1);asse
 // The actual standalone backup codec must retain new hidden metadata while cleaning credentials.
 const backupContext={window:null,document:{readyState:'loading',addEventListener(){}},Blob,ArrayBuffer,Uint8Array,Date,TextEncoder,crypto:require('node:crypto').webcrypto,JSZip:require('../jszip.min.js'),btoa,atob};backupContext.window=backupContext;vm.createContext(backupContext);vm.runInContext(fs.readFileSync('full-data-backup.js','utf8').replace('root.FullDataBackup={','root.cleanForTest=clean;root.FullDataBackup={'),backupContext);const cleanJob=backupContext.cleanForTest({...job,apiKey:'DO-NOT-BACKUP'}),zipData={format:'ScoreFullBackup',version:1,createdAt:new Date().toISOString(),batches:[{id:'now',combinedStudentData:[],practiceBankScope:students[0].bankScope,aiPracticeTasks:[cleanJob]}],workspace:{currentBatchId:'now',uploadedFilesData:{},uploadedPdfs:[],combinedStudentData:[],allSubjectHeaders:[]},databases:[],local:{}};const restored=await backupContext.FullDataBackup.readZip(await backupContext.FullDataBackup.createZip(zipData));assert.equal(restored.batches[0].practiceBankScope.grade,'八年级');assert.equal(restored.batches[0].aiPracticeTasks[0].students[0].bankScope.grade,'八年级');assert(restored.batches[0].aiPracticeTasks[0].students[0].learningPreparation.value);assert(restored.batches[0].aiPracticeTasks[0].students[0].searchAttempts[0].result.plan.items[0].suitability);assert(!JSON.stringify(restored).includes('DO-NOT-BACKUP'));
 let repairCalls=0;await C.validatedCall({trace:{stage:'preparation'}},C.preparationMessages(packet,targets),j=>C.preparation(j,packet,targets),null,async(c,m)=>{repairCalls++;if(repairCalls===2)assert(!m.at(-1).content.includes('items填候选ID'));return JSON.stringify(repairCalls===1?{goal:'bad'}:prep)});assert.equal(repairCalls,2);
+// The live orchestration keeps every required image, then tries a different shortlist after a semantic rejection.
+students[0]={person:{name:'PRIVATE',className:'1'},status:'pending'};
+const figure={data:'data:image/png;base64,AA'};
+sandbox.bank=[
+ ...Array.from({length:13},(_,i)=>q('illustrated'+i,{images:[figure,figure,figure]})),
+ q('text-fallback')
+];
+sandbox.originalImages=async()=>[{label:'当前原题区域 1',data:figure.data}];
+sandbox.questionImages=sandbox.collectImages;
+const compared=[];
+sandbox.C.validatedCall=(cfg,msgs,validate,signal)=>C.validatedCall(cfg,msgs,validate,signal,async(c,m)=>{
+ const input=JSON.parse(m[1].content[0].text);
+ if(c.trace.stage==='preparation')return JSON.stringify(prep);
+ const ids=input.candidates.map(q=>q.id);
+ const labels=m[1].content.filter(p=>p.type==='text').slice(1).map(p=>p.text);
+ assert(labels.length<=R.candidateImageLimit);
+ for(const id of ids.filter(id=>id.startsWith('illustrated'))){
+  assert.equal(labels.filter(label=>label.startsWith('候选题 '+id+' 配图 ')).length,3);
+ }
+ compared.push({pass:input.searchPass,ids});
+ const selected={...result.items[0],id:ids[0]};
+ if(input.searchPass===1)selected.suitability={...selected.suitability,completeness:'uncertain'};
+ return JSON.stringify({...result,items:[selected]});
+});
+await sandbox.execute();
+assert.deepEqual(compared.map(attempt=>attempt.pass),[1,1,2]);
+assert(compared[0].ids.includes('text-fallback'),'a text question can fill the available shortlist');
+assert(compared[2].ids.every(id=>!compared[0].ids.includes(id)),'deferred questions can enter the second shortlist');
+assert.equal(students[0].searchAttempts[0].errorCode,'teaching_rules');
+assert.equal(students[0].status,'ready');
 console.log('PASS personal intent before retrieval, answer-informed profiles, reserved task candidates, semantic rejection, expanded search, actual UI orchestration, preparation reuse, anonymous audit and no automatic reruns');})().catch(e=>{console.error(e);process.exitCode=1});
