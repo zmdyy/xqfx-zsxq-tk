@@ -242,7 +242,7 @@ async function applyPreparedImport(p,mode){
 
  return {...r,updated:r.qualityUpdated,summary:'新增 '+r.added+' 道，合并重复 '+r.merged+' 道，质量修订 '+r.qualityUpdated+' 道，疑似变式保留 '+r.suspected+' 道。'+(p.kind==='docx'?'请核对答案、公式和图片。':'')};
 }
-function initBankManagement(){window.PhysicsBankBackup.init({dbName:DB_NAME,setSetting:saveBankSetting});window.PhysicsBankManagement.init({dbName:DB_NAME,questions:()=>state.questions,prepare:prepareImportFile,apply:applyPreparedImport,getSetting:bankSetting,setSetting:saveBankSetting,newQuestion,backup:options=>window.PhysicsBankBackup.backup(options),viewAdded:viewImportAdded,notify:tell,rememberAdded:record=>{state.importSelection=record},onChange:()=>{invalidateWordDownload();render()}})}
+function initBankManagement(){window.PhysicsBankBackup.init({dbName:DB_NAME,workspaceInfo:window.PhysicsBankWorkspace.current().meta,setSetting:saveBankSetting});window.PhysicsBankManagement.init({dbName:DB_NAME,questions:()=>state.questions,prepare:prepareImportFile,apply:applyPreparedImport,getSetting:bankSetting,setSetting:saveBankSetting,newQuestion,backup:options=>window.PhysicsBankBackup.backup(options),viewAdded:viewImportAdded,notify:tell,rememberAdded:record=>{state.importSelection=record},onChange:()=>{invalidateWordDownload();render()}})}
 
 function bind(){
 $('resetFiltersBtn').addEventListener('click',resetQuestionFilters);
