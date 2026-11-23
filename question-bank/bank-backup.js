@@ -1,7 +1,7 @@
 /* Shared background job and storage status. No main-thread ZIP fallback. */
 (function(root){
 'use strict';
-const workerURL=new URL('bank-backup-worker.js?v=20261014backup3',document.currentScript.src).href;
+const workerURL=new URL('bank-backup-worker.js?v=20261123ws1',document.currentScript.src).href;
 let api,job=null,url=null,statusWorker=null;
 function run(action,onProgress,extra,workspaceInfo){
  if(!root.Worker)throw Error('当前浏览器不支持后台备份，请使用新版浏览器。');
