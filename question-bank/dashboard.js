@@ -1,7 +1,7 @@
 /* 题库明细独立页：只读同源 IndexedDB，不重新导入，不修改题库。 */
 (function(root){
 'use strict';
-const DB_NAME='PhysicsTrainingBankV1';
+let DB_NAME='';
 const STORE='questions';
 const $=id=>document.getElementById(id);
 const normalizeName=name=>String(name||'').trim().toLowerCase().replace(/[\s/]+/g,'');
@@ -45,12 +45,12 @@ async function readKnowledgeCatalog(){
  return {byName,byId,error};
 }
 function focusConcept(name){
- root.location.href='./index.html?concept_name='+encodeURIComponent(name);
+ const p=new URLSearchParams({concept_name:name,workspace:root.PhysicsBankWorkspace.current().meta.id});root.location.href='./index.html?'+p.toString();
 }
 function focusDistribution(filter){
- const params=new URLSearchParams();for(const key of ['category','type','concept'])if(filter[key])params.set('distribution_'+key,filter[key]);if(filter.approved)params.set('distribution_approved','1');root.location.href='./index.html?'+params.toString();
+ const params=new URLSearchParams({workspace:root.PhysicsBankWorkspace.current().meta.id});for(const key of ['category','type','concept'])if(filter[key])params.set('distribution_'+key,filter[key]);if(filter.approved)params.set('distribution_approved','1');root.location.href='./index.html?'+params.toString();
 }
-function classifyDistribution(filter){const p=new URLSearchParams();for(const key of ['category','type','concept'])if(filter[key])p.set('distribution_'+key,filter[key]);if(filter.approved)p.set('distribution_approved','1');p.set('classify','1');root.location.href='./index.html?'+p.toString()}
+function classifyDistribution(filter){const p=new URLSearchParams({workspace:root.PhysicsBankWorkspace.current().meta.id});for(const key of ['category','type','concept'])if(filter[key])p.set('distribution_'+key,filter[key]);if(filter.approved)p.set('distribution_approved','1');p.set('classify','1');root.location.href='./index.html?'+p.toString()}
 function resetFilters(){
  $('detailScope').value='all';
  $('detailMetric').value='type';
@@ -61,6 +61,7 @@ function resetFilters(){
 async function init(){
  if(!root.PhysicsBankDetails){showStatus('统计图表模块加载失败，请按 Ctrl+F5 刷新。',true);return}
  try{
+   const workspace=await root.PhysicsBankWorkspace.resolve();DB_NAME=workspace.dbName;root.PhysicsBankWorkspace.decorateLinks();
    const [loaded,lookup]=await Promise.all([readQuestions(),readKnowledgeCatalog()]);
    questions=loaded;
    api={

@@ -35,6 +35,7 @@ onmessage=async({data:request})=>{
   bank.settings=bank.settings.filter(s=>!internal.has(s.id));
   bank.settings.push({id:'bankBackupSnapshotV1',value:{snapshotAt,baseline}});
   if(request.extra)bank.diagramRepairBatch=request.extra;
+  if(request.workspaceInfo)bank.workspaceInfo=request.workspaceInfo;
   let last=0;
   const result=await PhysicsBankPackage.create(bank,{kind:'backup',onPrepare:p=>{if(Date.now()-last>80){last=Date.now();progress({stage:'prepare',...p})}},onProgress:p=>{if(Date.now()-last>80||p.percent===100){last=Date.now();progress({stage:'compress',percent:p.percent})}}});
   postMessage({type:'done',result:{blob:result.blob,resourceCount:result.resourceCount,questionCount:bank.questions.length,record:{snapshotAt,generatedAt:new Date().toISOString(),baseline}}});
