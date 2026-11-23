@@ -33,7 +33,7 @@ const server=http.createServer((req,res)=>{const u=decodeURIComponent(req.url.sp
   await page.locator('.bank-ws-card').filter({hasText:'2026—2027 · 八年级'}).getByRole('button',{name:'进入题库'}).click();
   await page.waitForFunction(id=>{try{return PhysicsBankWorkspace.current().meta.id===id}catch(_){return false}},grade8);
   assert.deepEqual(await ids(),['G8-Q']);
-  const dash=await browser.newPage();await dash.goto(base+'/question-bank/dashboard.html?workspace='+encodeURIComponent(grade9));await dash.waitForFunction(()=>{try{return window.PhysicsBankWorkspace.current().meta.grade==='九年级'}catch(_){return false}});
+  const dash=await page.context().newPage();await dash.goto(base+'/question-bank/dashboard.html?workspace='+encodeURIComponent(grade9));await dash.waitForFunction(()=>{try{return window.PhysicsBankWorkspace.current().meta.grade==='九年级'}catch(_){return false}});
   assert.equal(await dash.evaluate(()=>PhysicsBankWorkspace.current().dbName),'PhysicsTrainingBankV1_'+grade9);
   assert.notEqual(grade8,grade9);assert.notEqual(archiveId,grade8);
   const original=await page.evaluate(()=>new Promise(resolve=>{const r=indexedDB.open('PhysicsTrainingBankV1');r.onsuccess=()=>{const q=r.result.transaction('questions').objectStore('questions').get('LEGACY-Q');q.onsuccess=()=>{r.result.close();resolve(q.result)}}}));
