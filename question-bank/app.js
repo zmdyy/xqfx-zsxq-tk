@@ -210,7 +210,7 @@ async function prepareImportFile(file){
 }
 function preparePackage(file,pkg){
  const j=pkg.bank,description=pkg.legacy?'（兼容旧文件）':'（统一格式V2；正文和资源已通过校验）';
- if(pkg.kind==='backup')return {file,kind:'backup',data:j,questions:j.questions,package:pkg,plan:estimateMerge(j.questions),description:'个人备份'+description+'：可仅添加题目，或恢复完整个人记录。'};
+ if(pkg.kind==='backup')return {file,kind:'backup',data:j,questions:j.questions,package:pkg,plan:estimateMerge(j.questions),description:'个人备份'+description+'：来源工作区 '+(j.workspaceInfo?.name||[j.workspaceInfo?.academicYear,j.workspaceInfo?.grade].filter(Boolean).join(' · ')||'未标注')+'；可仅添加题目，或恢复完整个人记录。'};
  const diff=window.PhysicsBankVersionUpdate.compare(state.questions,j.questions);
  return {file,kind:'update',questions:j.questions,package:pkg,plan:{added:diff.added.length,existing:j.questions.length-diff.added.length-diff.conflicts.length,conflicts:diff.conflicts.length},description:'题库更新包'+description+'：添加新题，按修订规则更新旧题；教师修改受保护。'};
 }
@@ -242,7 +242,7 @@ async function applyPreparedImport(p,mode){
 
  return {...r,updated:r.qualityUpdated,summary:'新增 '+r.added+' 道，合并重复 '+r.merged+' 道，质量修订 '+r.qualityUpdated+' 道，疑似变式保留 '+r.suspected+' 道。'+(p.kind==='docx'?'请核对答案、公式和图片。':'')};
 }
-function initBankManagement(){window.PhysicsBankBackup.init({dbName:DB_NAME,workspaceInfo:window.PhysicsBankWorkspace.current().meta,setSetting:saveBankSetting});window.PhysicsBankManagement.init({dbName:DB_NAME,questions:()=>state.questions,prepare:prepareImportFile,apply:applyPreparedImport,getSetting:bankSetting,setSetting:saveBankSetting,newQuestion,backup:options=>window.PhysicsBankBackup.backup(options),viewAdded:viewImportAdded,notify:tell,rememberAdded:record=>{state.importSelection=record},onChange:()=>{invalidateWordDownload();render()}})}
+function initBankManagement(){window.PhysicsBankBackup.init({dbName:DB_NAME,workspaceInfo:window.PhysicsBankWorkspace.current().meta,setSetting:saveBankSetting});window.PhysicsBankManagement.init({dbName:DB_NAME,workspaceInfo:window.PhysicsBankWorkspace.current().meta,questions:()=>state.questions,prepare:prepareImportFile,apply:applyPreparedImport,getSetting:bankSetting,setSetting:saveBankSetting,newQuestion,backup:options=>window.PhysicsBankBackup.backup(options),viewAdded:viewImportAdded,notify:tell,rememberAdded:record=>{state.importSelection=record},onChange:()=>{invalidateWordDownload();render()}})}
 
 function bind(){
 $('resetFiltersBtn').addEventListener('click',resetQuestionFilters);
