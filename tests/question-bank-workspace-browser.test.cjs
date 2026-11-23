@@ -7,12 +7,12 @@ const server=http.createServer((req,res)=>{const u=decodeURIComponent(req.url.sp
  const browser=await chromium.launch({executablePath:process.env.CHROME_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900}}),base='http://127.0.0.1:'+server.address().port;
-  page.on('pageerror',e=>{throw e});
+  page.on('pageerror',e=>{throw e});page.on('dialog',async d=>{console.log('BROWSER DIALOG:',d.message());await d.accept()});
   await page.goto(base+'/question-bank/index.html');await page.waitForSelector('.bank-ws-panel');
   // A legacy shared bank is copied into a clearly labelled archive; source remains untouched.
   await page.evaluate(()=>new Promise((resolve,reject)=>{const r=indexedDB.open('PhysicsTrainingBankV1',1);r.onupgradeneeded=()=>{for(const s of ['questions','events','settings'])r.result.createObjectStore(s,{keyPath:'id'})};r.onsuccess=()=>{const tx=r.result.transaction('questions','readwrite');tx.objectStore('questions').put({id:'LEGACY-Q',stem:'旧版共享题库记录',images:[]});tx.oncomplete=()=>{r.result.close();resolve()};tx.onerror=()=>reject(tx.error)}}));
   await page.reload();await page.waitForSelector('.bank-ws-card');
-  const archive=page.locator('.bank-ws-card').filter({hasText:'历史题库（待整理）'});await archive.getByRole('button',{name:'进入题库'}).click();
+  const archive=page.locator('.bank-ws-card').filter({hasText:'历史题库（待整理）'});await archive.getByRole('button',{name:'进入题库'}).click();await page.waitForTimeout(200);console.log('AFTER ARCHIVE CLICK',await page.evaluate(()=>({url:location.href,active:(()=>{try{return PhysicsBankWorkspace.current().meta}catch(e){return e.message}})()})));
   await page.waitForFunction(()=>{try{return window.PhysicsBankWorkspace.current().meta.legacyArchive===true}catch(_){return false}});
   const archiveId=await page.evaluate(()=>PhysicsBankWorkspace.current().meta.id);
   const legacyRows=await page.evaluate(()=>new Promise(resolve=>{const r=indexedDB.open('PhysicsTrainingBankV1_legacy-archive');r.onsuccess=()=>{const q=r.result.transaction('questions').objectStore('questions').get('LEGACY-Q');q.onsuccess=()=>{r.result.close();resolve(q.result)}}}));
