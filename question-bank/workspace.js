@@ -57,7 +57,7 @@ async function chooser(){
 }
 async function resolve(){
  const id=new URLSearchParams(location.search).get('workspace');
- if(id){const meta=await get(id);if(meta){if(!await acquire(id))throw Error('当前题库已在另一个页面打开，请关闭另一个页面后重试。');active=meta;addToolbar(meta);return{id,dbName:dbName(id),meta}}}
+ if(id){const meta=await get(id);if(meta){if(!await acquire(id))throw Error('当前题库已在另一个页面打开，请关闭另一个页面后重试。');active=meta;addToolbar(meta);decorateLinks();return{id,dbName:dbName(id),meta}}}
  await migrateLegacy();
  return chooser();
 }
