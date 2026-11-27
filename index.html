@@ -768,7 +768,7 @@
 @media (max-width:760px){.notebook-choice-grid--two{grid-template-columns:1fr}}
 </style>
     <link rel="stylesheet" href="seating.css">
-    <link rel="stylesheet" href="analysis-leaderboards.css?v=1">
+    <link rel="stylesheet" href="analysis-leaderboards.css?v=image-copy-sync">
 </head>
 <body>
 <div class="container">
@@ -966,7 +966,7 @@
                 <span>密集</span>
             </span>
         </div>
-        <div id="classDiffHeatmapChart" style="width:100%;height:420px;"></div>
+        <div id="classDiffHeatmapChart" data-custom-chart-copy style="width:100%;height:420px;"></div>
         <div id="heatmapReportPanel" style="display:none;margin-top:14px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;padding:12px 14px;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
                 <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-right:6px;">单科得分率区间名单</div>
@@ -1013,7 +1013,10 @@
                 <div id="classDiffDistributionTablesContainer"></div>
             </div>
             <div class="distribution-chart-container" style="flex:2;min-height:400px;min-width:400px;">
-                <div id="classDiffDistributionChart" style="width:100%;height:400px;"></div>
+                <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+                    <button type="button" class="image-action-btn" id="classDiffRankCopyPng" title="以高清 PNG 格式复制当前柱状图" disabled>复制图片</button>
+                </div>
+                <div id="classDiffDistributionChart" data-custom-chart-copy style="width:100%;height:400px;"></div>
             </div>
         </div>
         <div class="distribution-extra-charts" id="classDiffDistributionExtraCharts" style="display:flex;flex-wrap:wrap;gap:30px;margin-top:20px;"></div>
@@ -1027,6 +1030,7 @@
             <span id="classDiffTopTenSummary" class="class-top-ten-summary" role="status"></span>
             <button type="button" class="class-top-ten-details" id="classDiffTopTenDetails"
                 aria-pressed="false" aria-controls="classDiffTopTenTable">显示详情</button>
+            <button type="button" class="image-action-btn" id="classDiffTopTenCopyPng" title="复制完整榜单" disabled>复制图片</button>
             <button type="button" class="class-top-ten-export" id="classDiffTopTenExport"
                 title="以 4 倍分辨率导出整张表，大表导出为矢量图" disabled>导出图片</button>
         </div>
@@ -1137,7 +1141,7 @@
         </div>
         <div id="collectiveHeatmapEmpty" class="diagnosis-empty" style="display:none;">暂无可绘制的小题数据。</div>
         <div id="collectiveHeatmapScroll" style="overflow-x:auto;overflow-y:hidden;border:1px solid #e5e7eb;border-radius:10px;background:#fff;">
-            <div id="collectiveHeatmapChart" style="height:360px;min-width:0;"></div>
+            <div id="collectiveHeatmapChart" data-custom-chart-copy style="height:360px;min-width:0;"></div>
         </div>
     </div>
 
@@ -1322,6 +1326,7 @@
         <div class="top-controls">
             <div class="top-title" style="font-size:16px;font-weight:bold;">成绩趋势分析</div>
             <div class="export-buttons">
+                <button type="button" class="image-action-btn" id="trendCopyToggle" aria-label="显示图表复制按钮" aria-pressed="false">复制：关</button>
                 <button class="upload-btn small" id="trendEditOrderBtn">编辑考试名称与顺序</button>
                 <button class="upload-btn small" id="trendPrintBtn" style="background:#2ecc71;">打印当前学生</button>
                 <button class="upload-btn small" id="trendBatchPrintBtn" style="background:#e67e22;">批量打印全部</button>
@@ -2015,8 +2020,7 @@ function applyDuplicateDisplayNames(data) {
 }
 function safeDisposeChart(dom) {
     if (!dom) return;
-    var inst = echarts && echarts.getInstanceByDom(dom);
-    if (inst) try { inst.dispose(); } catch(e) {}
+    try { AppCore.charts.dispose(dom); } catch(e) {}
 }
 function showModal(msg, cb) {
     var overlay = document.getElementById('modalOverlay');
@@ -6043,7 +6047,7 @@ function renderCrossExamSankey(batchTop10s) {
     if (chartDom.__chart) {
         try { chartDom.__chart.dispose(); } catch(e) {}
     }
-    var chart = echarts.init(chartDom);
+    var chart = AppCore.charts.initWithCopy(chartDom);
     chartDom.__chart = chart;
 
     var graphics = batchTop10s.map(function(bt, ei) {
@@ -6358,7 +6362,7 @@ function renderScoreDistChart() {
         colors.push('rgb(' + r + ',' + g + ',' + b + ')');
     }
     if (chartDom.__chart) try { chartDom.__chart.dispose(); } catch(e) {}
-    const myChart = echarts.init(chartDom);
+    const myChart = AppCore.charts.initWithCopy(chartDom);
     chartDom.__chart = myChart;
     myChart.setOption({
         tooltip: { trigger: 'axis', formatter: function(p) { const d = p[0]; return d.name + '<br/>人数: ' + d.value + (buckets[d.dataIndex].names.length ? '<br/>含: ' + buckets[d.dataIndex].names.join(', ') : ''); } },
@@ -7300,7 +7304,7 @@ function renderCollectiveHeatmap() {
     chartEl.style.height = chartHeight + 'px';
 
     resetCollectiveHeatmapChart(chartEl);
-    var chart = echarts.init(chartEl, null, {renderer:'svg'});
+    var chart = AppCore.charts.initWithCopy(chartEl, null, {renderer:'svg'});
     chartEl.__chart = chart;
     var colors = mode === 'anomaly'
         ? ['#f8fafc','#ffedd5','#fdba74','#f97316','#dc2626','#7f1d1d']
@@ -7464,7 +7468,7 @@ function renderCollectiveStudentOverviewHeatmap(model, onlyAbnormal, chartEl, sc
     }
 
     resetCollectiveHeatmapChart(chartEl);
-    var chart = echarts.init(chartEl, null, {renderer:'svg'});
+    var chart = AppCore.charts.initWithCopy(chartEl, null, {renderer:'svg'});
     chartEl.__chart = chart;
     var maxVal = Math.max(40, Math.ceil(Math.max.apply(null, data.map(function(d){ return Number(d.value[2]) || 0; })) / 10) * 10);
     chart.setOption({
@@ -10246,7 +10250,7 @@ function initTrendCharts() {
     var ids = ['totalRankChartContainer','radarChartContainer','chineseRankChart','mathRankChart','englishRankChart','physicsRankChart','historyRankChart','daofaRankChart','chemistryRankChart','bioGeoRankChart'];
     ids.forEach(function(id) {
         var el = document.getElementById(id);
-        if (el) trendEchartsInst[id] = echarts.init(el, null, rendererOpt);
+        if (el) trendEchartsInst[id] = AppCore.charts.initWithCopy(el, null, rendererOpt);
     });
 }
 // Window resize handler for trend charts
@@ -11099,6 +11103,12 @@ document.getElementById('trendBatchPrintBtn').addEventListener('click', async fu
 });
 
 // Trend: Exam name & order editing (with drag reorder)
+document.getElementById('trendCopyToggle').addEventListener('click', function() {
+    const enabled = this.getAttribute('aria-pressed') !== 'true';
+    document.getElementById('tab-trend').classList.toggle('trend-copy-enabled', enabled);
+    this.setAttribute('aria-pressed', String(enabled));
+    this.textContent = enabled ? '复制：开' : '复制：关';
+});
 document.getElementById('trendEditOrderBtn').addEventListener('click', async function() {
     const ps = DataPool.trendParsedSheets;
     if (!ps || !ps.total || !ps.total.headers) { await showAlert('请先生成趋势数据（需至少2个批次）'); return; }
@@ -12151,7 +12161,7 @@ function renderStudentReadableReport(studentName, thresholdVal) {
     html.push('<div id="studentReportWeakCompareChart" class="sr-chart sr-chart-wide"></div>');
     html.push('</div>');
 
-    html.push('<div class="sr-section"><h3>五、薄弱小题明细清单</h3>');
+    html.push('<div class="sr-section" data-report-list-image="weak-items">' + renderReportListImageHeading('五、薄弱小题明细清单', {disabled:!weakItems.length, allowDownload:true}));
     if (weakItems.length) {
         html.push('<table class="sr-table"><thead><tr><th>科目</th><th>题号/模块</th><th>得分</th><th>个人得分率</th><th>全体该题得分率</th><th>与全体对比</th><th>学生答案</th><th>正确答案</th></tr></thead><tbody>');
         weakItems.slice(0, 36).forEach(function(w) {
@@ -12227,7 +12237,7 @@ function renderStudentReadableCharts(subjects, weakItems, data, studentName) {
     var trendEl = document.getElementById('studentReportTrendChart');
     if (trendEl) {
         safeDisposeChart(trendEl);
-        var trendChart = echarts.init(trendEl, null, { renderer: 'svg' });
+        var trendChart = AppCore.charts.initWithCopy(trendEl, null, { renderer: 'svg' });
         var trend = getTotalRankTrendForReport(studentKey);
         if (trend && trend.values.some(function(v) { return v != null; })) {
             var valid = trend.values.filter(function(v) { return v != null; });
@@ -12249,7 +12259,7 @@ function renderStudentReadableCharts(subjects, weakItems, data, studentName) {
     var radarEl = document.getElementById('studentReportRadarChart');
     if (radarEl) {
         safeDisposeChart(radarEl);
-        var radarChart = echarts.init(radarEl, null, { renderer: 'svg' });
+        var radarChart = AppCore.charts.initWithCopy(radarEl, null, { renderer: 'svg' });
         if (usable.length) {
             radarChart.setOption({
                 title: getReportChartTitle('各科得分率雷达：优势结构一眼可见'),
@@ -12265,7 +12275,7 @@ function renderStudentReadableCharts(subjects, weakItems, data, studentName) {
     var rankEl = document.getElementById('studentReportRankCompareChart');
     if (rankEl) {
         safeDisposeChart(rankEl);
-        var rankChart = echarts.init(rankEl, null, { renderer: 'svg' });
+        var rankChart = AppCore.charts.initWithCopy(rankEl, null, { renderer: 'svg' });
         var rankRows = getSubjectRankCompareForReport(studentKey, subjects).slice(0, 10);
         if (rankRows.length) {
             var rankPrevColor = '#64748b';
@@ -12369,7 +12379,7 @@ function renderStudentReadableCharts(subjects, weakItems, data, studentName) {
     var weakEl = document.getElementById('studentReportWeakCompareChart');
     if (weakEl) {
         safeDisposeChart(weakEl);
-        var weakChart = echarts.init(weakEl, null, { renderer: 'svg' });
+        var weakChart = AppCore.charts.initWithCopy(weakEl, null, { renderer: 'svg' });
         var topWeak = weakItems.slice(0, 10);
         if (topWeak.length) {
             var personalColor = '#a23e1b';
@@ -12701,7 +12711,7 @@ function renderClassReadableReport(className, compareBatchId) {
     html.push('<div class="sr-kpi"><div class="sr-kpi-label">' + (hasCompare ? '可对照人数' : '均分排名项目') + '</div><div class="sr-kpi-value">' + (hasCompare ? progressRows.length : subjectRankRows.filter(function(r){ return r.currentRank != null; }).length) + '</div></div>');
     html.push('</div>');
     html.push('<div class="sr-section"><h3>一、学生榜单</h3>');
-    html.push('<div class="sr-class-leaderboard"><h4 id="classReportTopTenTitle">班内各科前十</h4>');
+    html.push('<div class="sr-class-leaderboard">' + renderClassLeaderboardHeading('classReportTopTenTitle', '班内各科前十'));
     html.push('<p class="sr-class-top-ten-legend"><span class="class-top-ten-grade-top">金色姓名</span>表示年级前十。</p>');
     html.push('<div class="scroll-container class-top-ten-scroll sr-class-top-ten-scroll" tabindex="0" role="region" aria-labelledby="classReportTopTenTitle">');
     html.push('<table class="class-top-ten-table" id="classReportTopTenTable" aria-labelledby="classReportTopTenTitle"><thead></thead><tbody></tbody></table></div></div>');
@@ -12775,7 +12785,7 @@ function renderClassTierChart(scores, students, totalName) {
     var el = document.getElementById('classReportTierChart');
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     var gradeOrder = ['A+','A','B+','B','C+','C'];
     var gradeCounts = {};
     scores.forEach(function(s) { if (gradeOrder.indexOf(s.grade) >= 0) gradeCounts[s.grade] = (gradeCounts[s.grade] || 0) + 1; });
@@ -12864,7 +12874,7 @@ function renderClassScoreDistributionChart(scores, totalFullMark) {
     var el = document.getElementById('classReportDistChart');
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     var vals = scores.filter(function(s){ return s.score != null; }).map(function(s){ return s.score; });
     if (!vals.length) { chart.setOption({ title: { text: '总分分布：暂无分数数据', left: 'center', textStyle: { fontSize: 13, color: '#64748b' } } }); return; }
     var distribution = calculateClassScoreRateDistribution(vals, totalFullMark);
@@ -12899,7 +12909,7 @@ function renderClassProgressBarChart(elId, title, rows, color) {
     var el = document.getElementById(elId);
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     if (!rows.length) { chart.setOption({ title: { text: title + '：暂无可对比数据', left: 'center', textStyle: { fontSize: 13, color: '#64748b' } } }); return; }
     var ordered = rows.slice().reverse();
     setReportHorizontalBarOption(chart, { title: title, xName: '名次变化', names: ordered.map(function(r){ return r.name; }), values: ordered.map(function(r){ return Math.abs(r.change); }), color: color, right: 48 });
@@ -13043,8 +13053,13 @@ function renderSubjectTeachingReadableReport(classNames, subjectName, compareBat
     html.push('<div id="subjectReportFlowChart" class="sr-chart sr-chart-wide"></div>');
     html.push('</div></div>');
     html.push('<div class="sr-section"><h3>三、分层结构与流转名单</h3>');
-    html.push(renderSubjectGradeNameTable(rows, subjectPop, tierMode));
-    html.push(renderSubjectFlowNameTable(flow));
+    const tierTable = renderSubjectGradeNameTable(rows, subjectPop, tierMode);
+    html.push('<div data-report-list-image="subject-tier">'
+        + renderReportListImageHeading('分层结构', {heading:'h4', disabled:!tierTable.startsWith('<table')})
+        + tierTable + '</div>');
+    html.push('<div data-report-list-image="subject-flow" style="margin-top:12px;">'
+        + renderReportListImageHeading('流转名单', {heading:'h4'})
+        + renderSubjectFlowNameTable(flow) + '</div>');
     html.push('</div>');
     html.push('<div class="sr-section"><h3>四、错题归因：选择题答案分布</h3>');
     html.push('<div id="subjectReportChoiceChart" class="sr-chart sr-chart-wide"></div>');
@@ -13227,7 +13242,7 @@ function renderSubjectChoiceDistributionChart(choiceItems, allRows) {
     var el = document.getElementById('subjectReportChoiceChart');
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     var top = choiceItems.slice(0, 10);
     if (!top.length) { chart.setOption({ title: { text: '选择题答案分布：暂无可用答案数据', left: 'center', textStyle: { fontSize: 13, color: '#64748b' } } }); return; }
     var keys = [];
@@ -13308,7 +13323,7 @@ function renderSubjectClassAvgChart(rows, classNames, fm) {
     var el = document.getElementById('subjectReportClassAvgChart');
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     var data = classNames.map(function(cls) {
         var items = rows.filter(function(r){ return String(r.className) === String(cls) && r.score != null; });
         var avg = items.length ? items.reduce(function(a,b){ return a + b.score; }, 0) / items.length : null;
@@ -13323,7 +13338,7 @@ function renderSubjectGradeDonutChart(rows, subjectPop, tierMode) {
     var el = document.getElementById('subjectReportGradeChart');
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     var order = ['A+','A','B+','B','C+','C'];
     var counts = {};
     var data = [];
@@ -13401,7 +13416,7 @@ function renderSubjectItemRateChart(weakItems) {
     var el = document.getElementById('subjectReportItemRateChart');
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     var top = weakItems.slice(0, 10);
     if (!top.length) { chart.setOption({ title: { text: '小题平均得分率：暂无小题数据', left: 'center', textStyle: { fontSize: 13, color: '#64748b' } } }); return; }
     var ordered = top.slice().reverse();
@@ -13412,7 +13427,7 @@ function renderSubjectFlowChart(flow) {
     var el = document.getElementById('subjectReportFlowChart');
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     chart.setOption({ color: [getSemanticChartColor('升级'), getSemanticChartColor('稳定'), getSemanticChartColor('降级'), getSemanticChartColor('无对比')], title: getReportChartTitle('等级流转统计：升级/降级一眼识别'), tooltip: getReportTooltip(), grid: getReportChartGrid(42, 28, 54, 36), xAxis: getReportCategoryAxis(['升级','稳定','降级','无对比']), yAxis: Object.assign(getReportValueAxis('人数'), { minInterval: 1 }), series: [{ type: 'bar', data: [{ value: flow.up, itemStyle: { color: getSemanticChartColor('升级') } }, { value: flow.stable, itemStyle: { color: getSemanticChartColor('稳定') } }, { value: flow.down, itemStyle: { color: getSemanticChartColor('降级') } }, { value: flow.none, itemStyle: { color: getSemanticChartColor('无对比') } }], barMaxWidth: 34, itemStyle: { borderRadius: [7,7,0,0] }, label: { show: true, position: 'top', color: REPORT_CHART_THEME.text, fontSize: 11, fontWeight: 700 } }] });
     chart.off('click');
     chart.on('click', function(params) {
@@ -13535,7 +13550,9 @@ function renderProgressReadableReport() {
     html.push('<div id="progressReportClassChart" class="sr-chart sr-chart-wide"></div>');
     html.push('</div></div>');
     window.progressReadableDetailMap = {};
-    html.push('<div class="sr-section"><h3>三、重点学生明细</h3><table class="sr-table"><thead><tr><th>类型</th><th>班级</th><th>姓名</th><th>对照分/本次分</th><th>分数变化</th><th>名次变化</th></tr></thead><tbody>');
+    html.push('<div class="sr-section" data-report-list-image="priority-students">'
+        + renderReportListImageHeading('三、重点学生明细', {disabled:!rankImproved.length && !rankDeclined.length})
+        + '<table class="sr-table"><thead><tr><th>类型</th><th>班级</th><th>姓名</th><th>对照分/本次分</th><th>分数变化</th><th>名次变化</th></tr></thead><tbody>');
     rankImproved.slice(0, 10).forEach(function(r){ html.push(renderProgressReadableRow('名次进步', r)); });
     rankDeclined.slice(0, 10).forEach(function(r){ html.push(renderProgressReadableRow('名次退步', r)); });
     html.push('</tbody></table></div></div>');
@@ -13600,7 +13617,7 @@ function renderProgressTopBarChart(elId, title, rows, color, improve) {
     var el = document.getElementById(elId);
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     if (!rows.length) { chart.setOption({ title: { text: title + '：暂无数据', left: 'center', textStyle: { fontSize: 13, color: '#64748b' } } }); return; }
     var ordered = rows.slice().reverse();
     setReportHorizontalBarOption(chart, { title: title, xName: '名次变化', names: ordered.map(function(r){ return r.name; }), values: ordered.map(function(r){ return Math.abs(r.rankDiff); }), color: color, right: 56 });
@@ -13611,7 +13628,7 @@ function renderProgressScatterChart(rows) {
     var el = document.getElementById('progressReportScatterChart');
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     var points = rows.filter(function(r){ return typeof r.rankDiff === 'number'; }).map(function(r){ return { name: r.name, value: [Number(r.diff.toFixed(1)), r.rankDiff], className: r.className }; });
     if (!points.length) { chart.setOption({ title: { text: '分数变化 vs 名次变化：暂无排名数据', left: 'center', textStyle: { fontSize: 13, color: '#64748b' } } }); return; }
     chart.setOption({ title: getReportChartTitle('分数变化 vs 名次变化'), tooltip: { formatter: function(p){ return escapeHtml(p.data.name) + '<br>班级：' + escapeHtml(p.data.className) + '<br>分数变化：' + p.value[0] + '<br>名次变化：' + (p.value[1] > 0 ? '↑' + p.value[1] : (p.value[1] < 0 ? '↓' + Math.abs(p.value[1]) : '→0')); }, backgroundColor: 'rgba(15,23,42,.92)', borderWidth: 0, textStyle: { color: '#fff', fontSize: 12 } }, grid: getReportChartGrid(64, 32, 54, 58), xAxis: Object.assign(getReportValueAxis('分数变化'), { nameLocation: 'middle', nameGap: 32 }), yAxis: Object.assign(getReportValueAxis('名次变化'), { nameLocation: 'middle', nameGap: 42 }), series: [{ type: 'scatter', symbolSize: function(v){ return Math.max(7, Math.min(18, Math.abs(v[1]) / 2 + 7)); }, data: points, itemStyle: { color: function(p){ return p.value[1] > 0 ? REPORT_CHART_THEME.green : (p.value[1] < 0 ? REPORT_CHART_THEME.red : REPORT_CHART_THEME.gray); }, opacity: 0.82 } }] });
@@ -13621,7 +13638,7 @@ function renderProgressClassStackChart(classStats, allResults) {
     var el = document.getElementById('progressReportClassChart');
     if (!el) return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     if (!classStats.length) { chart.setOption({ title: { text: '班级名次变化结构：暂无数据', left: 'center', textStyle: { fontSize: 13, color: '#64748b' } } }); return; }
 
     var stableColor = getSemanticChartColor('持平');
@@ -14303,7 +14320,7 @@ function renderCriticalTrackChart(elId, title, rows, range) {
     var el = document.getElementById(elId);
     if (!el || typeof echarts === 'undefined') return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     if (!rows || !rows.length) {
         chart.setOption({ title: { text: title + '：暂无学生', left: 'center', top: 'middle', textStyle: { fontSize: 13, color: '#64748b' } } });
         return;
@@ -14372,7 +14389,7 @@ function renderCriticalAlluvialChart(data) {
     var el = document.getElementById('criticalAlluvialChart');
     if (!el || typeof echarts === 'undefined') return;
     safeDisposeChart(el);
-    var chart = echarts.init(el, null, { renderer: 'svg' });
+    var chart = AppCore.charts.initWithCopy(el, null, { renderer: 'svg' });
     var model = (data && data.alluvial) || { exams: [], nodes: [], links: [] };
     if (!model.nodes.length) {
         chart.setOption({
@@ -14474,14 +14491,14 @@ function renderCriticalReadableCharts(data) {
     var distEl = document.getElementById('criticalReportDistanceChart');
     if (distEl) {
         safeDisposeChart(distEl);
-        var distChart = echarts.init(distEl, null, { renderer: 'svg' });
+        var distChart = AppCore.charts.initWithCopy(distEl, null, { renderer: 'svg' });
         var ordered = data.students.slice().sort(function(a,b){ return a.diff - b.diff; });
         distChart.setOption({ title: getReportChartTitle('临界生距离分数线'), tooltip: getReportTooltip(), grid: getReportChartGrid(76, 48, 54, 36), xAxis: getReportValueAxis('距离线分差'), yAxis: getReportCategoryAxis(ordered.map(function(s){ return s.name; })), series: [{ type: 'bar', data: ordered.map(function(s){ return { value: Number(s.diff.toFixed(1)), itemStyle: { color: s.diff >= 0 ? REPORT_CHART_THEME.orange : REPORT_CHART_THEME.red } }; }), barMaxWidth: 22, itemStyle: { borderRadius: [0,7,7,0] }, label: { show: true, position: 'right', color: REPORT_CHART_THEME.text, fontSize: 11, fontWeight: 700, formatter: function(p){ return (p.value >= 0 ? '+' : '') + p.value; } }, markLine: { symbol: 'none', data: [{ xAxis: 0 }], lineStyle: { color: REPORT_CHART_THEME.slate, type: 'dashed' } } }] });
     }
     var statusEl = document.getElementById('criticalReportStatusChart');
     if (statusEl) {
         safeDisposeChart(statusEl);
-        var statusChart = echarts.init(statusEl, null, { renderer: 'svg' });
+        var statusChart = AppCore.charts.initWithCopy(statusEl, null, { renderer: 'svg' });
         var above = data.students.filter(function(s){ return s.diff >= 0; }).length;
         var below = data.students.length - above;
         statusChart.setOption(getReportPieOption('临界状态结构', [{ name: '暂过危险', value: above }, { name: '未过预警', value: below }], [REPORT_CHART_THEME.orange, REPORT_CHART_THEME.red]));
@@ -14587,7 +14604,7 @@ function renderCorrelationReadableCharts(data, top, groups, weakGroups) {
     var scatterEl = document.getElementById('corrReportScatterChart');
     if (scatterEl && data && data.points && data.points.length) {
         safeDisposeChart(scatterEl);
-        var sChart = echarts.init(scatterEl, null, { renderer: 'svg' });
+        var sChart = AppCore.charts.initWithCopy(scatterEl, null, { renderer: 'svg' });
         var maxRank = 0;
         data.points.forEach(function(p) { maxRank = Math.max(maxRank, p.x, p.y); });
         var maxVal = Math.ceil((maxRank + 20) / 10) * 10;
@@ -14635,7 +14652,7 @@ function renderCorrelationReadableCharts(data, top, groups, weakGroups) {
     var levelEl = document.getElementById('corrReportLevelChart');
     if (levelEl) {
         safeDisposeChart(levelEl);
-        var levelChart = echarts.init(levelEl, null, { renderer: 'svg' });
+        var levelChart = AppCore.charts.initWithCopy(levelEl, null, { renderer: 'svg' });
         var levelOption = getReportPieOption('偏科程度结构', [{ name: '均衡', value: groups['均衡'] }, { name: '轻微偏科', value: groups['轻微偏科'] }, { name: '严重偏科', value: groups['严重偏科'] }], [getSemanticChartColor('均衡'), getSemanticChartColor('轻微'), getSemanticChartColor('严重')]);
         levelOption.series[0].cursor = 'pointer';
         levelChart.setOption(levelOption);
@@ -14648,7 +14665,7 @@ function renderCorrelationReadableCharts(data, top, groups, weakGroups) {
     var weakEl = document.getElementById('corrReportWeakChart');
     if (weakEl) {
         safeDisposeChart(weakEl);
-        var weakChart = echarts.init(weakEl, null, { renderer: 'svg' });
+        var weakChart = AppCore.charts.initWithCopy(weakEl, null, { renderer: 'svg' });
         var weakData = Object.keys(weakGroups).map(function(k){ return { name: k, value: weakGroups[k] }; });
         var weakOption = getReportPieOption('偏弱科目分布', weakData, weakData.map(function(d, i) { return getSubjectChartColor(d.name, i); }));
         if (weakOption.series && weakOption.series[0]) weakOption.series[0].cursor = 'pointer';
@@ -14662,7 +14679,7 @@ function renderCorrelationReadableCharts(data, top, groups, weakGroups) {
     var topEl = document.getElementById('corrReportTopChart');
     if (topEl) {
         safeDisposeChart(topEl);
-        var topChart = echarts.init(topEl, null, { renderer: 'svg' });
+        var topChart = AppCore.charts.initWithCopy(topEl, null, { renderer: 'svg' });
         if (!top.length) { topChart.setOption({ title: { text: '偏科程度 Top10：暂无超出阈值学生', left: 'center', textStyle: { fontSize: 13, color: '#64748b' } } }); return; }
         var ordered = top.slice().reverse();
         topChart.setOption({
@@ -16023,7 +16040,7 @@ async function renderSubjectCorrelation() {
     // Render chart
     var chartDiv = document.getElementById('corrScatterChart');
     if (chartDiv.__chart) try { chartDiv.__chart.dispose(); } catch(e) {}
-    var chart = echarts.init(chartDiv, null, {renderer: 'svg'});
+    var chart = AppCore.charts.initWithCopy(chartDiv, null, {renderer: 'svg'});
     chartDiv.__chart = chart;
 
     var markLineData = [
@@ -17753,7 +17770,7 @@ function renderClassDiffMeanLineChart(displaySubjects) {
     var chartDiv = document.getElementById('classDiffMeanLineChart');
     var existing = chartDiv.__chart;
     if (existing) try { existing.dispose(); } catch(e) {}
-    var chart = echarts.init(chartDiv, null, {renderer:'svg'});
+    var chart = AppCore.charts.initWithCopy(chartDiv, null, {renderer:'svg'});
     chartDiv.__chart = chart;
     chart.setOption({
         tooltip: { trigger: 'axis' },
@@ -17857,7 +17874,7 @@ function renderClassDiffHeatmap(stats, classNames, displaySubjects) {
     chartDiv.style.height = chartH + 'px';
     var existing = chartDiv.__chart;
     if (existing) try { existing.dispose(); } catch(e) {}
-    var chart = echarts.init(chartDiv, null, {renderer:'svg'});
+    var chart = AppCore.charts.initWithCopy(chartDiv, null, {renderer:'svg'});
     chartDiv.__chart = chart;
     chart.setOption({
         tooltip: {
@@ -18004,29 +18021,13 @@ function buildHeatmapReportSvg(subjectName, selectedClass, buckets, total) {
     return parts.join('');
 }
 
-function downloadHeatmapReportImage(svgText, fileName, scale = 2) {
+async function downloadHeatmapReportImage(svgText, fileName, scale = 2) {
     if (!svgText) return;
-    var img = new Image();
-    var svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
-    var url = URL.createObjectURL(svgBlob);
-    img.onload = function() {
-        var canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth * scale;
-        canvas.height = img.naturalHeight * scale;
-        var ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        URL.revokeObjectURL(url);
-        var a = document.createElement('a');
-        a.href = canvas.toDataURL('image/png');
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    };
-    img.onerror = function() { URL.revokeObjectURL(url); showAlert('名单图生成失败，请重试'); };
-    img.src = url;
+    try {
+        downloadCollectiveHeatmapBlob(await AppCore.images.svgPng(svgText, scale), fileName);
+    } catch (error) {
+        showAlert(error.message || '图片生成失败，请重试');
+    }
 }
 
 async function exportHeatmapSubjectRosterImage() {
@@ -18244,7 +18245,7 @@ function renderClassDiffGradeChart(selectedSubjectName, stats, classNames, grade
             label: { show: true, position: 'inside', fontSize: 13, formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         };
     });
-    var chart = echarts.init(chartDiv, null, {renderer:'svg'});
+    var chart = AppCore.charts.initWithCopy(chartDiv, null, {renderer:'svg'});
     chartDiv.__chart = chart;
     chart.setOption({
         tooltip: {
@@ -18254,11 +18255,19 @@ function renderClassDiffGradeChart(selectedSubjectName, stats, classNames, grade
                 return '班级: <b>' + params.name + '</b><br/>' + params.seriesName + ': <b>' + params.value + '</b>人';
             }
         },
-        legend: { data: grades, top: 0, textStyle: { fontSize: 14 } },
+        title: {
+            text: '科目：' + selectedSubjectName,
+            left: 12, top: 2,
+            padding: [4, 8],
+            backgroundColor: '#ffffff',
+            borderColor: '#cbd5e1', borderWidth: 1, borderRadius: 5,
+            textStyle: { color: '#334155', fontSize: 13, fontWeight: 600 }
+        },
+        legend: { data: grades, top: 30, textStyle: { fontSize: 14 } },
         xAxis: { type: 'category', data: classNames, axisLabel: { fontSize: 14, rotate: 45, interval: 0 } },
         yAxis: { type: 'value', name: '人数', axisLabel: { fontSize: 14 } },
         series: series,
-        grid: { left: 60, right: 20, top: 40, bottom: 80 }
+        grid: { left: 60, right: 20, top: 68, bottom: 80 }
     });
     chart.resize();
     chart.on('click', function(params) {
@@ -18283,6 +18292,7 @@ function renderClassDiffGradeChart(selectedSubjectName, stats, classNames, grade
 document.getElementById('classDiffGradeExportBtn').addEventListener('click', exportClassDiffGradeSubjectImage);
 
 function renderClassDiffRankDistribution() {
+    rankCopyPngButton.disabled = true;
     if (!combinedStudentData.length) return;
     var select = document.getElementById('classDiffRankSubject');
     var selectedSubject = select ? select.value : '';
@@ -18370,6 +18380,7 @@ function renderClassDiffRankDistribution() {
     html += '</tbody></table>';
     container.innerHTML = html;
     updateClassDiffDistributionChart(chartLabels, Object.values(chartDatasets), rankedStudents, selectedSubject, classList);
+    rankCopyPngButton.disabled = false;
     // Multi-batch data for extra charts
     var multiBatchRankData = null;
     var selectedBatches = getClassDiffSelectedBatches();
@@ -18431,7 +18442,7 @@ function updateClassDiffDistributionChart(labels, datasets, rankedStudents, sele
     var chartDiv = document.getElementById('classDiffDistributionChart');
     if (!chartDiv) return;
     if (classDiffEchartsInst.mainChart) try { classDiffEchartsInst.mainChart.dispose(); } catch(e) {}
-    var chart = echarts.init(chartDiv, null, {renderer: 'svg'});
+    var chart = AppCore.charts.initWithCopy(chartDiv, null, {renderer: 'svg'});
     classDiffEchartsInst.mainChart = chart;
     chart.setOption({
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
@@ -18493,7 +18504,7 @@ function updateClassDiffDistributionExtraCharts(labels, classList, classSegmentC
             var barId = 'classDiffEchartsBar_' + idx;
             var barEl = document.getElementById(barId);
             safeDisposeChart(barEl);
-            var barChart = echarts.init(barEl, null, {renderer:'svg'});
+            var barChart = AppCore.charts.initWithCopy(barEl, null, {renderer:'svg'});
             if (isMulti) {
                 var patternChars = ['/', '\\', '-', 'x', 'o', 'O', '.', '*'];
                 var batchSeries = multiBatchRankData.map(function(bd, bi) {
@@ -18601,7 +18612,7 @@ function updateClassDiffDistributionExtraCharts(labels, classList, classSegmentC
         var totalByClass = classList.map(function(cls) { return classSegmentCounts[cls].reduce(function(a,b){return a+b;}, 0); });
         var pieEl = document.getElementById('classDiffEchartsPie');
         safeDisposeChart(pieEl);
-        var pieChart = echarts.init(pieEl, null, {renderer:'svg'});
+        var pieChart = AppCore.charts.initWithCopy(pieEl, null, {renderer:'svg'});
         pieChart.setOption({
             tooltip: { trigger: 'item', textStyle: { fontSize: 18 } },
             legend: { orient: 'vertical', left: 10, data: classList, textStyle: { fontSize: 18 } },
@@ -18661,7 +18672,7 @@ function renderClassDiffBoxPlot() {
     });
     // Render box plot
     safeDisposeChart(chartDiv);
-    var chart = echarts.init(chartDiv, null, {renderer:'svg'});
+    var chart = AppCore.charts.initWithCopy(chartDiv, null, {renderer:'svg'});
     var series = [{
         name: '箱线图', type: 'boxplot', data: boxData,
         itemStyle: { color: 'rgba(84,112,198,0.3)', borderColor: '#1e3a5f', borderWidth: 2.5 },
@@ -18742,11 +18753,11 @@ setTimeout(async function() {
 
 // 座位逻辑见 seating.js；其余功能保留源仓库实现。
 </script>
-<script src="app-core.js"></script>
-<script src="analysis-leaderboards.js?v=1"></script>
+<script src="app-core.js?v=image-copy-sync"></script>
+<script src="analysis-leaderboards.js?v=image-copy-sync"></script>
 <script src="seating-data.js"></script>
 <script src="seating-engine.js"></script>
-<script src="seating.js"></script>
+<script src="seating.js?v=image-copy-sync"></script>
 <!-- 个人错题本弹窗 -->
 <div id="studentErrorNotebookModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10001;justify-content:center;align-items:center;" onclick="if(event.target===this)closeErrorNotebookModal()">
     <div class="error-notebook-panel">

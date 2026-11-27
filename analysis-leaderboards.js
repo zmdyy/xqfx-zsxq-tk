@@ -72,6 +72,7 @@ function renderClassDiffTopTen() {
     const totalNote = rowCount && !columns[0].entries.length ? ' · 暂无总分成绩' : '';
     document.getElementById('classDiffTopTenSummary').textContent = `${students.length} 人${totalNote}`;
     document.getElementById('classDiffTopTenExport').disabled = !rowCount;
+    document.getElementById('classDiffTopTenCopyPng').disabled = !rowCount;
     table.parentElement.scrollTop = 0;
 }
 
@@ -204,17 +205,20 @@ function buildClassDiffTopTenExportSvg(table, caption) {
     return {svg:svg.join(''), usePng};
 }
 
-async function exportClassDiffTopTenImage() {
+function getClassDiffTopTenImage() {
     const table = document.getElementById('classDiffTopTenTable');
-    const button = document.getElementById('classDiffTopTenExport');
-    if (button.disabled) return;
+    const scope = document.getElementById('classDiffTopTenClass').selectedOptions[0].textContent;
+    const batch = document.getElementById('batchLabelClassDiff').textContent.trim();
+    const summary = document.getElementById('classDiffTopTenSummary').textContent;
+    const mode = table.classList.contains('show-details') ? '详情' : '名单';
+    const filename = ['各科前十', batch, scope, mode].map(part => part.replace(/[\\/:*?"<>|]/g, '_').slice(0, 60)).join('_');
+    return {...buildClassDiffTopTenExportSvg(table, `${batch} · ${scope} · ${summary}`), filename};
+}
+
+async function exportClassDiffTopTenImage() {
+    if (document.getElementById('classDiffTopTenExport').disabled) return;
     try {
-        const scope = document.getElementById('classDiffTopTenClass').selectedOptions[0].textContent;
-        const batch = document.getElementById('batchLabelClassDiff').textContent.trim();
-        const summary = document.getElementById('classDiffTopTenSummary').textContent;
-        const mode = table.classList.contains('show-details') ? '详情' : '名单';
-        const filename = ['各科前十', batch, scope, mode].map(part => part.replace(/[\\/:*?"<>|]/g, '_').slice(0, 60)).join('_');
-        const {svg, usePng} = buildClassDiffTopTenExportSvg(table, `${batch} · ${scope} · ${summary}`);
+        const {svg, usePng, filename} = getClassDiffTopTenImage();
         if (usePng) downloadHeatmapReportImage(svg, filename + '.png', 1);
         else downloadCollectiveHeatmapBlob(new Blob([svg], {type:'image/svg+xml;charset=utf-8'}), filename + '.svg');
     } catch (error) {
@@ -222,6 +226,17 @@ async function exportClassDiffTopTenImage() {
     }
 }
 document.getElementById('classDiffTopTenExport').addEventListener('click', exportClassDiffTopTenImage);
+document.getElementById('classDiffTopTenCopyPng').addEventListener('click', function() {
+    AppCore.images.copyPng(this, () => {
+        const {svg, usePng} = getClassDiffTopTenImage();
+        return AppCore.images.svgPng(svg, usePng ? 1 : 4);
+    });
+});
+
+const rankCopyPngButton = document.getElementById('classDiffRankCopyPng');
+rankCopyPngButton.addEventListener('click', function() {
+    AppCore.charts.copyPng(this, classDiffEchartsInst.mainChart);
+});
 
 function getClassReportImportedGradeRanks(batch) {
     const ranks = new Map();
@@ -316,6 +331,268 @@ function buildClassReportLeaderboards(students, currentData, batch, compareBatch
     });
 }
 
+function renderReportListImageHeading(title, {disabled = false, allowDownload = false, heading = 'h3'} = {}) {
+    const state = disabled ? ' disabled' : '';
+    return `<div class="sr-list-image-heading"><${heading}>${title}</${heading}><div class="sr-class-leaderboard-actions">
+        ${allowDownload ? `<button type="button" class="image-action-btn" onclick="exportReportListImage(this)"${state}>导出 PNG</button>` : ''}
+        <button type="button" class="image-action-btn" onclick="exportReportListImage(this, true)"${state}>复制图片</button>
+    </div></div>`;
+}
+
+function drawReportListImage(section, title, caption) {
+    const tables = [...section.querySelectorAll(':scope > table')];
+    if (!tables.length) throw new Error('暂无可生成图片的清单');
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('当前浏览器无法生成图片');
+    const family = getComputedStyle(tables[0]).fontFamily || 'sans-serif';
+    const width = 1040, margin = 24, contentWidth = width - margin * 2;
+    const lineHeight = 20, padding = 10;
+    const useFont = (size, weight = 400) => { context.font = `${weight} ${size}px ${family}`; };
+    const wrap = (text, maxWidth) => {
+        const lines = [];
+        let line = '';
+        for (const char of text) {
+            if (line && context.measureText(line + char).width > maxWidth) {
+                lines.push(line);
+                line = '';
+            }
+            line += char;
+        }
+        lines.push(line);
+        return lines;
+    };
+    const weights = {
+        'weak-items':[.085, .125, .075, .115, .14, .16, .15, .15],
+        'priority-students':[.16, .12, .20, .20, .16, .16]
+    }[section.dataset.reportListImage] || [.16, .08, .76];
+    const plans = tables.map(table => {
+        const columns = weights.map(weight => weight * contentWidth);
+        const rows = [...table.rows].map(row => {
+            const header = row.parentElement === table.tHead;
+            useFont(14, header ? 700 : 400);
+            const cells = [...row.cells].map((cell, index) => {
+                const badge = cell.querySelector('.sr-pill');
+                return {
+                    lines:wrap(cell.textContent.trim().replace(/\s+/g, ' '), columns[index] - 2 * padding),
+                    color:header ? '#ffffff' : badge ? getComputedStyle(badge).color : '#1e293b'
+                };
+            });
+            return {header, cells, height:2 * padding + lineHeight * Math.max(1, ...cells.map(cell => cell.lines.length))};
+        });
+        return {columns, rows};
+    });
+    useFont(13);
+    const captionLines = caption ? wrap(caption, contentWidth) : [];
+    const notes = [...section.querySelectorAll(':scope > .sr-note-box')]
+        .flatMap(node => wrap(node.textContent.trim(), contentWidth));
+    const height = 78 + lineHeight * captionLines.length + margin
+        + plans.reduce((total, {rows}) => total + 12 + rows.reduce((height, row) => height + row.height, 0), 0)
+        + lineHeight * notes.length;
+    const scale = Math.min(3, 16384 / Math.max(width, height), Math.sqrt(32000000 / (width * height)));
+    canvas.width = Math.floor(width * scale);
+    canvas.height = Math.floor(height * scale);
+    context.scale(canvas.width / width, canvas.height / height);
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, width, height);
+    context.textBaseline = 'middle';
+    useFont(24, 700);
+    context.fillStyle = '#1e3a5f';
+    context.fillText(title, margin, 36);
+    useFont(13);
+    context.fillStyle = '#475569';
+    captionLines.forEach((line, index) => context.fillText(line, margin, 64 + index * lineHeight));
+    let y = 78 + captionLines.length * lineHeight;
+    for (const {columns, rows} of plans) {
+        rows.forEach((row, index) => {
+            let x = margin;
+            useFont(14, row.header ? 700 : 400);
+            row.cells.forEach(({lines, color}, columnIndex) => {
+                const cellWidth = columns[columnIndex];
+                context.fillStyle = row.header ? '#1e3a5f' : index % 2 ? '#ffffff' : '#f8fafc';
+                context.fillRect(x, y, cellWidth, row.height);
+                context.strokeStyle = '#e2e8f0';
+                context.strokeRect(x, y, cellWidth, row.height);
+                context.fillStyle = color;
+                const start = y + (row.height - (lines.length - 1) * lineHeight) / 2;
+                lines.forEach((text, line) => context.fillText(text, x + padding, start + line * lineHeight));
+                x += cellWidth;
+            });
+            y += row.height;
+        });
+        y += 12;
+    }
+    useFont(13);
+    context.fillStyle = '#475569';
+    notes.forEach((line, index) => context.fillText(line, margin, y + 10 + index * lineHeight));
+    return canvas;
+}
+
+async function exportReportListImage(button, copy = false) {
+    if (button.disabled) return;
+    const section = button.closest('[data-report-list-image]');
+    const title = section.querySelector('.sr-list-image-heading :is(h3, h4)').textContent.trim();
+    const report = section.closest('.student-readable-report, .comp-readable-report');
+    const reportName = report.querySelector('h2')?.textContent.trim() || '';
+    const metadata = [...report.querySelectorAll('.sr-meta > div, .cr-meta > div')]
+        .map(node => node.textContent.trim()).filter(text => !text.startsWith('生成时间'));
+    const caption = [reportName, ...metadata].filter(Boolean).join(' · ');
+    const renderPng = async () => {
+        if (document.fonts?.ready) await document.fonts.ready;
+        return AppCore.images.canvasPng(drawReportListImage(section, title, caption));
+    };
+    if (copy) {
+        await AppCore.images.copyPng(button, renderPng);
+        return;
+    }
+    button.disabled = true;
+    try {
+        const filename = [reportName, title].filter(Boolean).join('_').replace(/[\\/:*?"<>|]/g, '_').slice(0, 100) + '.png';
+        downloadCollectiveHeatmapBlob(await renderPng(), filename);
+    } catch (error) {
+        showToast(error.message || '清单图片导出失败，请重试', 'error');
+    } finally {
+        button.disabled = false;
+    }
+}
+
+function renderClassLeaderboardHeading(id,title) {
+    return `<div class="sr-class-leaderboard-heading"><h4 id="${id}">${title}</h4>
+        <div class="sr-class-leaderboard-actions">
+            <button type="button" class="image-action-btn sr-class-leaderboard-export" aria-label="复制图片：${title}" onclick="exportClassReportLeaderboard(this, true)">复制图片</button>
+            <button type="button" class="class-top-ten-export sr-class-leaderboard-export" title="导出完整榜单高清 PNG（不受滚动范围限制）" aria-label="导出${title}高清PNG" onclick="exportClassReportLeaderboard(this)">高清 PNG</button>
+        </div></div>`;
+}
+
+function drawClassReportLeaderboard(table, title, caption, legend, kind) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('当前浏览器无法生成图片');
+    const family = getComputedStyle(table).fontFamily || 'sans-serif';
+    const font = (size, weight) => { ctx.font = `${weight} ${size}px ${family}`; };
+    const measure = (value, size, weight = 400) => { font(size, weight); return Math.ceil(ctx.measureText(value).width); };
+    const txt = (value, x, y, size, weight, color, align = 'left') => {
+        font(size, weight); ctx.fillStyle = color; ctx.textAlign = align;
+        ctx.textBaseline = 'middle'; ctx.fillText(value, x, y);
+    };
+    const rect = (x,y,w,h,color) => { ctx.fillStyle = color; ctx.fillRect(x,y,w,h); };
+    const headers = Array.from(table.tHead.rows[0].cells, cell => cell.textContent.trim());
+    if (!headers.length) throw new Error('暂无可导出的榜单');
+    const progress = kind === 'improved' || kind === 'declined';
+    const pad = 12, gap = 8, margin = 24;
+    const widths = headers.map(label => Math.max(progress ? 150 : 118, measure(label,14,700) + 2*pad));
+    const read = (cell, selector) => cell.querySelector(selector)?.textContent.trim() || '';
+    const rows = Array.from(table.tBodies[0].rows, row => {
+        if (row.cells.length === 1 && row.cells[0].colSpan === headers.length &&
+            !row.cells[0].querySelector('.class-top-ten-entry, .sr-class-progress-entry')) {
+            return {message:row.cells[0].textContent.trim()};
+        }
+        return {cells:Array.from(row.cells, (cell,i) => {
+            const name = read(cell, progress ? '.sr-class-progress-name' : '.class-top-ten-name');
+            const tie = read(cell, '.class-top-ten-tie');
+            const gold = !!cell.querySelector('.class-top-ten-name.class-top-ten-grade-top');
+            const delta = read(cell,'.sr-class-progress-delta');
+            const change = read(cell,'.sr-class-progress-change');
+            const empty = read(cell,'.sr-class-progress-empty');
+            const nameWidth = name ? measure(name,progress ? 16 : 14,700) + (gold ? 8 : 0) : 0;
+            const tieWidth = tie ? measure(tie,11) + 8 : 0;
+            const rightWidth = progress ? Math.max(measure(delta,14,700),measure(change,11)) : tieWidth;
+            widths[i] = Math.max(widths[i],2*pad+nameWidth+(rightWidth ? gap+rightWidth : 0),2*pad+measure(empty,12));
+            return {name,tie,gold,delta,change,empty,nameWidth,tieWidth};
+        })};
+    });
+    const tableWidth = widths.reduce((sum,w)=>sum+w,0);
+    const width = Math.ceil(Math.max(tableWidth,measure(title,24,700),measure(caption,13),measure(legend,12),...rows.map(r=>r.message ? measure(r.message,14)+2*pad : 0))+2*margin);
+    const top = legend ? 104 : 82;
+    const headerHeight = 40, rowHeight = progress ? 52 : 38;
+    const height = top+headerHeight+Math.max(rows.length,1)*rowHeight+margin;
+    // Prefer 4x export; bound pixel count for unusually wide or long tables.
+    const scale = Math.min(4,16384/Math.max(width,height),Math.sqrt(32000000/(width*height)));
+    canvas.width = Math.max(1,Math.floor(width*scale));
+    canvas.height = Math.max(1,Math.floor(height*scale));
+    ctx.scale(canvas.width/width,canvas.height/height);
+    rect(0,0,width,height,'#ffffff');
+    txt(title,margin,32,24,700,'#193a56');
+    txt(caption,margin,61,13,400,'#53677c');
+    if (legend) txt(legend,margin,83,12,400,'#795510');
+    let x = margin;
+    headers.forEach((label,i)=>{
+        rect(x,top,widths[i],headerHeight,i===0?'#193a56':'#2b4e6b');
+        txt(label,x+widths[i]/2,top+headerHeight/2,14,700,'#ffffff','center');
+        x += widths[i];
+    });
+    rows.forEach((row,j)=>{
+        const y=top+headerHeight+j*rowHeight, cy=y+rowHeight/2;
+        const bg=j%2?'#f8fafc':'#ffffff';
+        if (row.message) {
+            rect(margin,y,tableWidth,rowHeight,bg);
+            txt(row.message,margin+pad,cy,14,400,'#53677c');
+            rect(margin,y+rowHeight-1,tableWidth,1,'#e9eef3');
+            return;
+        }
+        let x=margin;
+        row.cells.forEach((cell,i)=>{
+            const w=widths[i];
+            rect(x,y,w,rowHeight,bg);
+            rect(x+w-1,y,1,rowHeight,'#e9eef3');
+            rect(x,y+rowHeight-1,w,1,'#e9eef3');
+            if(cell.empty) txt(cell.empty,x+pad,cy,12,400,'#53677c');
+            if(cell.name){
+                if(cell.gold) rect(x+pad,cy-11,cell.nameWidth,22,'#ffe4a0');
+                txt(cell.name,x+pad+(cell.gold?4:0),cy,progress?16:14,700,cell.gold?'#563600':'#1a1a2e');
+                if(cell.tie){
+                    const tx=x+pad+cell.nameWidth+gap;
+                    rect(tx,cy-9,cell.tieWidth,18,'#edf3f9');
+                    txt(cell.tie,tx+4,cy,11,400,'#53677c');
+                }
+                if(progress){
+                    txt(cell.delta,x+w-pad,cy-9,14,700,kind==='declined'?'#991b1b':'#166534','right');
+                    txt(cell.change,x+w-pad,cy+10,11,400,'#53677c','right');
+                }
+            }
+            x+=w;
+        });
+    });
+    return canvas;
+}
+
+async function exportClassReportLeaderboard(button, copy = false) {
+    if (button.disabled) return;
+    const board = button.closest('.sr-class-leaderboard');
+    const table = board?.querySelector('table');
+    if (!table?.tHead?.rows.length || !table.tBodies[0]) {
+        await showAlert('暂无可导出的榜单');
+        return;
+    }
+    const title = board.querySelector('h4').textContent.trim();
+    const meta = Array.from(board.closest('.comp-readable-report').querySelectorAll('.cr-meta > div'))
+        .map(el=>el.textContent.trim()).filter(t=>!t.startsWith('生成时间'));
+    const caption = meta.join(' · ');
+    const legend = board.querySelector('.sr-class-top-ten-legend')?.textContent.trim() || '';
+    async function renderPng() {
+        if (document.fonts?.ready) await document.fonts.ready;
+        const canvas = drawClassReportLeaderboard(table,title,caption,legend,board.dataset.classLeaderboard);
+        return AppCore.images.canvasPng(canvas);
+    }
+    if (copy) {
+        await AppCore.images.copyPng(button, renderPng);
+        return;
+    }
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = '导出中…';
+    try {
+        const blob = await renderPng();
+        const filename = [title,...meta].map(s=>s.replace(/[\\/:*?"<>|：]/g,'_').slice(0,60)).join('_')+'.png';
+        downloadCollectiveHeatmapBlob(blob,filename);
+    } catch (error) {
+        await showAlert(error.message || '图片生成失败，请重试');
+    } finally {
+        button.disabled = false;
+        button.textContent = original;
+    }
+}
+
 function renderClassReportRankChangeTable(columns, kind) {
     const declining = kind === 'declined';
     const title = declining ? '年级名次退步前十' : '年级名次进步前十';
@@ -342,7 +619,7 @@ function renderClassReportRankChangeTable(columns, kind) {
         return `<tr>${cells}</tr>`;
     }).join('');
     return `<div class="sr-class-leaderboard" data-class-leaderboard="${kind}">
-        <h4 id="${titleId}">${title}</h4>
+        ${renderClassLeaderboardHeading(titleId, title)}
         <div class="scroll-container class-top-ten-scroll sr-class-top-ten-scroll sr-class-progress-scroll"
             tabindex="0" role="region" aria-labelledby="${titleId}">
             <table class="class-top-ten-table sr-class-progress-table" aria-labelledby="${titleId}">
