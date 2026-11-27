@@ -1158,11 +1158,16 @@
                 <th>题目</th><th>分值表头</th><th>知识点标注</th><th>操作</th><th>得分均值</th><th>最高分</th><th>最低分</th><th>标准答案</th><th>选项分布</th><th>得分率(%)</th>
             </tr></thead><tbody></tbody></table>
         </div>
-        <div style="font-size:15px;font-weight:bold;color:#e74c3c;margin-top:16px;margin-bottom:4px;" id="lowStatsTitle"></div>
+        <div data-report-list-image="threshold-questions-with-knowledge" style="margin-top:16px;">
+            <div class="sr-list-image-heading">
+                <h4 id="lowStatsTitle" style="font-size:15px;color:#e74c3c;margin:0;"></h4>
+                <button type="button" class="image-action-btn" id="copyLowStatsImage" onclick="exportReportListImage(this, true)" disabled>复制图片</button>
+            </div>
         <div class="scroll-container" style="max-height:160px;">
             <table id="lowStatsTable"><thead><tr>
                 <th>题目</th><th>分值表头</th><th>知识点标注</th><th>操作</th><th>得分均值</th><th>最高分</th><th>最低分</th><th>标准答案</th><th>选项分布</th><th>得分率(%)</th>
             </tr></thead><tbody></tbody></table>
+        </div>
         </div>
     </div>
 
@@ -8618,6 +8623,8 @@ function renderCollectiveTables() {
     document.getElementById('allStatsTitle').innerHTML = `全部题目统计（<b>${escapeHtml(ct)}${escapeHtml(subjTitle)}</b>）`;
     document.getElementById('lowStatsTitle').innerHTML = `低于阈值题目（<b>${escapeHtml(ct)}${escapeHtml(subjTitle)}</b>，阈=${collectiveThreshold}%）`;
 
+    const copyButton = document.getElementById('copyLowStatsImage');
+    copyButton.disabled = true;
     if (!fd.headers.length || !fd.data.length) {
         document.querySelector('#questionStatsTable tbody').innerHTML = '<tr><td colspan="10">暂无小题分数数据</td></tr>';
         document.querySelector('#lowStatsTable tbody').innerHTML = '<tr><td colspan="10">暂无数据</td></tr>';
@@ -8653,6 +8660,7 @@ function renderCollectiveTables() {
     });
     document.querySelector('#questionStatsTable tbody').innerHTML = allRows.join('') || '<tr><td colspan="10">无数据</td></tr>';
     document.querySelector('#lowStatsTable tbody').innerHTML = lowRows.length ? lowRows.join('') : '<tr><td colspan="10" style="color:#aaa;">无低于阈值的题目</td></tr>';
+    copyButton.disabled = !lowRows.length;
     qkBindButtons();
     qkUpdateToolbar();
 }
@@ -8811,10 +8819,12 @@ function renderLevelAnalysis() {
     let html = '';
     selectedGrades.forEach(function(lv) {
         const students = fd.data.filter(function(r) { return String(r[gradeCol]||'').trim() === lv; });
-        html += '<div style="font-weight:bold;color:#2980b9;margin:8px 0 4px;">' + escapeHtml(lv) + ' 等级：' + students.length + '人（<b>' + escapeHtml(ct) + '</b>）</div>';
-        if (!students.length) { html += '<div style="color:#aaa;">该等级下无学生</div>'; return; }
+        const heading = escapeHtml(lv + ' 等级：' + students.length + '人（' + ct + (ss ? '，' + ss : '') + '）');
+        html += '<div data-report-list-image="level-questions" style="margin-top:8px;">'
+            + renderReportListImageHeading(heading, {heading:'h4', disabled:!students.length || !qo.some(t => qd[t]?.scoreIdx != null)});
+        if (!students.length) { html += '<div style="color:#aaa;">该等级下无学生</div></div>'; return; }
         var groupContextId = registerCollectiveQuestionGroupContext('level', lv + '等级', students, fd, ss);
-        html += '<div style="margin:2px 0 6px;font-size:12px;color:#555;">学生名单：' + students.map(function(s) { return escapeHtml(s[fd.nameField]); }).join('、') + '</div>';
+        html += '<div class="sr-note-box" style="margin:2px 0 6px;font-size:12px;color:#555;">学生名单：' + students.map(function(s) { return escapeHtml(s[fd.nameField]); }).join('、') + '</div>';
         html += '<div class="scroll-container" style="max-height:200px;"><table><thead><tr><th>题目</th><th>分值表头</th><th>得分均值</th><th>最高分</th><th>最低分</th><th>选项分布</th><th>得分率(%)</th></tr></thead><tbody>';
         qo.forEach(function(t) {
             const item = qd[t]; if (!item || item.scoreIdx == null) return;
@@ -8825,7 +8835,7 @@ function renderLevelAnalysis() {
             var wd = ''; if (item.ansIdx != null) { const cnts = {}; students.forEach(function(r) { const v = String(r[fd.headers[item.ansIdx]]||'').toUpperCase().trim(); if (v) cnts[v] = (cnts[v]||0)+1; }); wd = formatCollectiveOptionDistribution(cnts, fd.correctAnswerMap[item.scoreHeader]); }
             html += '<tr><td>' + renderCollectiveGroupQuestionLink(groupContextId, t) + '</td><td>' + escapeHtml(item.scoreHeader||'') + '</td><td>' + (scores.length?avg.toFixed(2):'-') + '</td><td>' + (scores.length?Math.max.apply(null,scores):'-') + '</td><td>' + (scores.length?Math.min.apply(null,scores):'-') + '</td><td>' + wd + '</td><td>' + (rate==='-'?'-':rate+'%') + '</td></tr>';
         });
-        html += '</tbody></table></div>';
+        html += '</tbody></table></div></div>';
     });
     res.innerHTML = html;
     bindCollectiveGroupQuestionLinks(res);
@@ -13063,7 +13073,9 @@ function renderSubjectTeachingReadableReport(classNames, subjectName, compareBat
     html.push('</div>');
     html.push('<div class="sr-section"><h3>四、错题归因：选择题答案分布</h3>');
     html.push('<div id="subjectReportChoiceChart" class="sr-chart sr-chart-wide"></div>');
-    html.push(renderSubjectChoiceDistributionTable(choiceItems));
+    html.push('<div data-report-list-image="choice-distribution">'
+        + renderReportListImageHeading('答案分布', {heading:'h4', disabled:!choiceItems.length})
+        + renderSubjectChoiceDistributionTable(choiceItems) + '</div>');
     html.push('<div class="sr-note-box" style="margin-top:10px;">主观题建议由任课教师结合评分细则、典型答卷和课堂观察补充归因，本报告不自动编造主观题知识点。</div>');
     html.push('</div>');
     html.push('<div class="sr-section"><h3>五、低得分率小题明细</h3>');
@@ -13148,9 +13160,9 @@ function renderSubjectChoiceDistributionTable(choiceItems) {
     if (!choiceItems.length) return '<div class="sr-note-box">当前数据未检测到选择题学生答案/正确答案字段，无法生成选择题答案分布。</div>';
     var html = '<table class="sr-table"><thead><tr><th>题号</th><th>正确答案</th><th>错选率</th><th>最高错选</th><th>答案分布</th><th>归因提示</th></tr></thead><tbody>';
     choiceItems.slice(0, 12).forEach(function(item) {
-        var dist = Object.keys(item.counts).sort().map(function(k){ return k + '(' + item.counts[k] + ')'; }).join(' ');
+        var dist = formatCollectiveOptionDistribution(item.counts, item.correct);
         var hint = item.wrongRate >= 0.5 ? '高集中错选，优先讲评选项干扰点' : (item.wrongRate >= 0.3 ? '存在明显干扰项，建议课堂追问' : '整体掌握较好，个别纠错');
-        html += '<tr><td>' + escapeHtml(item.item) + '</td><td>' + escapeHtml(item.correct) + '</td><td>' + Math.round(item.wrongRate * 100) + '%</td><td>' + escapeHtml(item.topWrong) + '</td><td>' + escapeHtml(dist) + '</td><td>' + hint + '</td></tr>';
+        html += '<tr><td>' + escapeHtml(item.item) + '</td><td>' + escapeHtml(item.correct) + '</td><td>' + Math.round(item.wrongRate * 100) + '%</td><td>' + escapeHtml(item.topWrong) + '</td><td>' + dist + '</td><td>' + hint + '</td></tr>';
     });
     html += '</tbody></table>';
     return html;
@@ -18754,7 +18766,7 @@ setTimeout(async function() {
 // 座位逻辑见 seating.js；其余功能保留源仓库实现。
 </script>
 <script src="app-core.js?v=image-copy-sync"></script>
-<script src="analysis-leaderboards.js?v=image-copy-sync"></script>
+<script src="analysis-leaderboards.js?v=question-table-copy"></script>
 <script src="seating-data.js"></script>
 <script src="seating-engine.js"></script>
 <script src="seating.js?v=image-copy-sync"></script>

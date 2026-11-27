@@ -340,7 +340,7 @@ function renderReportListImageHeading(title, {disabled = false, allowDownload = 
 }
 
 function drawReportListImage(section, title, caption) {
-    const tables = [...section.querySelectorAll(':scope > table')];
+    const tables = [...section.querySelectorAll(':scope > table, :scope > .scroll-container > table')];
     if (!tables.length) throw new Error('暂无可生成图片的清单');
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
@@ -364,14 +364,46 @@ function drawReportListImage(section, title, caption) {
     };
     const weights = {
         'weak-items':[.085, .125, .075, .115, .14, .16, .15, .15],
-        'priority-students':[.16, .12, .20, .20, .16, .16]
+        'priority-students':[.16, .12, .20, .20, .16, .16],
+        'choice-distribution':[.10, .11, .10, .11, .25, .33],
+        'threshold-questions':[.09, .16, .09, .08, .08, .10, .30, .10],
+        'threshold-questions-with-knowledge':[.08, .13, .14, .08, .07, .07, .09, .25, .09],
+        'level-questions':[.10, .17, .10, .09, .09, .34, .11]
     }[section.dataset.reportListImage] || [.16, .08, .76];
     const plans = tables.map(table => {
         const columns = weights.map(weight => weight * contentWidth);
+        // The question-bank action column contains controls, not report data.
+        const actionColumn = [...table.tHead.rows[0].cells].findIndex(cell => cell.textContent.trim() === '操作');
         const rows = [...table.rows].map(row => {
             const header = row.parentElement === table.tHead;
-            useFont(14, header ? 700 : 400);
-            const cells = [...row.cells].map((cell, index) => {
+            const cells = [...row.cells].filter((_, index) => index !== actionColumn).map((cell, index) => {
+                useFont(14, header ? 700 : 400);
+                const correct = cell.querySelector('.collective-correct-option');
+                if (correct) {
+                    const marked = correct.textContent.trim();
+                    const style = getComputedStyle(correct);
+                    const runs = [];
+                    const nodes = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+                    for (let node; (node = nodes.nextNode());) {
+                        runs.push({text:node.textContent, highlighted:correct.contains(node)});
+                    }
+                    const lines = [[]];
+                    let lineWidth = 0;
+                    for (const run of runs) {
+                        useFont(14, run.highlighted ? 700 : 400);
+                        for (const token of (run.highlighted ? [marked] : run.text.split(/(\s+)/)).filter(Boolean)) {
+                            const tokenWidth = context.measureText(token).width + (run.highlighted ? 10 : 0);
+                            if (lineWidth + tokenWidth > columns[index] - 2 * padding && lineWidth) {
+                                lines.push([]);
+                                lineWidth = 0;
+                            }
+                            if (!lineWidth && !token.trim()) continue;
+                            lines[lines.length - 1].push({text:token, width:tokenWidth, highlighted:run.highlighted});
+                            lineWidth += tokenWidth;
+                        }
+                    }
+                    return {lines, color:'#1e293b', accent:style.color, fill:style.backgroundColor};
+                }
                 const badge = cell.querySelector('.sr-pill');
                 return {
                     lines:wrap(cell.textContent.trim().replace(/\s+/g, ' '), columns[index] - 2 * padding),
@@ -407,7 +439,8 @@ function drawReportListImage(section, title, caption) {
         rows.forEach((row, index) => {
             let x = margin;
             useFont(14, row.header ? 700 : 400);
-            row.cells.forEach(({lines, color}, columnIndex) => {
+            row.cells.forEach((cell, columnIndex) => {
+                const {lines, color} = cell;
                 const cellWidth = columns[columnIndex];
                 context.fillStyle = row.header ? '#1e3a5f' : index % 2 ? '#ffffff' : '#f8fafc';
                 context.fillRect(x, y, cellWidth, row.height);
@@ -415,7 +448,28 @@ function drawReportListImage(section, title, caption) {
                 context.strokeRect(x, y, cellWidth, row.height);
                 context.fillStyle = color;
                 const start = y + (row.height - (lines.length - 1) * lineHeight) / 2;
-                lines.forEach((text, line) => context.fillText(text, x + padding, start + line * lineHeight));
+                lines.forEach((text, line) => {
+                    const baseline = start + line * lineHeight;
+                    if (typeof text === 'string') {
+                        useFont(14, row.header ? 700 : 400);
+                        context.fillStyle = color;
+                        context.fillText(text, x + padding, baseline);
+                        return;
+                    }
+                    let cursor = x + padding;
+                    for (const run of text) {
+                        useFont(14, run.highlighted ? 700 : 400);
+                        if (run.highlighted) {
+                            context.fillStyle = cell.fill;
+                            context.beginPath();
+                            context.roundRect(cursor, baseline - 9, run.width, 18, 4);
+                            context.fill();
+                        }
+                        context.fillStyle = run.highlighted ? cell.accent : color;
+                        context.fillText(run.text, cursor + (run.highlighted ? 5 : 0), baseline);
+                        cursor += run.width;
+                    }
+                });
                 x += cellWidth;
             });
             y += row.height;
@@ -433,8 +487,8 @@ async function exportReportListImage(button, copy = false) {
     const section = button.closest('[data-report-list-image]');
     const title = section.querySelector('.sr-list-image-heading :is(h3, h4)').textContent.trim();
     const report = section.closest('.student-readable-report, .comp-readable-report');
-    const reportName = report.querySelector('h2')?.textContent.trim() || '';
-    const metadata = [...report.querySelectorAll('.sr-meta > div, .cr-meta > div')]
+    const reportName = report?.querySelector('h2')?.textContent.trim() || '';
+    const metadata = [...(report?.querySelectorAll('.sr-meta > div, .cr-meta > div') || [])]
         .map(node => node.textContent.trim()).filter(text => !text.startsWith('生成时间'));
     const caption = [reportName, ...metadata].filter(Boolean).join(' · ');
     const renderPng = async () => {
