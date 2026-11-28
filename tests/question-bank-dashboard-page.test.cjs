@@ -18,6 +18,7 @@ assert.match(dashboard,/detailDifficultyChart/);
 assert.match(dashboard,/detailConceptRows/);
 assert.match(app,/params\.get\('concept_name'\)/);
 const items=[{id:'q1',stem:'计算速度',tags:['速度'],type:'计算题',difficulty:'普通'}, {id:'q2',stem:'受力分析',tags:['力'],type:'作图题',difficulty:'容易'}];
+const workspace={dbName:'PhysicsTrainingBankV1_grade8',meta:{id:'grade8'}};
 let loaded=0,updated=0,initCallback;
 const status={textContent:'',classList:{toggle(){}}};
 const bank={
@@ -36,12 +37,13 @@ const bank={
  close(){}
 };
 const window={
- indexedDB:{open(name){assert.equal(name,'PhysicsTrainingBankV1');return {
+ indexedDB:{open(name){assert.equal(name,workspace.dbName);return {
   get result(){return bank},
   set onsuccess(fn){queueMicrotask(fn)},
   set onerror(fn){}
  }}},
  location:{href:'about:blank'},
+ PhysicsBankWorkspace:{resolve:async()=>workspace,current:()=>workspace,decorateLinks(){}},
  PhysicsBankDetails:{
   init(api){loaded++;this.api=api},
   update(q){updated++;assert.equal(q.length,2)}
@@ -59,6 +61,6 @@ assert.equal(typeof initCallback,'function');
  assert.equal(loaded,1);assert.equal(updated,1);
  assert.match(status.textContent,/2 道题/);
  window.PhysicsBankDetails.api.focusConcept('速度');
- assert.equal(window.location.href,'./index.html?concept_name='+encodeURIComponent('速度'));
+ assert.equal(window.location.href,'./index.html?concept_name='+encodeURIComponent('速度')+'&workspace=grade8');
  console.log('PASS: dashboard is separate, reads local bank, and returns to filtered question list');
 })().catch(e=>{console.error(e);process.exitCode=1});

@@ -2081,6 +2081,7 @@ function persistBatches() {
                 manualQuestionOverrides: b.manualQuestionOverrides,
                 notebookCropReviews: b.notebookCropReviews || {},
                 paperReviewStates: b.paperReviewStates || {},
+                practiceBankScope: b.practiceBankScope,
                 aiPracticeTasks: b.aiPracticeTasks || []
             };
         });
@@ -18832,18 +18833,19 @@ function closeStudentListModal() {
 </script>
 <script src="paper-crop-engine.js"></script>
 <script src="notebook-crop-review.js?v=10"></script>
-<script src="wrong-question-recommendations.js?v=1"></script>
+<script src="wrong-question-recommendations.js?v=20261123-task-retrieval"></script>
 <script src="notebook-practice.js?v=2"></script>
 <script src="full-data-backup.js?v=4"></script>
 <script src="question-bank/math-content.js?v=20261014export7"></script>
 <script src="question-bank/paper-layout.js?v=20261028feedback1"></script>
 <script src="question-bank/word-export.js?v=20261029paired1"></script>
-<script src="ai-practice-diagnostics.js?v=6"></script>
-<script src="ai-practice-rules.js?v=20261105personal6"></script>
-<script src="ai-practice-core.js?v=20261105personal6"></script>
+<script src="question-bank/workspace.js?v=20261123practice-scope"></script>
+<script src="ai-practice-diagnostics.js?v=20261123-task-retrieval"></script>
+<script src="ai-practice-rules.js?v=20261123-task-retrieval"></script>
+<script src="ai-practice-core.js?v=20261123-task-retrieval"></script>
 <script src="ai-practice-preview.js?v=3"></script>
-<script src="ai-practice-audit.js?v=20261105personal6"></script>
-<script src="ai-practice-ui.js?v=20261105personal6"></script>
+<script src="ai-practice-audit.js?v=20261123practice-scope"></script>
+<script src="ai-practice-ui.js?v=20261123-task-retrieval"></script>
 </body>
 </html>
 

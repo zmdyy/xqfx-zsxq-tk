@@ -29,12 +29,12 @@ const mixedTargets={...target,parts:[{conceptId:'target',scoreEligible:false,ass
 // An unconfirmed direct starter is a semantic warning, not a paid schema repair.
 const partial=C.recommendation({...fallback,foundationAssessment:null},packet,[{concept_id:'target'}],[unknown],target);assert(partial.plan.checks.warnings.length);assert.equal(partial.plan.checks.issues.length,0);assert.equal(partial.plan.checks.contract.requireDirectStart,false);assert.equal(partial.plan.checks.contract.preferDirectStart,false);
 const conceptual=q('concept','判断电磁继电器的工作原理。',{assessment_ids:['identify']});assert.equal(C.recommendation(make([{id:conceptual.id,minutes:2}]),packet,[{concept_id:'target'}],[conceptual],target).plan.items.length,1,'legacy outputs remain inspectable; new semantic checks require individual intent');
-const relatedCalc=q('related','已知电阻20Ω，两端电压6V，求电流。',{primary_concept_id:'base',concept_ids:['base']});assert.equal(R.select([{q:conceptual,score:405},{q:relatedCalc,score:100}],target,1)[0].id,'related','underlying calculation should outrank same-context concept choice');
+const relatedCalc=q('related','已知电阻20Ω，两端电压6V，求电流。',{primary_concept_id:'base',concept_ids:['base']});assert.equal(R.rankCandidates([{q:conceptual,score:405},{q:relatedCalc,score:100}],target)[0].q.id,'related','underlying calculation should outrank same-context concept choice');
 assert.throws(()=>C.recommendation({...make([{id:heavy.id,targetTask:'formula_direct',minutes:2}])},packet,[{concept_id:'target'}],[heavy],mixedTargets),/多小问/);
 
 assert.equal(R.contract(packet,target,[conceptual,heavy]).preferDirectStart,false);
 
-assert.equal(R.select([...many.map(q=>({q,score:405})),{q:relatedCalc,score:100}],{...target,practiceIntent:{startingPoint:'formula_direct',taskTypes:['calculate']}},12)[0].id,'related','reserve a direct starter from the full matched pool before taking twelve');
+assert.equal(R.rankCandidates([...many.map(q=>({q,score:405})),{q:relatedCalc,score:100}],{...target,practiceIntent:{startingPoint:'formula_direct',taskTypes:['calculate']}})[0].q.id,'related','reserve a direct starter from the full matched pool before taking twelve');
 
 // Explicit internal task context complements a narrow concept label without changing the canonical catalog.
 const context=R.taskContext({task:'根据实验目的确定应控制的条件',task_types:['control_variables'],evidence:['保持跨度相同'],image_required:false});assert.equal(context.validation.status,'unverified_annotation');assert.equal(R.taskContext(null),null);assert(R.taskContext({task:'待确认',task_types:['UNKNOWN']}).validation.warnings.length);
